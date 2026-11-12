@@ -92,16 +92,8 @@
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-400"></i>
         </button>
 
-        <button id="btnOpenPwaModal" type="button" class="p-1.5 rounded-lg text-xs bg-blue-600 hover:bg-blue-500 text-white transition" title="Telefona / Bilgisayara Uygulama Kur">
-          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
-        </button>
-
-        <button id="btnOpenFirebaseModal" type="button" class="p-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" title="Yapay Zeka, Firebase &amp; Yedek">
-          <i data-lucide="database" class="w-3.5 h-3.5 text-amber-400"></i>
-        </button>
-
-        <button id="btnResetDataModal" type="button" class="p-1.5 rounded-lg text-xs bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-800/60 transition" title="Verileri Sıfırla">
-          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        <button id="btnOpenFirebaseModal" type="button" class="admin-only p-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" title="Ayarlar, Yapay Zeka, Firebase &amp; Yedek">
+          <i data-lucide="settings" class="w-3.5 h-3.5 text-amber-400"></i>
         </button>
 
         <div id="userRolePill" class="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-200" title="Aktif Kullanıcı ve Rol">
@@ -148,7 +140,7 @@
         </button>
         <button type="button" data-tab="araclarim" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
           <i data-lucide="truck" class="w-3.5 h-3.5 text-sky-400"></i>
-          <span>Araçlarım</span>
+          <span>Araçlar</span>
           <span id="badgeAracCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-slate-200">0</span>
         </button>
         <button type="button" data-tab="transferler" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
@@ -228,23 +220,8 @@
         </div>
       </div>
 
-      <!-- ŞANTİYE BAZLI MALİYET ÖZETİ VE TEK TIKLA EXCEL İNDİRME PANELİ -->
-      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-              <i data-lucide="building-2" class="w-5 h-5 text-emerald-600"></i>
-              <span>Şantiye Bazlı Maliyet Özeti &amp; Tek Tıkla Şantiye Excel İndir</span>
-            </h3>
-            <p class="text-xs text-slate-500 mt-0.5">Her şantiyenin mevcut depo stoğu, harcanan (sarf) malzeme tutarı, bakım gideri ve zimmet dağılımı. İstediğiniz şantiyeyi tek tıkla Excel (.xlsx) olarak indirin.</p>
-          </div>
-          <button type="button" data-export-site-excel="ALL" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition">
-            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-            <span>Tüm Şantiyeleri Excel (.xlsx) İndir</span>
-          </button>
-        </div>
-        <div id="dashboardSiteCostsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-      </div>
+      <!-- KRİTİK STOK & YAKLAŞAN ARAÇ BAKIM UYARILARI -->
+      <div id="dashboardAlertsBox" class="hidden bg-white rounded-xl border border-amber-200 p-4 sm:p-5 shadow-sm space-y-3"></div>
 
       <!-- Hızlı Fatura Yükleme + Muhasebe Hızlı Sorgu -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -544,9 +521,6 @@
         </div>
       </div>
 
-      <!-- Araç Bazlı Toplam Bakım Maliyeti Kartları -->
-      <div id="vehicleSummaryCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-
       <!-- Bakım Filtreleri -->
       <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
@@ -599,7 +573,7 @@
     <section id="tab-araclarim" class="tab-panel hidden space-y-5">
       <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-base sm:text-lg font-bold text-slate-900">Araçlarım &amp; İş Makineleri</h2>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Araçlar &amp; İş Makineleri</h2>
           <p class="text-xs text-slate-500">Her aracınızı ayrı kartlarda görüntüleyin; toplam bakım/tamir giderini, son km bilgisini, sonraki bakım tarihini ve tüm işlem geçmişini tek tıkla inceleyin.</p>
         </div>
         <div class="flex items-center flex-wrap gap-2">
@@ -1301,6 +1275,24 @@
             <button id="btnSaveGeminiKey" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap">Test Et &amp; Kaydet</button>
           </div>
         </div>
+
+        <!-- 4. Uygulama Kurulumu & Veri Sıfırlama -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">4. Uygulama Kurulumu &amp; Sıfırlama</h4>
+            <p class="text-[11px] text-slate-500 mt-0.5">Cihaza PWA uygulama olarak kurun veya tüm listeyi sıfırlayın.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnOpenPwaModal" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition">
+              <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+              <span>Uygulamayı Kur</span>
+            </button>
+            <button id="btnResetDataModal" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+              <span>Verileri Sıfırla</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1443,16 +1435,21 @@
       </div>
       <div class="p-5 overflow-y-auto space-y-5">
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Yeni Ekip Kullanıcısı Oluştur</h4>
-          <form id="createTeamUserForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Kullanıcıya Rol Ata</h4>
+            <a href="https://console.firebase.google.com/project/santiye-stok/authentication/users" target="_blank" rel="noopener" class="text-[11px] font-semibold text-blue-600 hover:underline">
+              Firebase Console'da Kullanıcı Ekle &rarr;
+            </a>
+          </div>
+          <p class="text-[11px] text-slate-500">Dışarıdan kayıt güvenlik nedeniyle kapalıdır. Önce Firebase Console'dan e-posta/şifre tanımlayın, ardından buradan rol atayın.</p>
+          <form id="createTeamUserForm" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <input id="newUserEmail" type="email" required placeholder="personel@firma.com" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
-            <input id="newUserPassword" type="password" required minlength="6" placeholder="Şifre (en az 6 karakter)" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
             <select id="newUserRole" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500 bg-white">
-              <option value="saha">Saha Personeli (Ekleme &amp; Görüntüleme, Silme Yok)</option>
+              <option value="saha">Saha Personeli (Silme Yok)</option>
               <option value="admin">Admin (Tam Yetki)</option>
             </select>
             <button type="submit" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
-              + Kullanıcı Oluştur &amp; Rol Ata
+              + Rol Ata / Kaydet
             </button>
           </form>
         </div>
@@ -2781,6 +2778,7 @@
     // =========================================================================
     function renderAll() {
       renderStatsAndBadges();
+      renderDashboardAlerts();
       renderSiteCosts();
       renderGlobalSearch();
       renderDashboardRecent();
@@ -2858,6 +2856,55 @@
         (appState.aracBakimlar || []).forEach(b => { if (b.vehicle) vSet.add(b.vehicle); });
         vehDatalist.innerHTML = [...vSet].map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
       }
+    }
+
+    function renderDashboardAlerts() {
+      const box = document.getElementById('dashboardAlertsBox');
+      if (!box) return;
+      const lowStock = (appState.malzemeler || []).filter(m => Number(m.qty) <= 2);
+      const todayMs = new Date().setHours(0, 0, 0, 0);
+      const upcomingBakim = (appState.aracBakimlar || []).filter(b => {
+        if (!b.nextDate) return false;
+        const diffDays = Math.ceil((new Date(b.nextDate).getTime() - todayMs) / 86400000);
+        return diffDays <= 30;
+      });
+
+      if (lowStock.length === 0 && upcomingBakim.length === 0) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+      }
+
+      box.classList.remove('hidden');
+      const stockHtml = lowStock.slice(0, 6).map(m => `
+        <button type="button" data-open-site-detail="${escapeHtml(m.site || '')}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 text-xs font-semibold transition">
+          <span>${escapeHtml(m.name)} (${m.qty} ${escapeHtml(m.unit || 'Adet')})</span>
+          <span class="text-[10px] text-rose-500">• ${escapeHtml(m.site || '-')}</span>
+        </button>
+      `).join('');
+
+      const vehHtml = upcomingBakim.slice(0, 6).map(b => {
+        const diffDays = Math.ceil((new Date(b.nextDate).getTime() - todayMs) / 86400000);
+        const label = diffDays < 0 ? `${Math.abs(diffDays)} gün geçti` : (diffDays === 0 ? 'Bugün' : `${diffDays} gün kaldı`);
+        return `
+          <button type="button" data-open-vehicle-detail="${escapeHtml(b.vehicle || '')}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-semibold transition">
+            <span class="font-mono">${escapeHtml(b.vehicle || '-')}</span>
+            <span class="text-[10px] text-amber-700">• ${formatDateTR(b.nextDate)} (${label})</span>
+          </button>
+        `;
+      }).join('');
+
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+            <span>Dikkat Edilmesi Gerekenler (Kritik Stok &amp; Yaklaşan Araç Bakımları)</span>
+          </h3>
+          <span class="text-[11px] font-semibold text-slate-500">${lowStock.length} Kritik Stok • ${upcomingBakim.length} Yaklaşan Bakım</span>
+        </div>
+        ${lowStock.length ? `<div class="space-y-1"><div class="text-[11px] font-bold uppercase text-rose-700">Kritik Stoklar (≤ 2)</div><div class="flex flex-wrap gap-1.5">${stockHtml}</div></div>` : ''}
+        ${upcomingBakim.length ? `<div class="space-y-1"><div class="text-[11px] font-bold uppercase text-amber-700">Bakım / Muayene Tarihi Yaklaşan Araçlar</div><div class="flex flex-wrap gap-1.5">${vehHtml}</div></div>` : ''}
+      `;
     }
 
     function renderSiteCosts() {
@@ -6167,19 +6214,22 @@ KURALLAR:
         openModal('modalUsers');
       });
 
-      document.getElementById('createTeamUserForm')?.addEventListener('submit', async (e) => {
+      document.getElementById('createTeamUserForm')?.addEventListener('submit', (e) => {
         e.preventDefault();
         if (!isAdmin()) return;
-        const email = document.getElementById('newUserEmail')?.value || '';
-        const pass = document.getElementById('newUserPassword')?.value || '';
+        const email = (document.getElementById('newUserEmail')?.value || '').trim().toLowerCase();
         const role = document.getElementById('newUserRole')?.value || 'saha';
-        try {
-          await createTeamUser(email, pass, role);
-          e.target.reset();
-          showToast(`${email.trim().toLowerCase()} (${role.toUpperCase()}) kullanıcısı oluşturuldu.`);
-        } catch (err) {
-          showToast(err.message || 'Kullanıcı oluşturulamadı.', 'error');
+        if (!email) return;
+        if (email === SUPER_ADMIN_EMAIL) {
+          showToast('Ana yönetici rolü değiştirilemez.', 'error');
+          return;
         }
+        if (!appState.userRoles || typeof appState.userRoles !== 'object') appState.userRoles = {};
+        appState.userRoles[email] = role === 'admin' ? 'admin' : 'saha';
+        saveState();
+        renderUserRolesList();
+        e.target.reset();
+        showToast(`${email} için "${role === 'admin' ? 'Admin' : 'Saha'}" rolü kaydedildi.`);
       });
 
       document.getElementById('userRolesList')?.addEventListener('change', (e) => {
