@@ -28,6 +28,10 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.05); }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 9999px; }
+    .kpi-card { transition: transform 0.15s ease, box-shadow 0.15s ease; font-variant-numeric: tabular-nums; }
+    .kpi-card:hover { transform: translateY(-2px); }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.98) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .fixed[id^="modal"]:not(.hidden) > div { animation: modalPop 0.16s ease-out; }
     body.role-saha [data-delete-zimmet],
     body.role-saha [data-delete-malzeme],
     body.role-saha [data-delete-sarf],
@@ -41,7 +45,7 @@
     }
   </style>
 </head>
-<body class="min-h-full text-slate-800 bg-slate-50 flex flex-col">
+<body class="min-h-full text-slate-800 bg-slate-100/70 flex flex-col">
 
   <!-- ÜST BAR (COMPACT HEADER) -->
   <header class="bg-slate-900 text-white border-b border-slate-800 md:sticky md:top-0 z-30 shadow-sm">
@@ -164,57 +168,57 @@
     <section id="tab-dashboard" class="tab-panel space-y-6">
       <!-- Özet Kartları (5 Kart) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Kişisel &amp; Saha Zimmetleri</p>
+        <div class="kpi-card bg-white rounded-xl border border-slate-200 border-t-4 border-t-amber-500 p-4 shadow-sm hover:shadow-md flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Saha Zimmetleri</p>
             <p id="statZimmetCount" class="text-xl font-extrabold text-slate-900 mt-1">0 Adet</p>
-            <p id="statZimmetBreakdown" class="text-[11px] text-slate-500 mt-1">Araba • Telefon • El Aleti</p>
+            <p id="statZimmetBreakdown" class="text-[11px] text-slate-500 mt-1 truncate">Araba • Telefon • El Aleti</p>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
             <i data-lucide="shield-check" class="w-5 h-5"></i>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Zimmet Toplam Değeri</p>
+        <div class="kpi-card bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-4 shadow-sm hover:shadow-md flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Zimmet Değeri</p>
             <p id="statZimmetValue" class="text-xl font-extrabold text-slate-900 mt-1">₺0,00</p>
             <p class="text-[11px] text-slate-500 mt-1">Demirbaş &amp; ekipman</p>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
             <i data-lucide="smartphone" class="w-5 h-5"></i>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Aktif Stok + Sarfiyat</p>
+        <div class="kpi-card bg-white rounded-xl border border-slate-200 border-t-4 border-t-emerald-500 p-4 shadow-sm hover:shadow-md flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Aktif Stok + Sarfiyat</p>
             <p id="statMalzemeValue" class="text-xl font-extrabold text-emerald-700 mt-1">₺0,00</p>
-            <p id="statMalzemeCount" class="text-[11px] text-slate-500 mt-1">0 kalem • Sarf: ₺0,00</p>
+            <p id="statMalzemeCount" class="text-[11px] text-slate-500 mt-1 truncate">0 kalem • Sarf: ₺0,00</p>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
             <i data-lucide="package-check" class="w-5 h-5"></i>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Araç Bakım &amp; Tamir</p>
+        <div class="kpi-card bg-white rounded-xl border border-slate-200 border-t-4 border-t-rose-500 p-4 shadow-sm hover:shadow-md flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Araç Bakım &amp; Tamir</p>
             <p id="statBakimValue" class="text-xl font-extrabold text-rose-700 mt-1">₺0,00</p>
             <p id="statBakimCount" class="text-[11px] text-slate-500 mt-1">0 bakım/servis kaydı</p>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
             <i data-lucide="car" class="w-5 h-5"></i>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Kayıtlı Fatura İçeriği</p>
+        <div class="kpi-card bg-white rounded-xl border border-slate-200 border-t-4 border-t-purple-500 p-4 shadow-sm hover:shadow-md flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Kayıtlı Faturalar</p>
             <p id="statFaturaCount" class="text-xl font-extrabold text-slate-900 mt-1">0 Fatura</p>
-            <p id="statFaturaValue" class="text-[11px] text-slate-500 mt-1">Toplam: ₺0,00</p>
+            <p id="statFaturaValue" class="text-[11px] text-slate-500 mt-1 truncate">Toplam: ₺0,00</p>
           </div>
-          <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
             <i data-lucide="file-text" class="w-5 h-5"></i>
           </div>
         </div>
