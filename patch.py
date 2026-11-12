@@ -32,13 +32,13 @@ i9MiZRRSm3AEKDMGkAI/RPFB2Lz5f+xuS2gcetUTV2mOWkXj0EWMvXzpMtZh6IU5s0UvQu4hwxAb
 BaLllPDq9R4On8tskh01sM8c+3x3NlEmREkiyGNe1GBynQTWE6hm/Mp4wnSR+fkyvPkrmI4ge+10
 GACc9J4qA7KW2SRwLIL/1Ea+G9YMVGrxZYuyBfBDra2ww4WL7CDUST6QBWybT7Kl4knjFyZEk1FP
 mO4gjxrkhJm6TE6tJJ5ydKrWP0QwpCV7+yllbduhC046M7pvPzJNKsFBbYlOiQ9KFuC0ufOfZ3tr
-BefV/VrF5SRm60ElJrA0GCRWSmaKu1mpKZ7kys2M5JRI4+vzS2Un2vGIDLFYSGoWyQmsJigLReVo
+befV/VrF5SRm60ElJrA0GCRWSmaKu1mpKZ7kys2M5JRI4+vzS2Un2vGIDLFYSGoWyQmsJigLReVo
 ao9OE+TDJTvFf8vIy6zETGNGlZmpBfadeXX7uVzookhsFj17WJnRqoPr4cxnMPcGGOngXidCSZXb
 T2Fk3360yRNYurCoH0poMLwymxwEwQikxJr08bnpzN186uOPYyDvIitWsK/+yQSD1DLKG0qYsGjp
 S+Ws4ECrnNWlz5RzqxMv6yWaWbBTjmo2wJ9F6/z3602j3xJxtdibPTjc2d4nG9KZ1QXNdsn+7vPv
 Tp4c/jfVnyTPb/56dDzYh5Ff3H76YX9wMACevv30Yuf209HBII6yxVssUhjO0FDZdybTaOhfKJgY
 OxcwZccL7QhodIVKnyNHkgJkcaMHtoA5OrUCf14buouA0jAjLN8vwsgZX4rLuWLPeUkBLRf0pHY+
-hT6kAdICCwQAvYg/OL8iIpg7PrnNQ4aD3lA27Q0zY4AnEnFdluZkJDNbGg6jzhopZ3R0I7ObRg5
+hT6kAdICCwQpAvYg/OL8iIpg7PrnNQ4aD3lA27Q0zY4AnEnFdluZkJDNbGg6jzhopZ3R0I7ObRg5
 J6JVJiy2LBhW3kgminvRUayxXB3AAx1txgou54ITJ3JVfZgN0dNfM9/zxRDUKVQYn4crMrszXxZA
 XIIpMzmNHf/cQ1/7SYR+8jSwx/DwN/DT4g+QzRDuFWN3Olcpq3lWDNbdLUQnZnJ3GyAd+qCEvHRA
 eGDopoxPZOY94QHUdJiUzmDkotNIZU+BDFJw1JFYVBboPG//To+tiwSaEEk5KBLRRyWWopEfsN4S
@@ -176,8 +176,7 @@ W/lepuKcMA1ScOo8Ke3MyyWLXOsZ6F53BzVUTqzzhLrWbSPeZSPxjluJ+QiG7u6AXib4Ntf7rXbz
 0dv/D6cWDBqTrgAA
 """
 
-_s = "".join(B64_DATA.split())
-raw_bytes = base64.b64decode(_s + "=" * (-len(_s) % 4))
+raw_bytes = base64.b64decode("".join(B64_DATA.split()))
 ops = json.loads(gzip.decompress(raw_bytes).decode('utf-8'))
 
 old_url = 'https://raw.githubusercontent.com/udemirbas54-star/santiye-stok/main/index.html'
