@@ -32,6 +32,19 @@
     .kpi-card:hover { transform: translateY(-2px); }
     @keyframes modalPop { from { opacity: 0; transform: scale(0.98) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .fixed[id^="modal"]:not(.hidden) > div { animation: modalPop 0.16s ease-out; }
+    html, body { overflow-x: hidden; max-width: 100%; }
+    div.fixed[id^="modal"] {
+      align-items: flex-start !important;
+      overflow-y: auto !important;
+      padding: 0.75rem !important;
+    }
+    div.fixed[id^="modal"] > div {
+      margin-top: auto;
+      margin-bottom: auto;
+      max-height: calc(100dvh - 1.5rem);
+      overflow-y: auto;
+      width: 100%;
+    }
     body.role-saha [data-delete-zimmet],
     body.role-saha [data-delete-malzeme],
     body.role-saha [data-delete-sarf],
@@ -581,7 +594,7 @@
           <p class="text-xs text-slate-500">Her aracınızı ayrı kartlarda görüntüleyin; toplam bakım/tamir giderini, son km bilgisini, sonraki bakım tarihini ve tüm işlem geçmişini tek tıkla inceleyin.</p>
         </div>
         <div class="flex items-center flex-wrap gap-2">
-          <input id="araclarimSearchInput" type="text" placeholder="Plaka, araç adı, şantiye ara..." class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none w-56" />
+          <input id="araclarimSearchInput" type="text" placeholder="Plaka, araç adı, şantiye ara..." class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none w-full sm:w-56" />
           <button id="btnOpenNewVehicleBakim" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition">
             <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
             <span>Yeni Araç / Bakım Ekle</span>
