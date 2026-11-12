@@ -6141,15 +6141,27 @@ KURALLAR:
         showToast('Tek dosya HTML uygulaması indirildi.');
       });
 
-      // Verileri Sıfırla / Temizle
+      // Verileri Sıfırla / Temizle (Çift Onay + Otomatik Yedek)
       document.getElementById('btnResetDataModal')?.addEventListener('click', () => {
         if (!isAdmin()) { showToast('Sıfırlama yetkiniz yok (Saha rolü).', 'error'); return; }
-        if (confirm('Örnek verileri temizleyip sıfırdan boş bir şantiye stok listesiyle başlamak istiyor musunuz? (İptal derseniz varsayılan örnek veriler geri yüklenir)')) {
-          const keepRoles = appState.userRoles || { [SUPER_ADMIN_EMAIL]: 'admin' };
-          appState = { updatedAt: new Date().toISOString(), zimmetler: [], malzemeler: [], sarfiyatlar: [], aracBakimlar: [], transferler: [], faturalar: [], userRoles: keepRoles };
-          saveState();
-          showToast('Tüm liste sıfırlandı, kendi verilerinizi girebilirsiniz.');
+        if (!confirm('DİKKAT! Tüm şantiye stokları, zimmetler, araç bakımları ve faturalar silinecektir. Devam etmek istediğinize emin misiniz?')) return;
+        const code = prompt('Bu işlem geri alınamaz! Sıfırlamayı onaylamak için büyük harflerle SIFIRLA yazın:');
+        if (code !== 'SIFIRLA') {
+          showToast('Sıfırlama iptal edildi (SIFIRLA yazılmadı).', 'info');
+          return;
         }
+        // Sıfırlama öncesi otomatik JSON yedek indir
+        try {
+          const backupBlob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(backupBlob);
+          a.download = `santiye_stok_yedek_oncesi_${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+        } catch (e) {}
+        const keepRoles = appState.userRoles || { [SUPER_ADMIN_EMAIL]: 'admin' };
+        appState = { updatedAt: new Date().toISOString(), zimmetler: [], malzemeler: [], sarfiyatlar: [], aracBakimlar: [], transferler: [], faturalar: [], userRoles: keepRoles };
+        saveState();
+        showToast('Yedek indirildi ve tüm veriler sıfırlandı.');
       });
 
       // Şantiye Detay, Şantiye Adı Düzenleme & Araçlarım Eventleri
