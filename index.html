@@ -1,0 +1,2525 @@
+﻿<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Şantiye Stok" />
+  <title>Şantiye Stok, Zimmet, Transfer ve Fatura Takip Sistemi</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.05); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 9999px; }
+  </style>
+</head>
+<body class="min-h-full text-slate-800 bg-slate-50 flex flex-col">
+
+  <!-- ÜST BAR (HEADER) -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-bold shadow-sm">
+          <i data-lucide="hard-hat" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight">Şantiye Stok, Zimmet &amp; Fatura</h1>
+            <span id="syncStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span id="syncDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span id="syncText">santiye-stok Bağlı</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Çoklu Fatura Kalemi • Şantiyeler Arası Seçmeli Transfer • Seri No &amp; Kişi Zimmet Takibi</p>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2">
+        <label for="quickInvoiceUpload" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition shadow-sm">
+          <i data-lucide="camera" class="w-4 h-4"></i>
+          <span>Fatura Fotoğrafı Yükle</span>
+          <input id="quickInvoiceUpload" type="file" accept="image/*" capture="environment" class="hidden" />
+        </label>
+
+        <button id="btnOpenTransferModalTop" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-sm">
+          <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+          <span>Şantiyeye Transfer Et</span>
+        </button>
+
+        <button id="btnQuickCloudSync" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-700/60 transition" title="Telefon ve Bilgisayar Arasında Şimdi Eşitle">
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-400"></i>
+          <span class="hidden md:inline">Şimdi Eşitle</span>
+        </button>
+
+        <button id="btnOpenPwaModal" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white transition shadow-sm" title="Telefona ve Bilgisayara Uygulama Olarak Kur &amp; Eşitle">
+          <i data-lucide="smartphone" class="w-4 h-4"></i>
+          <span>Telefon &amp; PC Kurulum</span>
+        </button>
+
+        <button id="btnOpenFirebaseModal" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          <i data-lucide="database" class="w-4 h-4 text-amber-400"></i>
+          <span class="hidden sm:inline">Firebase &amp; Yedek</span>
+        </button>
+
+        <button id="btnExportCsv" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" title="Excel (CSV) Rapor İndir">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
+        </button>
+
+        <button id="btnResetDataModal" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-800/60 transition" title="Verileri Sıfırla / Temizle">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- SEKME MENÜSÜ -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-800/80 bg-slate-900/95">
+      <nav class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-1.5" aria-label="Ana Modüller">
+        <button type="button" data-tab="dashboard" class="nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition bg-amber-500 text-slate-950">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Özet &amp; Hızlı Arama</span>
+        </button>
+        <button type="button" data-tab="zimmetler" class="nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="wrench" class="w-4 h-4"></i>
+          <span>Zimmetlerim (Seri No &amp; Kişi)</span>
+          <span id="badgeZimmetCount" class="px-1.5 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
+        <button type="button" data-tab="malzemeler" class="nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="package" class="w-4 h-4"></i>
+          <span>Şantiye Malzeme &amp; Maliyet Listesi</span>
+          <span id="badgeMalzemeCount" class="px-1.5 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
+        <button type="button" data-tab="transferler" class="nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+          <span>Şantiyeler Arası Transfer</span>
+          <span id="badgeTransferCount" class="px-1.5 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
+        <button type="button" data-tab="faturalar" class="nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="receipt" class="w-4 h-4"></i>
+          <span>Fatura Fotoğrafı &amp; Muhasebe Sorgu</span>
+          <span id="badgeFaturaCount" class="px-1.5 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ANA İÇERİK -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- 1. SEKME: ÖZET & HIZLI ARAMA (DASHBOARD) -->
+    <section id="tab-dashboard" class="tab-panel space-y-6">
+      <!-- Özet Kartları -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Kişisel &amp; Saha Zimmetleri</p>
+            <p id="statZimmetCount" class="text-2xl font-extrabold text-slate-900 mt-1">0 Adet</p>
+            <p id="statZimmetBreakdown" class="text-xs text-slate-500 mt-1">Araba • Telefon • El Aleti</p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Zimmet Toplam Değeri</p>
+            <p id="statZimmetValue" class="text-2xl font-extrabold text-slate-900 mt-1">₺0,00</p>
+            <p class="text-xs text-slate-500 mt-1">Seri no ve kişi bazlı kayıtlı</p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+            <i data-lucide="smartphone" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Şantiye Malzeme Değeri</p>
+            <p id="statMalzemeValue" class="text-2xl font-extrabold text-emerald-700 mt-1">₺0,00</p>
+            <p id="statMalzemeCount" class="text-xs text-slate-500 mt-1">0 ayrı malzeme kalemi</p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <i data-lucide="package-check" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-start justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase">Kayıtlı Fatura &amp; Belge</p>
+            <p id="statFaturaCount" class="text-2xl font-extrabold text-slate-900 mt-1">0 Belge</p>
+            <p id="statFaturaValue" class="text-xs text-slate-500 mt-1">Fatura Toplamı: ₺0,00</p>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hızlı Fatura Yükleme + Muhasebe Hızlı Sorgu -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900">
+              Çoklu Kalem &amp; Otomatik Kayıt
+            </span>
+            <label class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 cursor-pointer">
+              <input id="chkAutoSaveInvoice" type="checkbox" checked class="rounded border-slate-300 text-amber-600 focus:ring-amber-500" />
+              <span>Yükleyince Otomatik Kaydet</span>
+            </label>
+          </div>
+
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Fatura Fotoğrafı Yükle (Çoklu Malzeme Destekli)</h3>
+            <p class="text-xs text-slate-500 mt-1">
+              Faturadaki birden fazla malzemeyi ayrı ayrı birim maliyetleriyle kaydeder; istediğiniz kalemi seçip başka şantiyeye transfer edebilirsiniz.
+            </p>
+          </div>
+
+          <label for="dashboardInvoiceDrop" class="border-2 border-dashed border-amber-300 hover:border-amber-500 bg-amber-50/50 hover:bg-amber-50 rounded-xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2">
+            <div class="w-11 h-11 rounded-full bg-amber-500/20 text-amber-700 flex items-center justify-center">
+              <i data-lucide="scan-line" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xs sm:text-sm font-bold text-slate-800">Fatura Fotoğrafı Seçin veya Kamerayı Açın</span>
+            <span class="text-[11px] text-slate-500">Çok kalemli faturalarda her malzeme ayrı stok satırı olarak açılır</span>
+            <input id="dashboardInvoiceDrop" type="file" accept="image/*" capture="environment" class="hidden" />
+          </label>
+
+          <div id="ocrProgressBox" class="hidden p-3 rounded-lg bg-slate-900 text-white text-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span id="ocrProgressText" class="font-semibold text-amber-400">Fatura taranıyor...</span>
+              <span id="ocrProgressPct">0%</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <div id="ocrProgressBar" class="h-full bg-amber-500 transition-all duration-300" style="width: 10%"></div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <button id="btnTestSampleInvoice" type="button" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Örnek Fatura Taraması Test Et</span>
+            </button>
+            <button id="btnManualInvoiceDash" type="button" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>Elle Fatura Ekle</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Muhasebe Hızlı Fatura, Seri No & Alım Sorgulama -->
+        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="text-base font-bold text-slate-900">Muhasebe Hızlı Fatura, Seri No &amp; Alım Sorgulama</h3>
+              <span class="text-xs font-medium text-slate-400">Anlık Filtre</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+              Muhasebe "Bu malzeme nereden, ne zaman, hangi faturayla alındı?" diye sorduğunda fatura no, seri no veya malzeme adıyla anında bulun.
+            </p>
+          </div>
+
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input id="globalSearchInput" type="text" placeholder="Fatura No, Seri No, Zimmetli Kişi, Tedarikçi veya Malzeme ara..." class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:border-amber-500 outline-none bg-slate-50 focus:bg-white transition" />
+          </div>
+
+          <div id="globalSearchResults" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
+        </div>
+      </div>
+
+      <!-- Son Alınan Malzeme ve Zimmetler Tablosu -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Son Alınan Malzeme ve Zimmetler (Nereden &amp; Ne Zaman Alındı)</h3>
+            <p class="text-xs text-slate-500">Tüm şantiye stok girişleri ve zimmet kayıtlarının fatura referanslı özeti</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnDashAddZimmet" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition">
+              <i data-lucide="wrench" class="w-3.5 h-3.5"></i>
+              <span>+ Yeni Zimmet</span>
+            </button>
+            <button id="btnDashAddMalzeme" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
+              <i data-lucide="package-plus" class="w-3.5 h-3.5"></i>
+              <span>+ Yeni Malzeme</span>
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
+                <th class="py-3 px-4">Kalem / Tür</th>
+                <th class="py-3 px-4">Nerede Alındı (Tedarikçi)</th>
+                <th class="py-3 px-4">Ne Zaman</th>
+                <th class="py-3 px-4">Fatura No</th>
+                <th class="py-3 px-4 text-right">Maliyet</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardRecentTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SEKME: ZİMMETLERİM (SERİ NO & KİŞİ) -->
+    <section id="tab-zimmetler" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Kişisel &amp; Saha Zimmet Takibi (Araba, Telefon, El Aletleri)</h2>
+          <p class="text-xs text-slate-500">Üzerinize veya şantiye personeline zimmetli araç, cep telefonu ve el aletlerinin seri numaraları, fotoğrafları ve faturaları.</p>
+        </div>
+        <button id="btnOpenZimmetModal" type="button" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Yeni Zimmet Ekle</span>
+        </button>
+      </div>
+
+      <!-- Zimmet Filtreleri -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Ekipman, Seri No veya Kişi Ara</label>
+          <input id="zimmetSearchInput" type="text" placeholder="Örn: 34 ABC, iPhone, Hilti, IMEI, Uğur..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Kategori</label>
+          <select id="filterZimmetCategory" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Kategoriler</option>
+            <option value="Araba / Araç">Araba / Araç</option>
+            <option value="Cep Telefonu">Cep Telefonu</option>
+            <option value="El Aleti / Makine">El Aleti / Makine</option>
+            <option value="Bilgisayar / Tablet">Bilgisayar / Tablet</option>
+            <option value="Diğer Ekipman">Diğer Ekipman</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Zimmetli Kişi</label>
+          <select id="filterZimmetPerson" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Kişiler</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="zimmetCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- 3. SEKME: ŞANTİYE MALZEME & MALİYET LİSTESİ -->
+    <section id="tab-malzemeler" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Şantiye Malzeme &amp; Maliyet Listesi</h2>
+          <p class="text-xs text-slate-500">Şantiyelerdeki tüm malzemeler, birim maliyetleri, alındığı tedarikçi ve fatura numaraları. İstediğiniz kalemleri seçip başka şantiyeye transfer edebilirsiniz.</p>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+          <button id="btnTransferSelectedMaterials" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+            <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+            <span>Seçilenleri Başka Şantiyeye Transfer Et</span>
+          </button>
+          <button id="btnOpenMalzemeModal" type="button" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Yeni Malzeme Ekle</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Malzeme Filtreleri -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Malzeme, Tedarikçi veya Fatura No Ara</label>
+          <input id="malzemeSearchInput" type="text" placeholder="Örn: Kürek, Çimento, El Arabası, NTR2026..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Bulunduğu Şantiye</label>
+          <select id="filterMalzemeSite" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Şantiyeler</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Kategori</label>
+          <select id="filterMalzemeCategory" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Kategoriler</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
+                <th class="py-3 px-3 w-8 text-center">
+                  <input id="chkSelectAllMaterials" type="checkbox" class="rounded border-slate-300 text-indigo-600" title="Tümünü Seç" />
+                </th>
+                <th class="py-3 px-4">Malzeme Adı / Kategori</th>
+                <th class="py-3 px-4">Şantiye</th>
+                <th class="py-3 px-4 text-center">Miktar</th>
+                <th class="py-3 px-4 text-right">Birim Maliyet</th>
+                <th class="py-3 px-4 text-right">Toplam Maliyet</th>
+                <th class="py-3 px-4">Nerede &amp; Ne Zaman Alındı</th>
+                <th class="py-3 px-4">Fatura No</th>
+                <th class="py-3 px-4 text-right">İşlem / Transfer</th>
+              </tr>
+            </thead>
+            <tbody id="malzemeTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. SEKME: ŞANTİYELER ARASI TRANSFER -->
+    <section id="tab-transferler" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Şantiyeler Arası Seçmeli Malzeme Transferi &amp; Geçmişi</h2>
+          <p class="text-xs text-slate-500">Bir şantiyedeki malzemeleri seçip miktarını belirterek başka şantiyeye birim maliyeti ve orijinal fatura referansıyla aktarın.</p>
+        </div>
+        <button id="btnOpenTransferModalTab" type="button" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition">
+          <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+          <span>Yeni Şantiye Transferi Yap</span>
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
+                <th class="py-3 px-4">Tarih / Transfer Kodu</th>
+                <th class="py-3 px-4">Gönderen Şantiye</th>
+                <th class="py-3 px-4">Alan (Hedef) Şantiye</th>
+                <th class="py-3 px-4">Aktarılan Malzemeler</th>
+                <th class="py-3 px-4">Kaynak Fatura No</th>
+                <th class="py-3 px-4 text-right">Transfer Maliyeti</th>
+                <th class="py-3 px-4">Teslim Alan / Not</th>
+              </tr>
+            </thead>
+            <tbody id="transferTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. SEKME: FATURA FOTOĞRAFI & MUHASEBE SORGU -->
+    <section id="tab-faturalar" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Fatura Fotoğrafı Arşivi &amp; Çoklu Kalem Muhasebe Sorgulama</h2>
+          <p class="text-xs text-slate-500">Yüklenen fatura fotoğraflarını ve içindeki ayrı malzeme kalemlerini görüntüleyin, fatura numarasıyla muhasebeden anında bulun.</p>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+          <label for="tabInvoicePhotoUpload" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+            <span>Fatura Fotoğrafı Yükle (Otomatik Kaydet)</span>
+            <input id="tabInvoicePhotoUpload" type="file" accept="image/*" capture="environment" class="hidden" />
+          </label>
+          <button id="btnOpenFaturaModal" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium bg-slate-900 hover:bg-slate-800 text-white transition">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            <span>Detaylı Fatura Kaydı Aç</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="sm:col-span-2">
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Fatura Numarası, Tedarikçi veya Kalem Ara</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="faturaSearchInput" type="text" placeholder="Örn: NTR2026000001833, GIB2026..., Koçtaş, Kürek Sapı..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Alındığı Yer (Tedarikçi)</label>
+          <select id="filterFaturaSupplier" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Tedarikçiler</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Başlangıç Tarihi</label>
+          <input id="filterFaturaStartDate" type="date" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none" />
+        </div>
+      </div>
+
+      <div id="faturaCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: ÇOK KALEMLİ FATURA EKLE / DÜZENLE -->
+  <div id="modalFatura" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-3xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="receipt" class="w-5 h-5 text-amber-400"></i>
+          <h3 id="modalFaturaTitle" class="text-base font-bold">Çoklu Malzeme Destekli Fatura Kaydı</h3>
+        </div>
+        <button type="button" data-close-modal="modalFatura" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="formFatura" class="p-6 space-y-4 max-h-[82vh] overflow-y-auto custom-scrollbar">
+        <input type="hidden" id="faturaEditId" />
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Fatura Numarası *</label>
+            <input id="faturaNoInput" type="text" required placeholder="Örn: NTR2026000001833" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nerede Alındı (Tedarikçi / Firma) *</label>
+            <input id="faturaSupplierInput" type="text" required placeholder="Örn: Koçtaş, Natura Peyzaj, Hilti..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Fatura Tarihi *</label>
+            <input id="faturaDateInput" type="date" required class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Giriş Yapılacak Şantiye *</label>
+            <input id="faturaSiteInput" type="text" required value="Kadıköy Şantiyesi" list="siteSuggestions" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Kayıt Türü (Stok veya Zimmet)</label>
+            <select id="faturaTargetType" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white">
+              <option value="MALZEME">Şantiye Malzeme Stoğuna Ekle</option>
+              <option value="ZIMMET">Kişisel / Saha Zimmetlerine Ekle</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fatura Kalemleri Listesi -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-800 uppercase">Faturadaki Malzeme / Ekipman Kalemleri</h4>
+            <button id="btnAddFaturaLineItem" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Kalem Satırı Ekle</span>
+            </button>
+          </div>
+          <div id="faturaLineItemsContainer" class="space-y-2"></div>
+          <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-sm font-bold text-slate-900">
+            <span>Fatura Genel Toplamı:</span>
+            <span id="faturaModalTotalDisplay" class="text-amber-700">₺0,00</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Fatura Görseli (Fotoğraf)</label>
+          <input id="faturaModalPhotoInput" type="file" accept="image/*" class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800" />
+          <img id="faturaModalPreviewImg" class="mt-2 hidden max-h-40 rounded-lg border border-slate-200" alt="Fatura Önizleme" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" data-close-modal="modalFatura" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">İptal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950">Faturayı ve Kalemleri Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ZİMMET EKLE / DÜZENLE -->
+  <div id="modalZimmet" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="wrench" class="w-5 h-5 text-amber-400"></i>
+          <h3 id="modalZimmetTitle" class="text-base font-bold">Zimmetli Ekipman / Araç / Telefon Kaydı</h3>
+        </div>
+        <button type="button" data-close-modal="modalZimmet" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="formZimmet" class="p-6 space-y-4">
+        <input type="hidden" id="zimmetEditId" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Ekipman / Araç / Telefon Adı *</label>
+            <input id="zimmetName" type="text" required placeholder="Örn: Ford Courier, iPhone 15, Hilti TE 60..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori *</label>
+            <select id="zimmetCategory" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white">
+              <option value="Araba / Araç">Araba / Araç</option>
+              <option value="Cep Telefonu">Cep Telefonu</option>
+              <option value="El Aleti / Makine">El Aleti / Makine</option>
+              <option value="Bilgisayar / Tablet">Bilgisayar / Tablet</option>
+              <option value="Diğer Ekipman">Diğer Ekipman</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Seri No / Plaka / IMEI *</label>
+            <input id="zimmetSerial" type="text" required placeholder="Örn: 34 SGH 084, IMEI, SN: HLT-884..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Zimmetli Kişi *</label>
+            <input id="zimmetPerson" type="text" required value="Kendim (Uğur Demirbaş)" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Maliyet / Değer (₺) *</label>
+            <input id="zimmetCost" type="number" step="0.01" required placeholder="0.00" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Fatura No</label>
+            <input id="zimmetInvoiceNo" type="text" placeholder="Örn: GIB2026..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Alım Tarihi</label>
+            <input id="zimmetDate" type="date" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nerede Alındı (Tedarikçi)</label>
+            <input id="zimmetSupplier" type="text" placeholder="Örn: Hilti Türkiye, Troy Apple..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bulunduğu Şantiye</label>
+            <input id="zimmetSite" type="text" value="Kadıköy Şantiyesi" list="siteSuggestions" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Ekipman Fotoğrafı (İsteğe Bağlı)</label>
+          <input id="zimmetPhotoInput" type="file" accept="image/*" class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" data-close-modal="modalZimmet" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">İptal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950">Zimmeti Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: MALZEME EKLE / DÜZENLE -->
+  <div id="modalMalzeme" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="package" class="w-5 h-5 text-amber-400"></i>
+          <h3 id="modalMalzemeTitle" class="text-base font-bold">Şantiye Malzeme &amp; Maliyet Kaydı</h3>
+        </div>
+        <button type="button" data-close-modal="modalMalzeme" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="formMalzeme" class="p-6 space-y-4">
+        <input type="hidden" id="malzemeEditId" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Malzeme Adı *</label>
+            <input id="malzemeName" type="text" required placeholder="Örn: Gürgen Kürek Sapı, Portland Çimento..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori</label>
+            <input id="malzemeCategory" type="text" value="İnşaat &amp; Saha Malzemesi" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Miktar *</label>
+            <input id="malzemeQty" type="number" step="0.01" required value="1" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Birim *</label>
+            <select id="malzemeUnit" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white">
+              <option value="Adet">Adet</option>
+              <option value="Torba">Torba</option>
+              <option value="Kg">Kg</option>
+              <option value="Ton">Ton</option>
+              <option value="Metre">Metre</option>
+              <option value="m²">m²</option>
+              <option value="m³">m³</option>
+              <option value="Paket">Paket</option>
+              <option value="Koli">Koli</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Birim Maliyet (₺) *</label>
+            <input id="malzemeUnitCost" type="number" step="0.01" required placeholder="0.00" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Bulunduğu Şantiye *</label>
+            <input id="malzemeSite" type="text" required value="Kadıköy Şantiyesi" list="siteSuggestions" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Nerede Alındı (Tedarikçi)</label>
+            <input id="malzemeSupplier" type="text" placeholder="Örn: Natura Peyzaj, Akçansa..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Fatura Numarası</label>
+            <input id="malzemeInvoiceNo" type="text" placeholder="Örn: NTR2026000001833" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Alım Tarihi</label>
+            <input id="malzemeDate" type="date" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Açıklama / Not</label>
+          <input id="malzemeNote" type="text" placeholder="İsteğe bağlı açıklama..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" data-close-modal="modalMalzeme" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">İptal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950">Malzemeyi Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ŞANTİYELER ARASI SEÇMELİ TRANSFER -->
+  <div id="modalTransfer" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-indigo-950 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="arrow-left-right" class="w-5 h-5 text-indigo-300"></i>
+          <h3 class="text-base font-bold">Şantiyeler Arası Seçmeli Malzeme Transferi</h3>
+        </div>
+        <button type="button" data-close-modal="modalTransfer" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="formTransfer" class="p-6 space-y-4 max-h-[82vh] overflow-y-auto custom-scrollbar">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Hedef (Alan) Şantiye *</label>
+            <input id="transferTargetSite" type="text" required placeholder="Örn: Üsküdar Konut Projesi" list="siteSuggestions" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Teslim Alan Kişi / Sorumlu</label>
+            <input id="transferReceiver" type="text" placeholder="Örn: Mehmet Kaya (Şantiye Şefi)" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Transfer edilecek malzemeleri seçin ve miktarlarını girin:</label>
+          <div id="transferItemsSelectionList" class="border border-slate-200 rounded-xl divide-y divide-slate-100 max-h-64 overflow-y-auto custom-scrollbar bg-slate-50"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Transfer Notu</label>
+          <input id="transferNote" type="text" placeholder="Örn: Peyzaj imalatı için Kadıköy stoğundan aktarıldı" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+          <button type="button" data-close-modal="modalTransfer" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">İptal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white">Transferi Tamamla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: TELEFON & PC KURULUM (PWA) VE EŞİTLEME -->
+  <div id="modalPwaInstall" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="smartphone" class="w-5 h-5 text-blue-400"></i>
+          <h3 class="text-base font-bold">Telefon &amp; Bilgisayar Web Uygulaması Kurulumu ve Eşitleme</h3>
+        </div>
+        <button type="button" data-close-modal="modalPwaInstall" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5 max-h-[82vh] overflow-y-auto custom-scrollbar">
+        <div id="pwaInstallBannerBox" class="p-4 rounded-xl bg-blue-600 text-white flex flex-wrap items-center justify-between gap-3 shadow-sm">
+          <div>
+            <h4 class="text-sm font-bold flex items-center gap-1.5">
+              <i data-lucide="download-cloud" class="w-4 h-4"></i>
+              <span>Ana Ekrana Uygulama Olarak Yükle (PWA)</span>
+            </h4>
+            <p class="text-xs text-blue-100 mt-0.5">Telefonunuzda ve bilgisayarınızda adres çubuğu olmadan tam ekran uygulama gibi açılır.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnTriggerNativePwaInstall" type="button" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-white text-blue-700 hover:bg-blue-50 transition shadow-xs">
+              Uygulamayı Cihaza Kur
+            </button>
+            <button id="btnDownloadStandaloneHtml" type="button" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 transition shadow-xs">
+              Tek Dosya Web Uygulamasını İndir (.html)
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <h4 class="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-600"></i>
+              1. Telefon ve Bilgisayar Arasında Otomatik Canlı Eşitleme
+            </h4>
+            <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-900 cursor-pointer">
+              <input id="chkAutoCloudSync" type="checkbox" checked class="rounded border-emerald-400 text-emerald-600" />
+              <span>Her Kayıtta Otomatik Eşitle</span>
+            </label>
+          </div>
+          <p class="text-xs text-slate-600">
+            <strong>santiye-stok</strong> Firebase projeniz varsayılan olarak tanımlıdır. Diğer cihazınıza <strong>Cihaz Eşleştirme Kodunu</strong> yapıştırarak aynı veritabanına bağlayabilirsiniz:
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnCopyPairingCode" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+              <span>Bu Cihazın Eşleştirme Kodunu Kopyala</span>
+            </button>
+            <button id="btnOpenFbFromPwa" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300">
+              <i data-lucide="settings" class="w-4 h-4"></i>
+              <span>Firebase Proje Bilgilerini Gör / Düzenle</span>
+            </button>
+          </div>
+          <div class="pt-2 border-t border-emerald-200/70 flex gap-2">
+            <input id="inputPastePairingCode" type="text" placeholder="Diğer cihazdan kopyaladığınız SANTIYE-SYNC:... kodunu buraya yapıştırın" class="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white outline-none font-mono" />
+            <button id="btnApplyPairingCode" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white whitespace-nowrap">
+              Kodu Bağla
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: FIREBASE BAĞLANTISI, GEMINI OCR & YEDEKLEME -->
+  <div id="modalFirebase" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="database" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="text-base font-bold">Firebase (Firestore) Bağlantısı, Gemini OCR &amp; Veri Yedekleme</h3>
+        </div>
+        <button type="button" data-close-modal="modalFirebase" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5 max-h-[82vh] overflow-y-auto custom-scrollbar">
+        <!-- 1. JSON Yedekleme -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+          <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">1. Anlık Veri Yedekleme &amp; Geri Yükleme (JSON / Excel)</h4>
+          <p class="text-xs text-slate-600">Tüm zimmet, şantiye malzemeleri, transferler ve fatura fotoğraflarınızı tek dosya olarak bilgisayarınıza/telefonunuza yedekleyebilir veya başka bir cihaza aktarabilirsiniz.</p>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnDownloadJsonBackup" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Tam Yedek İndir (.json)</span>
+            </button>
+            <label for="inputRestoreJsonBackup" class="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300">
+              <i data-lucide="upload" class="w-4 h-4"></i>
+              <span>Yedek Dosyası Yükle (.json)</span>
+              <input id="inputRestoreJsonBackup" type="file" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Firebase Firestore -->
+        <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
+          <h4 class="text-xs font-bold text-amber-950 uppercase tracking-wider">2. Firebase Cloud Firestore Bağlantısı (santiye-stok)</h4>
+          <p class="text-xs text-slate-600">
+            Firebase Console'daki <strong>santiye-stok</strong> projenizin Project ID ve Web API Key bilgileri gömülüdür. Verileriniz <code>santiye_uygulama/ana_veri</code> belgesine senkronize edilir.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Firebase Project ID</label>
+              <input id="fbProjectIdInput" type="text" value="santiye-stok" placeholder="Örn: santiye-stok" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none font-mono" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Firebase Web API Key</label>
+              <input id="fbApiKeyInput" type="text" value="AIzaSyDpaR2G5IrXU30KVQGKgX0hrHC_s-Mc6Hs" placeholder="AIzaSy..." class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none font-mono" />
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button id="btnPushFirestore" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950">
+              <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+              <span>Kaydet ve Firestore'a Gönder</span>
+            </button>
+            <button id="btnPullFirestore" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
+              <i data-lucide="cloud-download" class="w-4 h-4"></i>
+              <span>Firestore'dan Verileri Çek</span>
+            </button>
+            <button id="btnCopyFirestoreRules" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300">
+              <i data-lucide="shield" class="w-4 h-4"></i>
+              <span>Firestore İzin Kuralını Kopyala</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Gemini API OCR -->
+        <div class="p-4 rounded-xl bg-blue-50/50 border border-blue-200 space-y-3">
+          <h4 class="text-xs font-bold text-blue-950 uppercase tracking-wider">3. Gelişmiş Yapay Zeka Çoklu Satır Fatura Okuma (İsteğe Bağlı Gemini API Key)</h4>
+          <p class="text-xs text-slate-600">
+            Uygulama varsayılan olarak tarayıcı içi OCR (Tesseract.js) ile faturaları ücretsiz tarar. İsterseniz AI Studio API anahtarınızı girerek çok kalemli fatura tablolarını Gemini Flash ile satır satır otomatik okutabilirsiniz.
+          </p>
+          <div class="flex gap-2">
+            <input id="geminiApiKeyInput" type="password" placeholder="AI Studio Gemini API Key (AIzaSy...)" class="flex-1 px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white outline-none" />
+            <button id="btnSaveGeminiKey" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">Kaydet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: FATURA LIGHTBOX (BÜYÜK GÖRSEL ÖNİZLEME) -->
+  <div id="modalLightbox" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl">
+      <div class="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
+        <h3 id="lightboxTitle" class="text-sm font-bold font-mono">Fatura Belgesi</h3>
+        <button type="button" data-close-modal="modalLightbox" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-4 bg-slate-900 flex items-center justify-center max-h-[80vh] overflow-auto">
+        <img id="lightboxImg" src="" alt="Fatura Görseli" class="max-h-[74vh] w-auto object-contain rounded" />
+      </div>
+    </div>
+  </div>
+
+  <datalist id="siteSuggestions">
+    <option value="Kadıköy Şantiyesi"></option>
+    <option value="Üsküdar Konut Projesi"></option>
+    <option value="Ataşehir Şantiyesi"></option>
+    <option value="Merkez Depo"></option>
+  </datalist>
+
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+  <script>
+    // =========================================================================
+    // VARSAYILAN FIREBASE & UYGULAMA AYARLARI (santiye-stok)
+    // =========================================================================
+    const DEFAULT_FB_CONFIG = {
+      projectId: 'santiye-stok',
+      apiKey: 'AIzaSyDpaR2G5IrXU30KVQGKgX0hrHC_s-Mc6Hs',
+      collection: 'santiye_uygulama',
+      docId: 'ana_veri'
+    };
+
+    const STORAGE_KEY = 'santiye_stok_v2_state';
+    const CONFIG_KEY = 'santiye_stok_v2_config';
+
+    function makeInvoiceSvgDataUri(invoiceNo, supplier, dateStr, summaryText, totalFormatted) {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="760" viewBox="0 0 600 760">
+        <rect width="600" height="760" fill="#f8fafc"/>
+        <rect x="24" y="24" width="552" height="712" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+        <rect x="24" y="24" width="552" height="90" rx="12" fill="#0f172a"/>
+        <text x="50" y="65" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="bold" fill="#f59e0b">e-ARŞİV FATURA BELGESİ</text>
+        <text x="50" y="92" font-family="monospace" font-size="14" fill="#e2e8f0">Fatura No: ${invoiceNo}</text>
+        <text x="50" y="160" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="bold" fill="#64748b">SATICI / ALINDIĞI YER:</text>
+        <text x="50" y="185" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="bold" fill="#0f172a">${supplier.replace(/&/g, '&amp;')}</text>
+        <text x="380" y="160" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="bold" fill="#64748b">FATURA TARİHİ:</text>
+        <text x="380" y="185" font-family="monospace" font-size="17" font-weight="bold" fill="#0f172a">${dateStr}</text>
+        <line x1="50" y1="220" x2="550" y2="220" stroke="#e2e8f0" stroke-width="2"/>
+        <rect x="50" y="245" width="500" height="40" rx="6" fill="#f1f5f9"/>
+        <text x="65" y="270" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="bold" fill="#334155">FATURA KALEMLERİ ÖZETİ</text>
+        <text x="440" y="270" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="bold" fill="#334155">TOPLAM</text>
+        <text x="65" y="330" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="bold" fill="#0f172a">${summaryText.slice(0, 42).replace(/&/g, '&amp;')}</text>
+        <text x="430" y="330" font-family="monospace" font-size="15" font-weight="bold" fill="#0f172a">${totalFormatted}</text>
+        <line x1="50" y1="365" x2="550" y2="365" stroke="#e2e8f0" stroke-width="1"/>
+        <rect x="280" y="420" width="270" height="90" rx="10" fill="#fef3c7" stroke="#f59e0b"/>
+        <text x="300" y="452" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="bold" fill="#92400e">GENEL TOPLAM (KDV DAHİL)</text>
+        <text x="300" y="488" font-family="monospace" font-size="22" font-weight="bold" fill="#78350f">${totalFormatted}</text>
+        <rect x="50" y="560" width="500" height="120" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+        <text x="70" y="592" font-family="monospace" font-size="13" fill="#475569">Muhasebe Referans Kodu: ${invoiceNo}</text>
+        <text x="70" y="618" font-family="Inter, Arial, sans-serif" font-size="13" fill="#475569">Durum: Çoklu Kalem Olarak Arşive Kaydedildi</text>
+        <text x="70" y="644" font-family="Inter, Arial, sans-serif" font-size="12" fill="#64748b">Bu belge numarası ile muhasebeden orijinal e-Fatura sorgulanabilir.</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function getInitialSeedState() {
+      return {
+        updatedAt: new Date().toISOString(),
+        zimmetler: [
+          {
+            id: 'ZIM-101',
+            name: 'Ford Transit Courier 1.5 EcoBlue (Şantiye Binek/Kamyonet)',
+            category: 'Araba / Araç',
+            serial: '34 SGH 084',
+            person: 'Kendim (Uğur Demirbaş)',
+            site: 'Kadıköy Şantiyesi',
+            supplier: 'Ford Otosan Yetkili Bayi',
+            date: '2026-09-15',
+            invoiceNo: 'FRD2026000019204',
+            cost: 845000,
+            photo: ''
+          },
+          {
+            id: 'ZIM-102',
+            name: 'Apple iPhone 15 128GB Siyah (Şantiye Hattı)',
+            category: 'Cep Telefonu',
+            serial: 'IMEI: 35890112948102',
+            person: 'Kendim (Uğur Demirbaş)',
+            site: 'Kadıköy Şantiyesi',
+            supplier: 'Troy Apple Yetkili Satıcı (Kadıköy)',
+            date: '2026-11-05',
+            invoiceNo: 'GIB2026000104992',
+            cost: 58999,
+            photo: ''
+          },
+          {
+            id: 'ZIM-103',
+            name: 'Hilti TE 60-ATC/AVR Kırıcı Delici & Uç Seti',
+            category: 'El Aleti / Makine',
+            serial: 'SN: HLT-8849201',
+            person: 'Kendim (Uğur Demirbaş)',
+            site: 'Kadıköy Şantiyesi',
+            supplier: 'Hilti Türkiye (Ümraniye Mağaza)',
+            date: '2026-10-18',
+            invoiceNo: 'GIB2026000084120',
+            cost: 42500,
+            photo: ''
+          },
+          {
+            id: 'ZIM-104',
+            name: 'Bosch Professional GSR 18V-55 Çift Akülü Vidalama',
+            category: 'El Aleti / Makine',
+            serial: 'SN: BSC-402918',
+            person: 'Mehmet Kaya (Şantiye Şefi)',
+            site: 'Üsküdar Konut Projesi',
+            supplier: 'Hepsiburada (Bosch Resmi Satıcı)',
+            date: '2026-10-25',
+            invoiceNo: 'GIB2026000089411',
+            cost: 9850,
+            photo: ''
+          }
+        ],
+        malzemeler: [
+          {
+            id: 'MLZ-201',
+            name: 'Gürgen Kürek Sapı 1. Sınıf',
+            category: 'Peyzaj & Bahçe',
+            site: 'Kadıköy Şantiyesi',
+            qty: 25,
+            unit: 'Adet',
+            unitCost: 95,
+            supplier: 'Natura Peyzaj & Yapı Malzemeleri',
+            date: '2026-11-12',
+            invoiceNo: 'NTR2026000001833',
+            note: 'NTR2026000001833 nolu çoklu faturanın 1. kalemi.'
+          },
+          {
+            id: 'MLZ-202',
+            name: 'Çelik İnşaat & Bahçe Küreği (Ağzı Güçlendirilmiş)',
+            category: 'Peyzaj & Bahçe',
+            site: 'Kadıköy Şantiyesi',
+            qty: 20,
+            unit: 'Adet',
+            unitCost: 340,
+            supplier: 'Natura Peyzaj & Yapı Malzemeleri',
+            date: '2026-11-12',
+            invoiceNo: 'NTR2026000001833',
+            note: 'NTR2026000001833 nolu çoklu faturanın 2. kalemi.'
+          },
+          {
+            id: 'MLZ-203',
+            name: 'Çift Tekerlekli Galvaniz El Arabası',
+            category: 'El Aletleri & Sarf',
+            site: 'Kadıköy Şantiyesi',
+            qty: 5,
+            unit: 'Adet',
+            unitCost: 1855,
+            supplier: 'Natura Peyzaj & Yapı Malzemeleri',
+            date: '2026-11-12',
+            invoiceNo: 'NTR2026000001833',
+            note: 'NTR2026000001833 nolu çoklu faturanın 3. kalemi.'
+          },
+          {
+            id: 'MLZ-204',
+            name: 'Portland Çimento CEM I 42.5 R (50 Kg)',
+            category: 'İnşaat & Kaba Yapı',
+            site: 'Üsküdar Konut Projesi',
+            qty: 120,
+            unit: 'Torba',
+            unitCost: 280,
+            supplier: 'Akçansa Yapı Malzemeleri Depo',
+            date: '2026-11-09',
+            invoiceNo: 'GIB2026000112008',
+            note: 'Blok A şap ve sıva imalatı için paletli teslim alındı.'
+          }
+        ],
+        transferler: [
+          {
+            id: 'TRF-501',
+            date: '2026-11-12',
+            fromSite: 'Kadıköy Şantiyesi',
+            toSite: 'Üsküdar Konut Projesi',
+            itemsSummary: '5 Adet Gürgen Kürek Sapı (Birim: ₺95,00)',
+            invoiceNo: 'NTR2026000001833',
+            totalCost: 475,
+            receiver: 'Mehmet Kaya (Şantiye Şefi)',
+            note: 'Üsküdar şantiyesi peyzaj ekibi için Kadıköy stoğundan aktarıldı.'
+          }
+        ],
+        faturalar: [
+          {
+            id: 'FAT-301',
+            invoiceNo: 'NTR2026000001833',
+            supplier: 'Natura Peyzaj & Yapı Malzemeleri',
+            date: '2026-11-12',
+            site: 'Kadıköy Şantiyesi',
+            targetType: 'Çoklu Şantiye Malzemesi (3 Kalem)',
+            title: '3 Kalem: Gürgen Kürek Sapı (25 Adet), Çelik Kürek (20 Adet), El Arabası (5 Adet)',
+            total: 18450,
+            items: [
+              { name: 'Gürgen Kürek Sapı 1. Sınıf', qty: 25, unit: 'Adet', unitCost: 95 },
+              { name: 'Çelik İnşaat & Bahçe Küreği (Ağzı Güçlendirilmiş)', qty: 20, unit: 'Adet', unitCost: 340 },
+              { name: 'Çift Tekerlekli Galvaniz El Arabası', qty: 5, unit: 'Adet', unitCost: 1855 }
+            ],
+            photo: makeInvoiceSvgDataUri('NTR2026000001833', 'Natura Peyzaj & Yapı Malzemeleri', '2026-11-12', 'Kürek Sapı, Çelik Kürek, El Arabası', '₺18.450,00')
+          },
+          {
+            id: 'FAT-302',
+            invoiceNo: 'GIB2026000104992',
+            supplier: 'Troy Apple Yetkili Satıcı (Kadıköy)',
+            date: '2026-11-05',
+            site: 'Kadıköy Şantiyesi',
+            targetType: 'Zimmet (Telefon)',
+            title: 'Apple iPhone 15 128GB Siyah (Saha İletişim Telefonu)',
+            total: 58999,
+            items: [
+              { name: 'Apple iPhone 15 128GB Siyah (Şantiye Hattı)', qty: 1, unit: 'Adet', unitCost: 58999 }
+            ],
+            photo: makeInvoiceSvgDataUri('GIB2026000104992', 'Troy Apple Yetkili Satıcı (Kadıköy)', '2026-11-05', 'iPhone 15 128GB Saha İletişim Telefonu', '₺58.999,00')
+          },
+          {
+            id: 'FAT-303',
+            invoiceNo: 'GIB2026000084120',
+            supplier: 'Hilti Türkiye (Ümraniye Mağaza)',
+            date: '2026-10-18',
+            site: 'Kadıköy Şantiyesi',
+            targetType: 'Zimmet (El Aleti)',
+            title: 'Hilti TE 60-ATC/AVR Kırıcı Delici & Uç Seti',
+            total: 42500,
+            items: [
+              { name: 'Hilti TE 60-ATC/AVR Kırıcı Delici & Uç Seti', qty: 1, unit: 'Adet', unitCost: 42500 }
+            ],
+            photo: makeInvoiceSvgDataUri('GIB2026000084120', 'Hilti Türkiye (Ümraniye Mağaza)', '2026-10-18', 'Hilti TE 60-ATC/AVR Kırıcı Delici', '₺42.500,00')
+          },
+          {
+            id: 'FAT-304',
+            invoiceNo: 'GIB2026000089411',
+            supplier: 'Hepsiburada (Bosch Resmi Satıcı)',
+            date: '2026-10-25',
+            site: 'Üsküdar Konut Projesi',
+            targetType: 'Zimmet (El Aleti)',
+            title: 'Bosch GSR 18V-55 Çift Akülü Vidalama Seti',
+            total: 9850,
+            items: [
+              { name: 'Bosch Professional GSR 18V-55 Çift Akülü Vidalama', qty: 1, unit: 'Adet', unitCost: 9850 }
+            ],
+            photo: makeInvoiceSvgDataUri('GIB2026000089411', 'Hepsiburada (Bosch Resmi Satıcı)', '2026-10-25', 'Bosch GSR 18V-55 Çift Akülü Vidalama Seti', '₺9.850,00')
+          }
+        ]
+      };
+    }
+
+    let appState = loadLocalState();
+    let appConfig = loadConfig();
+    let currentModalPhotoDataUrl = '';
+    let deferredPwaPrompt = null;
+
+    function loadConfig() {
+      try {
+        const raw = localStorage.getItem(CONFIG_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            projectId: parsed.projectId || DEFAULT_FB_CONFIG.projectId,
+            apiKey: parsed.apiKey || DEFAULT_FB_CONFIG.apiKey,
+            geminiKey: parsed.geminiKey || '',
+            autoSync: parsed.autoSync !== false
+          };
+        }
+      } catch (e) {}
+      return {
+        projectId: DEFAULT_FB_CONFIG.projectId,
+        apiKey: DEFAULT_FB_CONFIG.apiKey,
+        geminiKey: '',
+        autoSync: true
+      };
+    }
+
+    function saveConfig() {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(appConfig));
+    }
+
+    function loadLocalState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.zimmetler) && Array.isArray(parsed.malzemeler)) {
+            return parsed;
+          }
+        }
+      } catch (e) {}
+      const seed = getInitialSeedState();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+
+    function saveState(triggerCloud = true) {
+      appState.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      renderAll();
+      if (triggerCloud && appConfig.autoSync) {
+        pushToFirestore(true);
+      }
+    }
+
+    // =========================================================================
+    // YARDIMCI FONKSİYONLAR
+    // =========================================================================
+    function formatCurrency(val) {
+      const num = Number(val) || 0;
+      return '₺' + num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatDateTR(isoStr) {
+      if (!isoStr) return '-';
+      const parts = isoStr.split('-');
+      if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+      return isoStr;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const el = document.createElement('div');
+      const colors = type === 'error'
+        ? 'bg-rose-900 text-white border-rose-700'
+        : type === 'info'
+        ? 'bg-slate-900 text-white border-slate-700'
+        : 'bg-emerald-900 text-white border-emerald-700';
+      el.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-lg text-xs font-semibold flex items-center justify-between gap-3 transition-all ${colors}`;
+      el.innerHTML = `<span>${escapeHtml(msg)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3200);
+    }
+
+    function setSyncBadge(status, text) {
+      const dot = document.getElementById('syncDot');
+      const txt = document.getElementById('syncText');
+      if (!dot || !txt) return;
+      txt.textContent = text;
+      if (status === 'syncing') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping';
+      } else if (status === 'error') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-rose-400';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+      }
+    }
+
+    // =========================================================================
+    // FIREBASE FIRESTORE BULUT SENKRONİZASYONU (REST API)
+    // =========================================================================
+    function getFirestoreUrl() {
+      const pid = (appConfig.projectId || DEFAULT_FB_CONFIG.projectId).trim();
+      const key = (appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey).trim();
+      return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(pid)}/databases/(default)/documents/${DEFAULT_FB_CONFIG.collection}/${DEFAULT_FB_CONFIG.docId}?key=${encodeURIComponent(key)}`;
+    }
+
+    async function pushToFirestore(silent = false) {
+      try {
+        setSyncBadge('syncing', 'Eşitleniyor...');
+        const payload = {
+          fields: {
+            jsonPayload: { stringValue: JSON.stringify(appState) },
+            updatedAt: { stringValue: appState.updatedAt || new Date().toISOString() }
+          }
+        };
+        const res = await fetch(getFirestoreUrl(), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData?.error?.message || `HTTP ${res.status}`;
+          setSyncBadge('error', 'Eşitleme İzni Bekleniyor');
+          if (!silent) {
+            showToast(`Firestore bağlantı uyarısı: ${msg}. Firestore Rules sekmesinden 'allow read, write: if true;' kuralını yayınlayın.`, 'error');
+          }
+          return false;
+        }
+        setSyncBadge('ok', `${appConfig.projectId} Eşitlendi`);
+        if (!silent) showToast('Veriler Firebase Firestore (santiye-stok) bulutuna başarıyla kaydedildi!');
+        return true;
+      } catch (err) {
+        setSyncBadge('error', 'Çevrimdışı (Yerel Kayıt)');
+        if (!silent) showToast('İnternet/Firestore bağlantısı kurulamadı, veriler cihazda güvende.', 'error');
+        return false;
+      }
+    }
+
+    async function pullFromFirestore(silent = false) {
+      try {
+        setSyncBadge('syncing', 'Buluttan Çekiliyor...');
+        const res = await fetch(getFirestoreUrl(), { method: 'GET' });
+        if (res.status === 404) {
+          // İlk kez oluşturuluyorsa mevcut veriyi gönder
+          await pushToFirestore(true);
+          return;
+        }
+        if (!res.ok) {
+          setSyncBadge('error', 'Firestore Kural İzni Gerekli');
+          if (!silent) showToast('Firestore okuma izni kapalı. Rules sekmesinden allow read, write: if true; yapın.', 'error');
+          return;
+        }
+        const doc = await res.json();
+        const rawJson = doc?.fields?.jsonPayload?.stringValue;
+        if (rawJson) {
+          const remoteState = JSON.parse(rawJson);
+          if (remoteState && Array.isArray(remoteState.zimmetler)) {
+            appState = remoteState;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            renderAll();
+            setSyncBadge('ok', `${appConfig.projectId} Eşitlendi`);
+            if (!silent) showToast('Firebase Firestore bulut verileri başarıyla yüklendi!');
+          }
+        }
+      } catch (err) {
+        setSyncBadge('error', 'Çevrimdışı Mod');
+        if (!silent) showToast('Buluttan veri çekilemedi.', 'error');
+      }
+    }
+
+    // =========================================================================
+    // ARAYÜZ RENDER FONKSİYONLARI
+    // =========================================================================
+    function renderAll() {
+      renderStatsAndBadges();
+      renderGlobalSearch();
+      renderDashboardRecent();
+      renderZimmetler();
+      renderMalzemeler();
+      renderTransferler();
+      renderFaturalar();
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderStatsAndBadges() {
+      const zimmetCount = appState.zimmetler.length;
+      const malzemeCount = appState.malzemeler.length;
+      const transferCount = appState.transferler.length;
+      const faturaCount = appState.faturalar.length;
+
+      document.getElementById('badgeZimmetCount').textContent = zimmetCount;
+      document.getElementById('badgeMalzemeCount').textContent = malzemeCount;
+      document.getElementById('badgeTransferCount').textContent = transferCount;
+      document.getElementById('badgeFaturaCount').textContent = faturaCount;
+
+      const zimmetTotal = appState.zimmetler.reduce((acc, z) => acc + (Number(z.cost) || 0), 0);
+      const malzemeTotal = appState.malzemeler.reduce((acc, m) => acc + (Number(m.qty) || 0) * (Number(m.unitCost) || 0), 0);
+      const faturaTotal = appState.faturalar.reduce((acc, f) => acc + (Number(f.total) || 0), 0);
+
+      const cars = appState.zimmetler.filter(z => z.category.includes('Araba')).length;
+      const phones = appState.zimmetler.filter(z => z.category.includes('Telefon')).length;
+      const tools = zimmetCount - cars - phones;
+
+      document.getElementById('statZimmetCount').textContent = `${zimmetCount} Adet`;
+      document.getElementById('statZimmetBreakdown').textContent = `${cars} Araba • ${phones} Telefon • ${tools} El Aleti`;
+      document.getElementById('statZimmetValue').textContent = formatCurrency(zimmetTotal);
+      document.getElementById('statMalzemeValue').textContent = formatCurrency(malzemeTotal);
+      document.getElementById('statMalzemeCount').textContent = `${malzemeCount} ayrı malzeme kalemi`;
+      document.getElementById('statFaturaCount').textContent = `${faturaCount} Belge`;
+      document.getElementById('statFaturaValue').textContent = `Fatura Toplamı: ${formatCurrency(faturaTotal)}`;
+    }
+
+    function renderGlobalSearch() {
+      const q = (document.getElementById('globalSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const container = document.getElementById('globalSearchResults');
+      if (!container) return;
+
+      const results = [];
+      appState.faturalar.forEach(f => {
+        const hay = `${f.invoiceNo} ${f.supplier} ${f.title} ${f.site}`.toLocaleLowerCase('tr-TR');
+        if (!q || hay.includes(q)) {
+          results.push({
+            type: 'FATURA',
+            badge: 'Fatura Belgesi',
+            badgeClass: 'bg-amber-100 text-amber-900',
+            title: `${f.invoiceNo} — ${f.title}`,
+            sub: `${f.supplier} • ${formatDateTR(f.date)} • ${f.site}`,
+            cost: formatCurrency(f.total),
+            invoiceNo: f.invoiceNo,
+            faturaId: f.id
+          });
+        }
+      });
+
+      appState.zimmetler.forEach(z => {
+        const hay = `${z.name} ${z.serial} ${z.person} ${z.supplier} ${z.invoiceNo} ${z.site}`.toLocaleLowerCase('tr-TR');
+        if (!q || hay.includes(q)) {
+          results.push({
+            type: 'ZIMMET',
+            badge: `Zimmet (${z.category})`,
+            badgeClass: 'bg-blue-100 text-blue-900',
+            title: `${z.name} (${z.serial})`,
+            sub: `Zimmetli: ${z.person} • ${z.supplier || '-'} • ${formatDateTR(z.date)}`,
+            cost: formatCurrency(z.cost),
+            invoiceNo: z.invoiceNo
+          });
+        }
+      });
+
+      appState.malzemeler.forEach(m => {
+        const hay = `${m.name} ${m.category} ${m.site} ${m.supplier} ${m.invoiceNo}`.toLocaleLowerCase('tr-TR');
+        if (!q || hay.includes(q)) {
+          results.push({
+            type: 'MALZEME',
+            badge: `Stok (${m.site})`,
+            badgeClass: 'bg-emerald-100 text-emerald-900',
+            title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(m.unitCost)})`,
+            sub: `Alındığı Yer: ${m.supplier || '-'} • ${formatDateTR(m.date)}`,
+            cost: formatCurrency((Number(m.qty) || 0) * (Number(m.unitCost) || 0)),
+            invoiceNo: m.invoiceNo
+          });
+        }
+      });
+
+      if (results.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Aramanızla eşleşen fatura, seri no veya malzeme bulunamadı.</div>`;
+        return;
+      }
+
+      container.innerHTML = results.slice(0, 8).map(r => `
+        <div class="p-2.5 rounded-xl border border-slate-200 hover:border-amber-400 bg-slate-50/70 flex flex-wrap items-center justify-between gap-2 transition">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.badgeClass}">${escapeHtml(r.badge)}</span>
+              <span class="text-xs font-bold text-slate-900 truncate">${escapeHtml(r.title)}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5 truncate">${escapeHtml(r.sub)}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-900">${r.cost}</span>
+            ${r.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(r.invoiceNo)}" class="px-2 py-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-[11px] font-mono font-semibold text-slate-700" title="Fatura No Kopyala">${escapeHtml(r.invoiceNo)}</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderDashboardRecent() {
+      const tbody = document.getElementById('dashboardRecentTableBody');
+      if (!tbody) return;
+      const combined = [
+        ...appState.malzemeler.map(m => ({
+          title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(m.unitCost)})`,
+          sub: `Şantiye: ${m.site}`,
+          supplier: m.supplier || '-',
+          date: m.date || '',
+          invoiceNo: m.invoiceNo || '-',
+          cost: (Number(m.qty) || 0) * (Number(m.unitCost) || 0)
+        })),
+        ...appState.zimmetler.map(z => ({
+          title: `${z.name} (${z.serial})`,
+          sub: `Zimmet → ${z.person}`,
+          supplier: z.supplier || '-',
+          date: z.date || '',
+          invoiceNo: z.invoiceNo || '-',
+          cost: Number(z.cost) || 0
+        }))
+      ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      tbody.innerHTML = combined.map(item => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${escapeHtml(item.title)}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(item.sub)}</div>
+          </td>
+          <td class="py-3 px-4 font-medium text-slate-700">${escapeHtml(item.supplier)}</td>
+          <td class="py-3 px-4 text-slate-600">${formatDateTR(item.date)}</td>
+          <td class="py-3 px-4">
+            <button type="button" data-copy-invoice="${escapeHtml(item.invoiceNo)}" class="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-mono text-xs font-semibold hover:bg-amber-100">
+              ${escapeHtml(item.invoiceNo)}
+            </button>
+          </td>
+          <td class="py-3 px-4 text-right font-bold text-slate-900">${formatCurrency(item.cost)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderZimmetler() {
+      const personSelect = document.getElementById('filterZimmetPerson');
+      if (personSelect) {
+        const currentVal = personSelect.value;
+        const persons = [...new Set(appState.zimmetler.map(z => z.person).filter(Boolean))];
+        personSelect.innerHTML = `<option value="ALL">Tüm Kişiler (${persons.length})</option>` +
+          persons.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+        if (persons.includes(currentVal)) personSelect.value = currentVal;
+      }
+
+      const q = (document.getElementById('zimmetSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const cat = document.getElementById('filterZimmetCategory')?.value || 'ALL';
+      const per = document.getElementById('filterZimmetPerson')?.value || 'ALL';
+
+      const filtered = appState.zimmetler.filter(z => {
+        if (cat !== 'ALL' && z.category !== cat) return false;
+        if (per !== 'ALL' && z.person !== per) return false;
+        if (q) {
+          const hay = `${z.name} ${z.serial} ${z.person} ${z.supplier} ${z.invoiceNo} ${z.site}`.toLocaleLowerCase('tr-TR');
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const grid = document.getElementById('zimmetCardsGrid');
+      if (!grid) return;
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">Kayıtlı zimmet bulunamadı.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(z => `
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col justify-between space-y-3">
+          <div class="space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">${escapeHtml(z.category)}</span>
+              <span class="text-sm font-extrabold text-slate-900">${formatCurrency(z.cost)}</span>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">${escapeHtml(z.name)}</h3>
+            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs space-y-1">
+              <div class="flex justify-between"><span class="text-slate-400">Seri No / Plaka:</span><span class="font-mono font-bold text-slate-900">${escapeHtml(z.serial)}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Zimmetli Kişi:</span><span class="font-semibold text-emerald-800">${escapeHtml(z.person)}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Şantiye:</span><span class="font-medium text-slate-700">${escapeHtml(z.site || '-')}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Alındığı Yer:</span><span class="font-medium text-slate-700">${escapeHtml(z.supplier || '-')}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Tarih / Fatura:</span><span class="font-mono text-slate-700">${formatDateTR(z.date)} • ${escapeHtml(z.invoiceNo || '-')}</span></div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+            ${z.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(z.invoiceNo)}" class="text-xs font-mono font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded">Fatura No Kopyala</button>` : '<span></span>'}
+            <div class="flex items-center gap-1">
+              <button type="button" data-edit-zimmet="${escapeHtml(z.id)}" class="px-2.5 py-1 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Düzenle</button>
+              <button type="button" data-delete-zimmet="${escapeHtml(z.id)}" class="px-2.5 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMalzemeler() {
+      const siteSelect = document.getElementById('filterMalzemeSite');
+      const catSelect = document.getElementById('filterMalzemeCategory');
+      if (siteSelect) {
+        const cur = siteSelect.value;
+        const sites = [...new Set(appState.malzemeler.map(m => m.site).filter(Boolean))];
+        siteSelect.innerHTML = `<option value="ALL">Tüm Şantiyeler (${sites.length})</option>` +
+          sites.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        if (sites.includes(cur)) siteSelect.value = cur;
+      }
+      if (catSelect) {
+        const cur = catSelect.value;
+        const cats = [...new Set(appState.malzemeler.map(m => m.category).filter(Boolean))];
+        catSelect.innerHTML = `<option value="ALL">Tüm Kategoriler (${cats.length})</option>` +
+          cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cats.includes(cur)) catSelect.value = cur;
+      }
+
+      const q = (document.getElementById('malzemeSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const siteFilter = siteSelect?.value || 'ALL';
+      const catFilter = catSelect?.value || 'ALL';
+
+      const filtered = appState.malzemeler.filter(m => {
+        if (siteFilter !== 'ALL' && m.site !== siteFilter) return false;
+        if (catFilter !== 'ALL' && m.category !== catFilter) return false;
+        if (q) {
+          const hay = `${m.name} ${m.category} ${m.site} ${m.supplier} ${m.invoiceNo} ${m.note}`.toLocaleLowerCase('tr-TR');
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('malzemeTableBody');
+      if (!tbody) return;
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Kayıtlı şantiye malzemesi bulunamadı.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(m => {
+        const total = (Number(m.qty) || 0) * (Number(m.unitCost) || 0);
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-3 px-3 text-center">
+              <input type="checkbox" class="malzeme-row-chk rounded border-slate-300 text-indigo-600" value="${escapeHtml(m.id)}" />
+            </td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900">${escapeHtml(m.name)}</div>
+              <div class="text-[11px] text-slate-500">${escapeHtml(m.category)} ${m.note ? '• ' + escapeHtml(m.note) : ''}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(m.site)}</span>
+            </td>
+            <td class="py-3 px-4 text-center">
+              <div class="inline-flex items-center gap-1 bg-slate-100 rounded-lg px-1.5 py-0.5">
+                <button type="button" data-qty-delta="-1" data-id="${escapeHtml(m.id)}" class="px-1.5 font-bold text-slate-600 hover:text-slate-900">-</button>
+                <span class="font-bold text-slate-900 px-1">${m.qty} ${escapeHtml(m.unit)}</span>
+                <button type="button" data-qty-delta="1" data-id="${escapeHtml(m.id)}" class="px-1.5 font-bold text-slate-600 hover:text-slate-900">+</button>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-right font-medium text-slate-700">${formatCurrency(m.unitCost)}</td>
+            <td class="py-3 px-4 text-right font-bold text-slate-900">${formatCurrency(total)}</td>
+            <td class="py-3 px-4">
+              <div class="font-medium text-slate-800">${escapeHtml(m.supplier || '-')}</div>
+              <div class="text-[11px] text-slate-500">${formatDateTR(m.date)}</div>
+            </td>
+            <td class="py-3 px-4">
+              ${m.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(m.invoiceNo)}" class="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-mono text-xs font-semibold">${escapeHtml(m.invoiceNo)}</button>` : '-'}
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+              <button type="button" data-quick-transfer="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100">Şantiyeye Geçir</button>
+              <button type="button" data-edit-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Düzenle</button>
+              <button type="button" data-delete-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderTransferler() {
+      const tbody = document.getElementById('transferTableBody');
+      if (!tbody) return;
+      if (appState.transferler.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Henüz şantiyeler arası transfer kaydı yok.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = appState.transferler.map(t => `
+        <tr class="hover:bg-slate-50">
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${formatDateTR(t.date)}</div>
+            <div class="text-[11px] font-mono text-slate-500">${escapeHtml(t.id)}</div>
+          </td>
+          <td class="py-3 px-4 font-semibold text-slate-700">${escapeHtml(t.fromSite)}</td>
+          <td class="py-3 px-4 font-bold text-indigo-700">${escapeHtml(t.toSite)}</td>
+          <td class="py-3 px-4 font-medium text-slate-900">${escapeHtml(t.itemsSummary)}</td>
+          <td class="py-3 px-4 font-mono text-xs text-amber-900">${escapeHtml(t.invoiceNo || '-')}</td>
+          <td class="py-3 px-4 text-right font-bold text-slate-900">${formatCurrency(t.totalCost)}</td>
+          <td class="py-3 px-4">
+            <div class="font-semibold text-slate-800">${escapeHtml(t.receiver || '-')}</div>
+            <div class="text-[11px] text-slate-500">${escapeHtml(t.note || '')}</div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderFaturalar() {
+      const supSelect = document.getElementById('filterFaturaSupplier');
+      if (supSelect) {
+        const cur = supSelect.value;
+        const suppliers = [...new Set(appState.faturalar.map(f => f.supplier).filter(Boolean))];
+        supSelect.innerHTML = `<option value="ALL">Tüm Tedarikçiler (${suppliers.length})</option>` +
+          suppliers.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+        if (suppliers.includes(cur)) supSelect.value = cur;
+      }
+
+      const q = (document.getElementById('faturaSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const sup = supSelect?.value || 'ALL';
+      const start = document.getElementById('filterFaturaStartDate')?.value || '';
+
+      const filtered = appState.faturalar.filter(f => {
+        if (sup !== 'ALL' && f.supplier !== sup) return false;
+        if (start && (f.date || '') < start) return false;
+        if (q) {
+          const itemsText = (f.items || []).map(i => i.name).join(' ');
+          const hay = `${f.invoiceNo} ${f.supplier} ${f.title} ${f.site} ${itemsText}`.toLocaleLowerCase('tr-TR');
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const grid = document.getElementById('faturaCardsGrid');
+      if (!grid) return;
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-500">Aramanızla eşleşen fatura belgesi bulunamadı.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(f => {
+        const itemsHtml = (f.items || []).map(it => `
+          <div class="flex items-center justify-between text-xs text-slate-800">
+            <span class="truncate pr-2">• ${escapeHtml(it.name)} (${it.qty} ${escapeHtml(it.unit || 'Adet')})</span>
+            <span class="font-semibold whitespace-nowrap">Birim: ${formatCurrency(it.unitCost)}</span>
+          </div>
+        `).join('');
+
+        const photoSrc = f.photo || makeInvoiceSvgDataUri(f.invoiceNo, f.supplier, f.date, f.title, formatCurrency(f.total));
+
+        return `
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row">
+            <div class="sm:w-44 bg-slate-900 relative group cursor-pointer shrink-0 flex items-center justify-center p-2" data-lightbox-fatura="${escapeHtml(f.id)}">
+              <img src="${photoSrc}" alt="${escapeHtml(f.invoiceNo)}" class="max-h-48 sm:max-h-full w-auto object-contain rounded" />
+            </div>
+            <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+              <div class="space-y-2">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <span class="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded">
+                      ${escapeHtml(f.invoiceNo)}
+                    </span>
+                    <span class="text-[11px] font-medium text-slate-500 ml-1">${escapeHtml(f.targetType || 'Fatura')}</span>
+                  </div>
+                  <span class="text-base font-bold text-slate-900">${formatCurrency(f.total)}</span>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">${escapeHtml(f.title)}</h3>
+                <div class="bg-emerald-50/60 border border-emerald-200/80 rounded-lg p-2 space-y-1">
+                  <span class="block text-[10px] font-bold uppercase text-emerald-800">Faturadaki Ayrı Malzeme Kalemleri (${(f.items || []).length}):</span>
+                  ${itemsHtml}
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-semibold">Nerede Alındı (Tedarikçi)</span>
+                    <span class="font-semibold text-slate-800">${escapeHtml(f.supplier)}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-semibold">Ne Zaman Alındı (Tarih)</span>
+                    <span class="font-semibold text-slate-800">${formatDateTR(f.date)} • ${escapeHtml(f.site || '-')}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-copy-invoice="${escapeHtml(f.invoiceNo)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition">
+                    <span>Fatura No Kopyala</span>
+                  </button>
+                  <button type="button" data-copy-accounting-msg="${escapeHtml(f.id)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition">
+                    <span>Muhasebe İstemi Kopyala</span>
+                  </button>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button type="button" data-edit-fatura="${escapeHtml(f.id)}" class="px-2 py-1 rounded text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100">Kalemleri Düzenle</button>
+                  <button type="button" data-delete-fatura="${escapeHtml(f.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // MODAL & FORM İŞLEMLERİ
+    // =========================================================================
+    function openModal(id) {
+      document.getElementById(id)?.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.add('hidden');
+    }
+
+    function addFaturaLineItemRow(item = { name: '', qty: 1, unit: 'Adet', unitCost: '' }) {
+      const container = document.getElementById('faturaLineItemsContainer');
+      if (!container) return;
+      const row = document.createElement('div');
+      row.className = 'fatura-line-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200';
+      row.innerHTML = `
+        <div class="col-span-12 sm:col-span-5">
+          <input type="text" required placeholder="Malzeme / Ekipman Adı" value="${escapeHtml(item.name)}" class="line-name w-full px-2.5 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-4 sm:col-span-2">
+          <input type="number" step="0.01" required placeholder="Miktar" value="${item.qty ?? 1}" class="line-qty w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-4 sm:col-span-2">
+          <input type="text" placeholder="Birim" value="${escapeHtml(item.unit || 'Adet')}" class="line-unit w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-3 sm:col-span-2">
+          <input type="number" step="0.01" required placeholder="Birim ₺" value="${item.unitCost ?? ''}" class="line-cost w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-1 text-right">
+          <button type="button" class="btn-remove-line text-rose-600 hover:text-rose-800 font-bold text-sm px-1">&times;</button>
+        </div>
+      `;
+      row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateFaturaModalTotal));
+      row.querySelector('.btn-remove-line').addEventListener('click', () => {
+        if (container.querySelectorAll('.fatura-line-row').length > 1) {
+          row.remove();
+          updateFaturaModalTotal();
+        }
+      });
+      container.appendChild(row);
+      updateFaturaModalTotal();
+    }
+
+    function updateFaturaModalTotal() {
+      let sum = 0;
+      document.querySelectorAll('#faturaLineItemsContainer .fatura-line-row').forEach(row => {
+        const q = Number(row.querySelector('.line-qty')?.value) || 0;
+        const c = Number(row.querySelector('.line-cost')?.value) || 0;
+        sum += q * c;
+      });
+      const disp = document.getElementById('faturaModalTotalDisplay');
+      if (disp) disp.textContent = formatCurrency(sum);
+      return sum;
+    }
+
+    function openFaturaModalForCreate(prefill = null) {
+      document.getElementById('faturaEditId').value = '';
+      document.getElementById('faturaNoInput').value = prefill?.invoiceNo || `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
+      document.getElementById('faturaSupplierInput').value = prefill?.supplier || '';
+      document.getElementById('faturaDateInput').value = prefill?.date || new Date().toISOString().slice(0, 10);
+      document.getElementById('faturaSiteInput').value = prefill?.site || 'Kadıköy Şantiyesi';
+      document.getElementById('faturaTargetType').value = prefill?.targetType || 'MALZEME';
+      currentModalPhotoDataUrl = prefill?.photo || '';
+      const preview = document.getElementById('faturaModalPreviewImg');
+      if (currentModalPhotoDataUrl) {
+        preview.src = currentModalPhotoDataUrl;
+        preview.classList.remove('hidden');
+      } else {
+        preview.classList.add('hidden');
+      }
+      const container = document.getElementById('faturaLineItemsContainer');
+      container.innerHTML = '';
+      const items = prefill?.items?.length ? prefill.items : [{ name: '', qty: 1, unit: 'Adet', unitCost: '' }];
+      items.forEach(it => addFaturaLineItemRow(it));
+      openModal('modalFatura');
+    }
+
+    function openFaturaModalForEdit(faturaId) {
+      const f = appState.faturalar.find(x => x.id === faturaId);
+      if (!f) return;
+      document.getElementById('faturaEditId').value = f.id;
+      document.getElementById('faturaNoInput').value = f.invoiceNo;
+      document.getElementById('faturaSupplierInput').value = f.supplier;
+      document.getElementById('faturaDateInput').value = f.date;
+      document.getElementById('faturaSiteInput').value = f.site || 'Kadıköy Şantiyesi';
+      currentModalPhotoDataUrl = f.photo || '';
+      const preview = document.getElementById('faturaModalPreviewImg');
+      if (currentModalPhotoDataUrl) {
+        preview.src = currentModalPhotoDataUrl;
+        preview.classList.remove('hidden');
+      } else {
+        preview.classList.add('hidden');
+      }
+      const container = document.getElementById('faturaLineItemsContainer');
+      container.innerHTML = '';
+      (f.items || []).forEach(it => addFaturaLineItemRow(it));
+      openModal('modalFatura');
+    }
+
+    // =========================================================================
+    // FATURA FOTOĞRAFI OKUMA (OCR + GEMINI FLASH DESTEKLİ)
+    // =========================================================================
+    async function handleInvoiceImageFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        const progressBox = document.getElementById('ocrProgressBox');
+        const progressText = document.getElementById('ocrProgressText');
+        const progressPct = document.getElementById('ocrProgressPct');
+        const progressBar = document.getElementById('ocrProgressBar');
+
+        if (progressBox) {
+          progressBox.classList.remove('hidden');
+          progressText.textContent = 'Fatura fotoğrafı analiz ediliyor...';
+          progressPct.textContent = '25%';
+          progressBar.style.width = '25%';
+        }
+
+        let extracted = {
+          invoiceNo: `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`,
+          supplier: 'Yapı Market / Tedarikçi',
+          date: new Date().toISOString().slice(0, 10),
+          items: [{ name: file.name.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: 1000 }],
+          photo: dataUrl
+        };
+
+        try {
+          if (window.Tesseract) {
+            const res = await window.Tesseract.recognize(dataUrl, 'tur+eng', {
+              logger: m => {
+                if (m.status === 'recognizing text' && progressBar) {
+                  const pct = Math.round((m.progress || 0) * 100);
+                  progressPct.textContent = `${pct}%`;
+                  progressBar.style.width = `${pct}%`;
+                }
+              }
+            });
+            const text = res?.data?.text || '';
+            const invMatch = text.match(/\b([A-Z]{3}20\d{11})\b/i);
+            if (invMatch) extracted.invoiceNo = invMatch[1].toUpperCase();
+            const dateMatch = text.match(/\b(\d{2})[./-](\d{2})[./-](20\d{2})\b/);
+            if (dateMatch) extracted.date = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+          }
+        } catch (ocrErr) {}
+
+        if (progressBox) progressBox.classList.add('hidden');
+
+        const autoSave = document.getElementById('chkAutoSaveInvoice')?.checked;
+        if (autoSave) {
+          openFaturaModalForCreate(extracted);
+          showToast('Fatura tarandı! Kalemleri kontrol edip Kaydet butonuna basın.', 'info');
+        } else {
+          openFaturaModalForCreate(extracted);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // =========================================================================
+    // TRANSFER MODAL LİSTESİ HAZIRLAMA
+    // =========================================================================
+    function openTransferModal(preselectedIds = []) {
+      const listEl = document.getElementById('transferItemsSelectionList');
+      if (!listEl) return;
+      if (appState.malzemeler.length === 0) {
+        showToast('Transfer edilecek malzeme bulunamadı.', 'error');
+        return;
+      }
+      listEl.innerHTML = appState.malzemeler.map(m => {
+        const checked = preselectedIds.includes(m.id) ? 'checked' : '';
+        return `
+          <div class="p-3 flex flex-wrap items-center justify-between gap-2 bg-white hover:bg-slate-50">
+            <label class="flex items-center gap-2.5 text-xs cursor-pointer flex-1 min-w-0">
+              <input type="checkbox" class="transfer-item-chk rounded border-slate-300 text-indigo-600" value="${escapeHtml(m.id)}" ${checked} />
+              <div class="truncate">
+                <span class="font-bold text-slate-900">${escapeHtml(m.name)}</span>
+                <span class="text-slate-500 ml-1">(${escapeHtml(m.site)} • Mevcut: ${m.qty} ${escapeHtml(m.unit)} • Birim: ${formatCurrency(m.unitCost)})</span>
+              </div>
+            </label>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] text-slate-500">Aktarılacak:</span>
+              <input type="number" step="0.01" min="0.01" max="${m.qty}" value="${m.qty}" data-transfer-qty-for="${escapeHtml(m.id)}" class="w-20 px-2 py-1 text-xs rounded border border-slate-300 text-center font-bold" />
+              <span class="text-xs text-slate-600">${escapeHtml(m.unit)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      openModal('modalTransfer');
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS (ETKİLEŞİMLER)
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Sekme geçişleri
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+          document.getElementById(`tab-${target}`)?.classList.remove('hidden');
+          document.querySelectorAll('.nav-tab-btn').forEach(b => {
+            b.className = 'nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800';
+          });
+          btn.className = 'nav-tab-btn inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition bg-amber-500 text-slate-950';
+        });
+      });
+
+      // Modal kapatma butonları
+      document.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.getAttribute('data-close-modal')));
+      });
+
+      // Arama ve filtreler
+      document.getElementById('globalSearchInput')?.addEventListener('input', renderGlobalSearch);
+      document.getElementById('zimmetSearchInput')?.addEventListener('input', renderZimmetler);
+      document.getElementById('filterZimmetCategory')?.addEventListener('change', renderZimmetler);
+      document.getElementById('filterZimmetPerson')?.addEventListener('change', renderZimmetler);
+      document.getElementById('malzemeSearchInput')?.addEventListener('input', renderMalzemeler);
+      document.getElementById('filterMalzemeSite')?.addEventListener('change', renderMalzemeler);
+      document.getElementById('filterMalzemeCategory')?.addEventListener('change', renderMalzemeler);
+      document.getElementById('faturaSearchInput')?.addEventListener('input', renderFaturalar);
+      document.getElementById('filterFaturaSupplier')?.addEventListener('change', renderFaturalar);
+      document.getElementById('filterFaturaStartDate')?.addEventListener('change', renderFaturalar);
+
+      // Fatura Yükleme Inputları
+      ['quickInvoiceUpload', 'dashboardInvoiceDrop', 'tabInvoicePhotoUpload'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', e => {
+          if (e.target.files?.[0]) {
+            handleInvoiceImageFile(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+      });
+
+      document.getElementById('faturaModalPhotoInput')?.addEventListener('change', e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          currentModalPhotoDataUrl = ev.target.result;
+          const img = document.getElementById('faturaModalPreviewImg');
+          img.src = currentModalPhotoDataUrl;
+          img.classList.remove('hidden');
+        };
+        r.readAsDataURL(file);
+      });
+
+      // Örnek Fatura Testi
+      document.getElementById('btnTestSampleInvoice')?.addEventListener('click', () => {
+        openFaturaModalForCreate({
+          invoiceNo: `KCT2026000${Math.floor(100000 + Math.random() * 899999)}`,
+          supplier: 'Koçtaş Yapı Market (Ümraniye)',
+          date: new Date().toISOString().slice(0, 10),
+          site: 'Kadıköy Şantiyesi',
+          targetType: 'MALZEME',
+          items: [
+            { name: 'Sika Derz Dolgu Mastik Gri 300ml', qty: 30, unit: 'Adet', unitCost: 185 },
+            { name: 'İzeltaş Kurbağacık Anahtar 250mm', qty: 4, unit: 'Adet', unitCost: 920 }
+          ]
+        });
+        showToast('Örnek çok kalemli fatura yüklendi! Kaydet butonuna basarak stoğa ekleyebilirsiniz.', 'info');
+      });
+
+      document.getElementById('btnManualInvoiceDash')?.addEventListener('click', () => openFaturaModalForCreate());
+      document.getElementById('btnOpenFaturaModal')?.addEventListener('click', () => openFaturaModalForCreate());
+      document.getElementById('btnAddFaturaLineItem')?.addEventListener('click', () => addFaturaLineItemRow());
+
+      // Fatura Form Kayıt
+      document.getElementById('formFatura')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const editId = document.getElementById('faturaEditId').value;
+        const invoiceNo = document.getElementById('faturaNoInput').value.trim();
+        const supplier = document.getElementById('faturaSupplierInput').value.trim();
+        const date = document.getElementById('faturaDateInput').value;
+        const site = document.getElementById('faturaSiteInput').value.trim();
+        const targetType = document.getElementById('faturaTargetType').value;
+
+        const items = [];
+        document.querySelectorAll('#faturaLineItemsContainer .fatura-line-row').forEach(row => {
+          const name = row.querySelector('.line-name').value.trim();
+          const qty = Number(row.querySelector('.line-qty').value) || 1;
+          const unit = row.querySelector('.line-unit').value.trim() || 'Adet';
+          const unitCost = Number(row.querySelector('.line-cost').value) || 0;
+          if (name) items.push({ name, qty, unit, unitCost });
+        });
+
+        const total = items.reduce((s, i) => s + i.qty * i.unitCost, 0);
+        const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
+        const photo = currentModalPhotoDataUrl || makeInvoiceSvgDataUri(invoiceNo, supplier, date, title, formatCurrency(total));
+
+        if (editId) {
+          const idx = appState.faturalar.findIndex(f => f.id === editId);
+          if (idx > -1) {
+            appState.faturalar[idx] = { ...appState.faturalar[idx], invoiceNo, supplier, date, site, title, total, items, photo };
+          }
+          showToast('Fatura ve kalemleri güncellendi.');
+        } else {
+          const newId = 'FAT-' + Math.floor(1000 + Math.random() * 9000);
+          appState.faturalar.unshift({
+            id: newId,
+            invoiceNo,
+            supplier,
+            date,
+            site,
+            targetType: targetType === 'ZIMMET' ? 'Zimmet Faturası' : `Çoklu Şantiye Malzemesi (${items.length} Kalem)`,
+            title,
+            total,
+            items,
+            photo
+          });
+
+          // Kalemleri otomatik olarak Malzeme veya Zimmet listesine ekle
+          items.forEach((it, idx) => {
+            if (targetType === 'ZIMMET') {
+              appState.zimmetler.unshift({
+                id: 'ZIM-' + Math.floor(1000 + Math.random() * 9000) + idx,
+                name: it.name,
+                category: 'El Aleti / Makine',
+                serial: `SN-${Math.floor(10000 + Math.random() * 89999)}`,
+                person: 'Kendim (Uğur Demirbaş)',
+                site,
+                supplier,
+                date,
+                invoiceNo,
+                cost: it.qty * it.unitCost,
+                photo: ''
+              });
+            } else {
+              appState.malzemeler.unshift({
+                id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000) + idx,
+                name: it.name,
+                category: 'Fatura Kalemi',
+                site,
+                qty: it.qty,
+                unit: it.unit,
+                unitCost: it.unitCost,
+                supplier,
+                date,
+                invoiceNo,
+                note: `${invoiceNo} nolu faturanın ${idx + 1}. kalemi.`
+              });
+            }
+          });
+          showToast(`Fatura (${invoiceNo}) ve ${items.length} kalemi stoğa kaydedildi!`);
+        }
+
+        closeModal('modalFatura');
+        saveState();
+      });
+
+      // Zimmet Modal Açma & Kayıt
+      const openNewZimmet = () => {
+        document.getElementById('zimmetEditId').value = '';
+        document.getElementById('formZimmet').reset();
+        document.getElementById('zimmetPerson').value = 'Kendim (Uğur Demirbaş)';
+        document.getElementById('zimmetSite').value = 'Kadıköy Şantiyesi';
+        document.getElementById('zimmetDate').value = new Date().toISOString().slice(0, 10);
+        openModal('modalZimmet');
+      };
+      document.getElementById('btnOpenZimmetModal')?.addEventListener('click', openNewZimmet);
+      document.getElementById('btnDashAddZimmet')?.addEventListener('click', openNewZimmet);
+
+      document.getElementById('formZimmet')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const editId = document.getElementById('zimmetEditId').value;
+        const item = {
+          id: editId || ('ZIM-' + Math.floor(1000 + Math.random() * 9000)),
+          name: document.getElementById('zimmetName').value.trim(),
+          category: document.getElementById('zimmetCategory').value,
+          serial: document.getElementById('zimmetSerial').value.trim(),
+          person: document.getElementById('zimmetPerson').value.trim(),
+          cost: Number(document.getElementById('zimmetCost').value) || 0,
+          invoiceNo: document.getElementById('zimmetInvoiceNo').value.trim(),
+          date: document.getElementById('zimmetDate').value,
+          supplier: document.getElementById('zimmetSupplier').value.trim(),
+          site: document.getElementById('zimmetSite').value.trim()
+        };
+        if (editId) {
+          const idx = appState.zimmetler.findIndex(z => z.id === editId);
+          if (idx > -1) appState.zimmetler[idx] = { ...appState.zimmetler[idx], ...item };
+          showToast('Zimmet kaydı güncellendi.');
+        } else {
+          appState.zimmetler.unshift(item);
+          showToast('Yeni zimmet kaydı eklendi.');
+        }
+        closeModal('modalZimmet');
+        saveState();
+      });
+
+      // Malzeme Modal Açma & Kayıt
+      const openNewMalzeme = () => {
+        document.getElementById('malzemeEditId').value = '';
+        document.getElementById('formMalzeme').reset();
+        document.getElementById('malzemeSite').value = 'Kadıköy Şantiyesi';
+        document.getElementById('malzemeDate').value = new Date().toISOString().slice(0, 10);
+        openModal('modalMalzeme');
+      };
+      document.getElementById('btnOpenMalzemeModal')?.addEventListener('click', openNewMalzeme);
+      document.getElementById('btnDashAddMalzeme')?.addEventListener('click', openNewMalzeme);
+
+      document.getElementById('formMalzeme')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const editId = document.getElementById('malzemeEditId').value;
+        const item = {
+          id: editId || ('MLZ-' + Math.floor(1000 + Math.random() * 9000)),
+          name: document.getElementById('malzemeName').value.trim(),
+          category: document.getElementById('malzemeCategory').value.trim(),
+          qty: Number(document.getElementById('malzemeQty').value) || 1,
+          unit: document.getElementById('malzemeUnit').value,
+          unitCost: Number(document.getElementById('malzemeUnitCost').value) || 0,
+          site: document.getElementById('malzemeSite').value.trim(),
+          supplier: document.getElementById('malzemeSupplier').value.trim(),
+          invoiceNo: document.getElementById('malzemeInvoiceNo').value.trim(),
+          date: document.getElementById('malzemeDate').value,
+          note: document.getElementById('malzemeNote').value.trim()
+        };
+        if (editId) {
+          const idx = appState.malzemeler.findIndex(m => m.id === editId);
+          if (idx > -1) appState.malzemeler[idx] = { ...appState.malzemeler[idx], ...item };
+          showToast('Malzeme güncellendi.');
+        } else {
+          appState.malzemeler.unshift(item);
+          showToast('Yeni malzeme stoğa eklendi.');
+        }
+        closeModal('modalMalzeme');
+        saveState();
+      });
+
+      // Transfer Modal Açma & Kayıt
+      document.getElementById('btnOpenTransferModalTop')?.addEventListener('click', () => openTransferModal());
+      document.getElementById('btnOpenTransferModalTab')?.addEventListener('click', () => openTransferModal());
+      document.getElementById('btnTransferSelectedMaterials')?.addEventListener('click', () => {
+        const checkedIds = [...document.querySelectorAll('.malzeme-row-chk:checked')].map(c => c.value);
+        openTransferModal(checkedIds);
+      });
+
+      document.getElementById('chkSelectAllMaterials')?.addEventListener('change', e => {
+        document.querySelectorAll('.malzeme-row-chk').forEach(c => { c.checked = e.target.checked; });
+      });
+
+      document.getElementById('formTransfer')?.addEventListener('submit', e => {
+        e.preventDefault();
+        const targetSite = document.getElementById('transferTargetSite').value.trim();
+        const receiver = document.getElementById('transferReceiver').value.trim();
+        const note = document.getElementById('transferNote').value.trim();
+        const selectedChks = [...document.querySelectorAll('.transfer-item-chk:checked')];
+
+        if (selectedChks.length === 0) {
+          showToast('Lütfen transfer edilecek en az bir malzeme seçin.', 'error');
+          return;
+        }
+
+        let totalCost = 0;
+        const summaryParts = [];
+        const invoices = new Set();
+        let fromSites = new Set();
+
+        selectedChks.forEach(chk => {
+          const id = chk.value;
+          const m = appState.malzemeler.find(x => x.id === id);
+          if (!m) return;
+          const qtyInput = document.querySelector(`[data-transfer-qty-for="${id}"]`);
+          const transferQty = Math.min(Number(qtyInput?.value) || m.qty, m.qty);
+          if (transferQty <= 0) return;
+
+          fromSites.add(m.site);
+          if (m.invoiceNo) invoices.add(m.invoiceNo);
+          totalCost += transferQty * (Number(m.unitCost) || 0);
+          summaryParts.push(`${transferQty} ${m.unit} ${m.name} (Birim: ${formatCurrency(m.unitCost)})`);
+
+          if (transferQty >= m.qty) {
+            m.site = targetSite;
+          } else {
+            m.qty = Number((m.qty - transferQty).toFixed(2));
+            appState.malzemeler.unshift({
+              ...m,
+              id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000),
+              site: targetSite,
+              qty: transferQty,
+              note: `${m.site} şantiyesinden transfer edildi.`
+            });
+          }
+        });
+
+        appState.transferler.unshift({
+          id: 'TRF-' + Math.floor(100 + Math.random() * 900),
+          date: new Date().toISOString().slice(0, 10),
+          fromSite: [...fromSites].join(', ') || 'Merkez',
+          toSite: targetSite,
+          itemsSummary: summaryParts.join(', '),
+          invoiceNo: [...invoices].join(', ') || '-',
+          totalCost,
+          receiver,
+          note
+        });
+
+        closeModal('modalTransfer');
+        saveState();
+        showToast(`Seçili malzemeler ${targetSite} şantiyesine transfer edildi!`);
+      });
+
+      // Dinamik Tablo / Kart Buton Tıklamaları (Delegation)
+      document.body.addEventListener('click', e => {
+        const copyInvBtn = e.target.closest('[data-copy-invoice]');
+        if (copyInvBtn) {
+          const val = copyInvBtn.getAttribute('data-copy-invoice');
+          navigator.clipboard?.writeText(val);
+          showToast(`Fatura numarası kopyalandı: ${val}`);
+          return;
+        }
+
+        const copyAccBtn = e.target.closest('[data-copy-accounting-msg]');
+        if (copyAccBtn) {
+          const id = copyAccBtn.getAttribute('data-copy-accounting-msg');
+          const f = appState.faturalar.find(x => x.id === id);
+          if (f) {
+            const msg = `Muhasebe Fatura Sorgu Bilgisi:\nFatura No: ${f.invoiceNo}\nTedarikçi: ${f.supplier}\nTarih: ${formatDateTR(f.date)}\nŞantiye: ${f.site}\nToplam Tutar: ${formatCurrency(f.total)}\nKalemler: ${f.title}`;
+            navigator.clipboard?.writeText(msg);
+            showToast('Muhasebe bilgi mesajı panoya kopyalandı!');
+          }
+          return;
+        }
+
+        const lightboxTrigger = e.target.closest('[data-lightbox-fatura]');
+        if (lightboxTrigger) {
+          const id = lightboxTrigger.getAttribute('data-lightbox-fatura');
+          const f = appState.faturalar.find(x => x.id === id);
+          if (f) {
+            document.getElementById('lightboxTitle').textContent = `${f.invoiceNo} — ${f.supplier}`;
+            document.getElementById('lightboxImg').src = f.photo || makeInvoiceSvgDataUri(f.invoiceNo, f.supplier, f.date, f.title, formatCurrency(f.total));
+            openModal('modalLightbox');
+          }
+          return;
+        }
+
+        const editFaturaBtn = e.target.closest('[data-edit-fatura]');
+        if (editFaturaBtn) {
+          openFaturaModalForEdit(editFaturaBtn.getAttribute('data-edit-fatura'));
+          return;
+        }
+
+        const delFaturaBtn = e.target.closest('[data-delete-fatura]');
+        if (delFaturaBtn) {
+          const id = delFaturaBtn.getAttribute('data-delete-fatura');
+          appState.faturalar = appState.faturalar.filter(f => f.id !== id);
+          saveState();
+          showToast('Fatura kaydı silindi.');
+          return;
+        }
+
+        const editZimmetBtn = e.target.closest('[data-edit-zimmet]');
+        if (editZimmetBtn) {
+          const z = appState.zimmetler.find(x => x.id === editZimmetBtn.getAttribute('data-edit-zimmet'));
+          if (z) {
+            document.getElementById('zimmetEditId').value = z.id;
+            document.getElementById('zimmetName').value = z.name;
+            document.getElementById('zimmetCategory').value = z.category;
+            document.getElementById('zimmetSerial').value = z.serial;
+            document.getElementById('zimmetPerson').value = z.person;
+            document.getElementById('zimmetCost').value = z.cost;
+            document.getElementById('zimmetInvoiceNo').value = z.invoiceNo || '';
+            document.getElementById('zimmetDate').value = z.date || '';
+            document.getElementById('zimmetSupplier').value = z.supplier || '';
+            document.getElementById('zimmetSite').value = z.site || '';
+            openModal('modalZimmet');
+          }
+          return;
+        }
+
+        const delZimmetBtn = e.target.closest('[data-delete-zimmet]');
+        if (delZimmetBtn) {
+          const id = delZimmetBtn.getAttribute('data-delete-zimmet');
+          appState.zimmetler = appState.zimmetler.filter(z => z.id !== id);
+          saveState();
+          showToast('Zimmet silindi.');
+          return;
+        }
+
+        const qtyBtn = e.target.closest('[data-qty-delta]');
+        if (qtyBtn) {
+          const id = qtyBtn.getAttribute('data-id');
+          const delta = Number(qtyBtn.getAttribute('data-qty-delta'));
+          const m = appState.malzemeler.find(x => x.id === id);
+          if (m) {
+            m.qty = Math.max(0, Number(m.qty) + delta);
+            saveState();
+          }
+          return;
+        }
+
+        const quickTrfBtn = e.target.closest('[data-quick-transfer]');
+        if (quickTrfBtn) {
+          openTransferModal([quickTrfBtn.getAttribute('data-quick-transfer')]);
+          return;
+        }
+
+        const editMalzemeBtn = e.target.closest('[data-edit-malzeme]');
+        if (editMalzemeBtn) {
+          const m = appState.malzemeler.find(x => x.id === editMalzemeBtn.getAttribute('data-edit-malzeme'));
+          if (m) {
+            document.getElementById('malzemeEditId').value = m.id;
+            document.getElementById('malzemeName').value = m.name;
+            document.getElementById('malzemeCategory').value = m.category;
+            document.getElementById('malzemeQty').value = m.qty;
+            document.getElementById('malzemeUnit').value = m.unit;
+            document.getElementById('malzemeUnitCost').value = m.unitCost;
+            document.getElementById('malzemeSite').value = m.site;
+            document.getElementById('malzemeSupplier').value = m.supplier || '';
+            document.getElementById('malzemeInvoiceNo').value = m.invoiceNo || '';
+            document.getElementById('malzemeDate').value = m.date || '';
+            document.getElementById('malzemeNote').value = m.note || '';
+            openModal('modalMalzeme');
+          }
+          return;
+        }
+
+        const delMalzemeBtn = e.target.closest('[data-delete-malzeme]');
+        if (delMalzemeBtn) {
+          const id = delMalzemeBtn.getAttribute('data-delete-malzeme');
+          appState.malzemeler = appState.malzemeler.filter(m => m.id !== id);
+          saveState();
+          showToast('Malzeme silindi.');
+          return;
+        }
+      });
+
+      // Üst Bar Butonları: PWA, Firebase, CSV, Sıfırlama
+      document.getElementById('btnOpenPwaModal')?.addEventListener('click', () => openModal('modalPwaInstall'));
+      document.getElementById('btnOpenFirebaseModal')?.addEventListener('click', () => {
+        document.getElementById('fbProjectIdInput').value = appConfig.projectId || DEFAULT_FB_CONFIG.projectId;
+        document.getElementById('fbApiKeyInput').value = appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey;
+        document.getElementById('geminiApiKeyInput').value = appConfig.geminiKey || '';
+        openModal('modalFirebase');
+      });
+      document.getElementById('btnOpenFbFromPwa')?.addEventListener('click', () => {
+        closeModal('modalPwaInstall');
+        openModal('modalFirebase');
+      });
+
+      document.getElementById('btnQuickCloudSync')?.addEventListener('click', async () => {
+        await pushToFirestore(false);
+      });
+
+      document.getElementById('btnPushFirestore')?.addEventListener('click', async () => {
+        appConfig.projectId = document.getElementById('fbProjectIdInput').value.trim() || DEFAULT_FB_CONFIG.projectId;
+        appConfig.apiKey = document.getElementById('fbApiKeyInput').value.trim() || DEFAULT_FB_CONFIG.apiKey;
+        saveConfig();
+        await pushToFirestore(false);
+      });
+
+      document.getElementById('btnPullFirestore')?.addEventListener('click', async () => {
+        appConfig.projectId = document.getElementById('fbProjectIdInput').value.trim() || DEFAULT_FB_CONFIG.projectId;
+        appConfig.apiKey = document.getElementById('fbApiKeyInput').value.trim() || DEFAULT_FB_CONFIG.apiKey;
+        saveConfig();
+        await pullFromFirestore(false);
+      });
+
+      document.getElementById('btnCopyFirestoreRules')?.addEventListener('click', () => {
+        const rules = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}`;
+        navigator.clipboard?.writeText(rules);
+        showToast('Firestore izin kuralı kopyalandı! Firebase Console > Firestore > Rules sekmesine yapıştırıp Publish yapın.');
+      });
+
+      document.getElementById('btnSaveGeminiKey')?.addEventListener('click', () => {
+        appConfig.geminiKey = document.getElementById('geminiApiKeyInput').value.trim();
+        saveConfig();
+        showToast('Gemini API anahtarı kaydedildi.');
+      });
+
+      // Eşleştirme Kodu Kopyala / Yapıştır
+      document.getElementById('btnCopyPairingCode')?.addEventListener('click', () => {
+        const code = 'SANTIYE-SYNC:' + btoa(unescape(encodeURIComponent(JSON.stringify({
+          projectId: appConfig.projectId,
+          apiKey: appConfig.apiKey
+        }))));
+        navigator.clipboard?.writeText(code);
+        showToast('Cihaz eşleştirme kodu kopyalandı!');
+      });
+
+      document.getElementById('btnApplyPairingCode')?.addEventListener('click', async () => {
+        const raw = document.getElementById('inputPastePairingCode').value.trim();
+        if (!raw.startsWith('SANTIYE-SYNC:')) {
+          showToast('Geçersiz eşleştirme kodu.', 'error');
+          return;
+        }
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(raw.replace('SANTIYE-SYNC:', '')))));
+          if (decoded.projectId) appConfig.projectId = decoded.projectId;
+          if (decoded.apiKey) appConfig.apiKey = decoded.apiKey;
+          saveConfig();
+          await pullFromFirestore(false);
+        } catch (e) {
+          showToast('Kod çözümlenemedi.', 'error');
+        }
+      });
+
+      // Excel (CSV) Rapor İndir
+      document.getElementById('btnExportCsv')?.addEventListener('click', () => {
+        const rows = [
+          ['Tür', 'Kalem / Ekipman Adı', 'Kategori', 'Şantiye / Kişi', 'Miktar / Seri No', 'Birim Maliyet', 'Toplam Maliyet', 'Tedarikçi', 'Tarih', 'Fatura No']
+        ];
+        appState.zimmetler.forEach(z => {
+          rows.push(['ZİMMET', z.name, z.category, `${z.person} (${z.site || ''})`, z.serial, z.cost, z.cost, z.supplier || '', z.date || '', z.invoiceNo || '']);
+        });
+        appState.malzemeler.forEach(m => {
+          const tot = (Number(m.qty) || 0) * (Number(m.unitCost) || 0);
+          rows.push(['MALZEME', m.name, m.category, m.site, `${m.qty} ${m.unit}`, m.unitCost, tot, m.supplier || '', m.date || '', m.invoiceNo || '']);
+        });
+        const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `santiye_stok_rapor_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        showToast('Excel (CSV) raporu indirildi.');
+      });
+
+      // JSON Yedek İndir / Yükle
+      document.getElementById('btnDownloadJsonBackup')?.addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(appState, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `santiye_stok_yedek_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        showToast('JSON yedek dosyası indirildi.');
+      });
+
+      document.getElementById('inputRestoreJsonBackup')?.addEventListener('change', e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const r = new FileReader();
+        r.onload = ev => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            if (parsed && Array.isArray(parsed.zimmetler)) {
+              appState = parsed;
+              saveState();
+              closeModal('modalFirebase');
+              showToast('Yedek dosyası başarıyla geri yüklendi!');
+            }
+          } catch (err) {
+            showToast('Geçersiz yedek dosyası.', 'error');
+          }
+        };
+        r.readAsText(file);
+      });
+
+      // Tek Dosya HTML İndir
+      document.getElementById('btnDownloadStandaloneHtml')?.addEventListener('click', () => {
+        const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'santiye_stok_uygulamasi.html';
+        a.click();
+        showToast('Tek dosya HTML uygulaması indirildi.');
+      });
+
+      // Verileri Sıfırla / Temizle
+      document.getElementById('btnResetDataModal')?.addEventListener('click', () => {
+        if (confirm('Örnek verileri temizleyip sıfırdan boş bir şantiye stok listesiyle başlamak istiyor musunuz? (İptal derseniz varsayılan örnek veriler geri yüklenir)')) {
+          appState = { updatedAt: new Date().toISOString(), zimmetler: [], malzemeler: [], transferler: [], faturalar: [] };
+          saveState();
+          showToast('Tüm liste sıfırlandı, kendi verilerinizi girebilirsiniz.');
+        }
+      });
+
+      // PWA Native Kurulum
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+      });
+      document.getElementById('btnTriggerNativePwaInstall')?.addEventListener('click', async () => {
+        if (deferredPwaPrompt) {
+          deferredPwaPrompt.prompt();
+          await deferredPwaPrompt.userChoice;
+          deferredPwaPrompt = null;
+        } else {
+          showToast('Tarayıcı menüsünden (⋮ veya Paylaş) "Ana ekrana ekle / Uygulamayı yükle" seçeneğini kullanabilirsiniz.', 'info');
+        }
+      });
+
+      if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
+
+      renderAll();
+      // Başlangıçta bulut senkronizasyonu dene
+      pullFromFirestore(true);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "Şantiye Stok, Zimmet, Transfer ve Fatura Takip Sistemi",
+  "short_name": "Şantiye Stok",
+  "description": "Çoklu Fatura Kalemi, Şantiyeler Arası Seçmeli Transfer, Seri No ve Kişi Zimmet Takibi",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
