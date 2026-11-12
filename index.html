@@ -146,6 +146,11 @@
           <span>Araç Bakım</span>
           <span id="badgeBakimCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-slate-200">0</span>
         </button>
+        <button type="button" data-tab="araclarim" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="truck" class="w-3.5 h-3.5 text-sky-400"></i>
+          <span>Araçlarım</span>
+          <span id="badgeAracCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
         <button type="button" data-tab="transferler" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
           <i data-lucide="arrow-left-right" class="w-3.5 h-3.5"></i>
           <span>Transferler</span>
@@ -588,6 +593,26 @@
           </table>
         </div>
       </div>
+    </section>
+
+    <!-- 3C. SEKME: ARAÇLARIM (ARAÇ BAZLI KARTLAR VE GEÇMİŞ) -->
+    <section id="tab-araclarim" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900">Araçlarım &amp; İş Makineleri</h2>
+          <p class="text-xs text-slate-500">Her aracınızı ayrı kartlarda görüntüleyin; toplam bakım/tamir giderini, son km bilgisini, sonraki bakım tarihini ve tüm işlem geçmişini tek tıkla inceleyin.</p>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+          <input id="araclarimSearchInput" type="text" placeholder="Plaka, araç adı, şantiye ara..." class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none w-56" />
+          <button id="btnOpenNewVehicleBakim" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
+            <span>Yeni Araç / Bakım Ekle</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="araclarimSummaryStrip" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+      <div id="araclarimGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </section>
 
     <!-- 4. SEKME: ŞANTİYELER ARASI TRANSFER & İRSALİYE -->
@@ -1435,6 +1460,78 @@
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Tanımlı Roller</h4>
           <div id="userRolesList" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden bg-white text-xs"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ŞANTİYE DETAY & DÜZENLEME MODALI -->
+  <div id="modalSiteDetail" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="building-2" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 id="siteDetailTitle" class="text-base sm:text-lg font-bold truncate">Şantiye Detayı</h3>
+            <p id="siteDetailSubtitle" class="text-[11px] text-slate-400">Şantiye içi tüm stok, sarfiyat, zimmet, araç bakım ve fatura kayıtları</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnRenameCurrentSite" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            <span>Şantiye Adını Düzenle</span>
+          </button>
+          <button id="btnSiteDetailExcel" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Excel</span>
+          </button>
+          <button type="button" data-close-modal="modalSiteDetail" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 bg-slate-50 flex-1">
+        <div id="siteDetailKpis" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200" id="siteDetailTabsBar">
+          <button type="button" data-site-subtab="stok" class="site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white whitespace-nowrap">Stoklar</button>
+          <button type="button" data-site-subtab="sarfiyat" class="site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Sarfiyatlar</button>
+          <button type="button" data-site-subtab="zimmet" class="site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Zimmetler</button>
+          <button type="button" data-site-subtab="bakim" class="site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Araç Bakım</button>
+          <button type="button" data-site-subtab="fatura" class="site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 whitespace-nowrap">Faturalar</button>
+        </div>
+        <div id="siteDetailContent" class="space-y-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARAÇ DETAY & GEÇMİŞ MODALI -->
+  <div id="modalVehicleDetail" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+      <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
+            <i data-lucide="truck" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 id="vehicleDetailTitle" class="text-base sm:text-lg font-bold font-mono truncate">Araç Detayı</h3>
+            <p id="vehicleDetailSubtitle" class="text-[11px] text-slate-400">Araç bakım, tamir, masraf ve zimmet geçmişi</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnRenameCurrentVehicle" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            <span>Plaka / Ad Düzenle</span>
+          </button>
+          <button id="btnAddBakimToVehicle" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>+ Bakım Ekle</span>
+          </button>
+          <button type="button" data-close-modal="modalVehicleDetail" class="text-slate-400 hover:text-white p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+      </div>
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 bg-slate-50 flex-1">
+        <div id="vehicleDetailKpis" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+        <div id="vehicleDetailHistory" class="space-y-2.5"></div>
       </div>
     </div>
   </div>
@@ -2691,8 +2788,15 @@
       renderMalzemeler();
       renderSarfiyatlar();
       renderAracBakimlar();
+      renderAraclarim();
       renderTransferler();
       renderFaturalar();
+      if (currentDetailSiteName && !document.getElementById('modalSiteDetail')?.classList.contains('hidden')) {
+        renderSiteDetailModal();
+      }
+      if (currentDetailVehicleName && !document.getElementById('modalVehicleDetail')?.classList.contains('hidden')) {
+        renderVehicleDetailModal();
+      }
       if (window.lucide) window.lucide.createIcons();
     }
 
@@ -2763,9 +2867,14 @@
           <div class="space-y-2.5">
             <div class="flex items-start justify-between gap-2">
               <div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
-                  ${escapeHtml(s.siteName)}
-                </span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <button type="button" data-open-site-detail="${escapeHtml(s.siteName)}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-200 transition cursor-pointer" title="Şantiye içine gir">
+                    ${escapeHtml(s.siteName)}
+                  </button>
+                  <button type="button" data-rename-site="${escapeHtml(s.siteName)}" class="p-1 rounded-md text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition" title="Şantiye Adını Düzenle">
+                    <i data-lucide="pencil" class="w-3 h-3"></i>
+                  </button>
+                </div>
                 <p class="text-[11px] text-slate-500 mt-1">${s.matCount} Stok Kalemi • ${s.sarfCount} Sarfiyat • ${s.zimmetCount} Zimmet</p>
               </div>
               <div class="text-right">
@@ -2794,11 +2903,14 @@
             </div>
           </div>
 
-          <div class="pt-1 flex items-center justify-between gap-2">
-            <span class="text-[11px] text-slate-500 font-medium">Demirbaş Dahil: <strong>${formatCurrency(s.grandTotalWithZimmet)}</strong></span>
+          <div class="pt-1 flex items-center justify-between gap-2 flex-wrap">
+            <button type="button" data-open-site-detail="${escapeHtml(s.siteName)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition">
+              <i data-lucide="folder-open" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>İçine Gir</span>
+            </button>
             <button type="button" data-export-site-excel="${escapeHtml(s.siteName)}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition">
               <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
-              <span>Bu Şantiyeyi Excel İndir</span>
+              <span>Excel</span>
             </button>
           </div>
         </div>
@@ -2808,6 +2920,373 @@
       if (dashGrid) dashGrid.innerHTML = cardsHtml;
       const fullGrid = document.getElementById('fullSiteCostsGrid');
       if (fullGrid) fullGrid.innerHTML = cardsHtml;
+    }
+
+    // =========================================================================
+    // ŞANTİYE İÇİ DETAY & ŞANTİYE İSMİ DÜZENLEME
+    // =========================================================================
+    let currentDetailSiteName = '';
+    let currentDetailSiteSubtab = 'stok';
+
+    function openSiteDetailModal(siteName, subtab = 'stok') {
+      currentDetailSiteName = siteName;
+      currentDetailSiteSubtab = subtab;
+      renderSiteDetailModal();
+      openModal('modalSiteDetail');
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renameSite(oldName, newName) {
+      const cleanOld = (oldName || '').trim();
+      const cleanNew = (newName || '').trim();
+      if (!cleanOld || !cleanNew || cleanOld === cleanNew) return false;
+
+      let count = 0;
+      (appState.malzemeler || []).forEach(m => { if ((m.site || '').trim() === cleanOld) { m.site = cleanNew; count++; } });
+      (appState.sarfiyatlar || []).forEach(s => { if ((s.site || '').trim() === cleanOld) { s.site = cleanNew; count++; } });
+      (appState.zimmetler || []).forEach(z => { if ((z.site || '').trim() === cleanOld) { z.site = cleanNew; count++; } });
+      (appState.aracBakimlar || []).forEach(b => { if ((b.site || '').trim() === cleanOld) { b.site = cleanNew; count++; } });
+      (appState.faturalar || []).forEach(f => { if ((f.site || '').trim() === cleanOld) { f.site = cleanNew; count++; } });
+      (appState.transferler || []).forEach(t => {
+        if ((t.fromSite || '').trim() === cleanOld) { t.fromSite = cleanNew; count++; }
+        if ((t.toSite || '').trim() === cleanOld) { t.toSite = cleanNew; count++; }
+      });
+
+      if (currentDetailSiteName === cleanOld) currentDetailSiteName = cleanNew;
+      saveState();
+      showToast(`"${cleanOld}" şantiyesi "${cleanNew}" olarak güncellendi (${count} kayıt).`);
+      return true;
+    }
+
+    function promptRenameSite(oldName) {
+      const next = prompt(`"${oldName}" şantiyesinin yeni adını girin:`, oldName);
+      if (next === null) return;
+      const trimmed = next.trim();
+      if (!trimmed) { showToast('Şantiye adı boş olamaz.', 'error'); return; }
+      if (trimmed === oldName) return;
+      renameSite(oldName, trimmed);
+    }
+
+    function renderSiteDetailModal() {
+      const site = currentDetailSiteName;
+      if (!site) return;
+      const mats = (appState.malzemeler || []).filter(m => (m.site || '').trim() === site);
+      const sarfs = (appState.sarfiyatlar || []).filter(s => (s.site || '').trim() === site);
+      const zims = (appState.zimmetler || []).filter(z => (z.site || '').trim() === site);
+      const bakims = (appState.aracBakimlar || []).filter(b => (b.site || '').trim() === site);
+      const fats = (appState.faturalar || []).filter(f => (f.site || '').trim() === site);
+
+      const matSum = mats.reduce((a, m) => a + (Number(m.qty) || 0) * (Number(m.unitCost) || 0), 0);
+      const sarfSum = sarfs.reduce((a, s) => a + (Number(s.totalCost) || (Number(s.qty) || 0) * (Number(s.unitCost) || 0)), 0);
+      const zimSum = zims.reduce((a, z) => a + (Number(z.cost) || 0), 0);
+      const bakimSum = bakims.reduce((a, b) => a + (Number(b.cost) || 0), 0);
+      const fatSum = fats.reduce((a, f) => a + (Number(f.total) || 0), 0);
+
+      const titleEl = document.getElementById('siteDetailTitle');
+      if (titleEl) titleEl.textContent = site;
+      const subEl = document.getElementById('siteDetailSubtitle');
+      if (subEl) subEl.textContent = `${mats.length} Stok • ${sarfs.length} Sarfiyat • ${zims.length} Zimmet • ${bakims.length} Bakım • ${fats.length} Fatura`;
+
+      const kpisEl = document.getElementById('siteDetailKpis');
+      if (kpisEl) {
+        kpisEl.innerHTML = `
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Depo Stoğu (${mats.length})</div><div class="text-sm font-extrabold text-emerald-700 mt-0.5">${formatCurrency(matSum)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Sarfiyat (${sarfs.length})</div><div class="text-sm font-extrabold text-orange-700 mt-0.5">${formatCurrency(sarfSum)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Zimmet (${zims.length})</div><div class="text-sm font-extrabold text-blue-700 mt-0.5">${formatCurrency(zimSum)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Araç Bakım (${bakims.length})</div><div class="text-sm font-extrabold text-rose-700 mt-0.5">${formatCurrency(bakimSum)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Faturalar (${fats.length})</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${formatCurrency(fatSum)}</div></div>
+        `;
+      }
+
+      document.querySelectorAll('.site-subtab-btn').forEach(btn => {
+        const active = btn.getAttribute('data-site-subtab') === currentDetailSiteSubtab;
+        btn.className = active
+          ? 'site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white whitespace-nowrap'
+          : 'site-subtab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 whitespace-nowrap';
+      });
+
+      const contentEl = document.getElementById('siteDetailContent');
+      if (!contentEl) return;
+
+      if (currentDetailSiteSubtab === 'stok') {
+        contentEl.innerHTML = mats.length === 0
+          ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede kayıtlı stok yok.</div>'
+          : mats.map(m => `
+            <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-slate-900">${escapeHtml(m.name)} <span class="text-slate-400 font-normal">(${escapeHtml(m.category || 'Genel')})</span></div>
+                <div class="text-slate-500 mt-0.5">${escapeHtml(m.supplier || '-')} • ${formatDateTR(m.date)} ${m.invoiceNo ? '• ' + escapeHtml(m.invoiceNo) : ''}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="text-right mr-2">
+                  <div class="font-extrabold text-slate-900">${m.qty} ${escapeHtml(m.unit || 'Adet')}</div>
+                  <div class="text-[11px] text-emerald-700 font-semibold">${formatCurrency((Number(m.qty)||0)*(Number(m.unitCost)||0))}</div>
+                </div>
+                <button type="button" data-qty-delta="-1" data-id="${escapeHtml(m.id)}" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">-1</button>
+                <button type="button" data-qty-delta="1" data-id="${escapeHtml(m.id)}" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">+1</button>
+                <button type="button" data-edit-malzeme="${escapeHtml(m.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
+                <button type="button" data-delete-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+              </div>
+            </div>
+          `).join('');
+      } else if (currentDetailSiteSubtab === 'sarfiyat') {
+        contentEl.innerHTML = sarfs.length === 0
+          ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede sarfiyat kaydı yok.</div>'
+          : sarfs.map(s => `
+            <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-slate-900">${escapeHtml(s.name)} — <span class="text-orange-700">${s.qty} ${escapeHtml(s.unit || 'Adet')}</span></div>
+                <div class="text-slate-500 mt-0.5">${escapeHtml(s.usedByNote || 'Şantiye tüketimi')} • ${formatDateTR(s.date)}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-orange-700">${formatCurrency(s.totalCost || (Number(s.qty)||0)*(Number(s.unitCost)||0))}</span>
+                <button type="button" data-delete-sarf="${escapeHtml(s.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+              </div>
+            </div>
+          `).join('');
+      } else if (currentDetailSiteSubtab === 'zimmet') {
+        contentEl.innerHTML = zims.length === 0
+          ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede zimmet kaydı yok.</div>'
+          : zims.map(z => `
+            <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-slate-900">${escapeHtml(z.name)} <span class="text-slate-400 font-mono">(${escapeHtml(z.serial || '-')})</span></div>
+                <div class="text-slate-500 mt-0.5">Zimmetli: <strong>${escapeHtml(z.person || '-')}</strong> • ${escapeHtml(z.category || '')} • ${formatDateTR(z.date)}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-blue-800">${formatCurrency(z.cost)}</span>
+                <button type="button" data-edit-zimmet="${escapeHtml(z.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
+                <button type="button" data-delete-zimmet="${escapeHtml(z.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+              </div>
+            </div>
+          `).join('');
+      } else if (currentDetailSiteSubtab === 'bakim') {
+        contentEl.innerHTML = bakims.length === 0
+          ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede araç bakım kaydı yok.</div>'
+          : bakims.map(b => `
+            <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-slate-900"><span class="px-1.5 py-0.5 rounded bg-slate-900 text-amber-400 font-mono text-[10px]">${escapeHtml(b.vehicle || '-')}</span> ${escapeHtml(b.description || b.type || '')}</div>
+                <div class="text-slate-500 mt-0.5">${escapeHtml(b.supplier || '-')} • ${formatDateTR(b.date)} ${b.km ? '• ' + escapeHtml(b.km) : ''}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-rose-700">${formatCurrency(b.cost)}</span>
+                <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
+                <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+              </div>
+            </div>
+          `).join('');
+      } else if (currentDetailSiteSubtab === 'fatura') {
+        contentEl.innerHTML = fats.length === 0
+          ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede fatura kaydı yok.</div>'
+          : fats.map(f => `
+            <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div>
+                <div class="font-bold text-slate-900">${escapeHtml(f.invoiceNo || '-')} — ${escapeHtml(f.title || '')}</div>
+                <div class="text-slate-500 mt-0.5">${escapeHtml(f.supplier || '-')} • ${formatDateTR(f.date)}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900">${formatCurrency(f.total)}</span>
+                <button type="button" data-edit-fatura="${escapeHtml(f.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
+                <button type="button" data-delete-fatura="${escapeHtml(f.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+              </div>
+            </div>
+          `).join('');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // =========================================================================
+    // ARAÇLARIM SEKMESİ & ARAÇ DETAY / PLAKA DÜZENLEME
+    // =========================================================================
+    let currentDetailVehicleName = '';
+
+    function getAllVehiclesAggregated() {
+      const map = {};
+      const ensureVeh = (name) => {
+        const key = (name || '').trim() || 'Belirtilmemiş Araç';
+        if (!map[key]) {
+          map[key] = {
+            vehicle: key,
+            records: [],
+            zimmet: null,
+            totalCost: 0,
+            count: 0,
+            lastDate: '',
+            lastKm: '',
+            nextDate: '',
+            site: '',
+            person: ''
+          };
+        }
+        return map[key];
+      };
+
+      (appState.aracBakimlar || []).forEach(b => {
+        const v = ensureVeh(b.vehicle);
+        v.records.push(b);
+        v.totalCost += Number(b.cost) || 0;
+        v.count += 1;
+        if (!v.lastDate || (b.date || '') >= v.lastDate) {
+          v.lastDate = b.date || '';
+          if (b.km) v.lastKm = b.km;
+          if (b.nextDate) v.nextDate = b.nextDate;
+          if (b.site) v.site = b.site;
+        }
+      });
+
+      (appState.zimmetler || []).forEach(z => {
+        const cat = (z.category || '').toLowerCase();
+        if (cat.includes('araç') || cat.includes('arac') || cat.includes('makine')) {
+          const label = z.serial ? `${z.serial} - ${z.name}` : z.name;
+          // Eğer aynı plaka/isim zaten bakım kayıtlarında varsa eşleştir
+          const existingKey = Object.keys(map).find(k =>
+            k.toLowerCase() === (z.serial || '').toLowerCase() ||
+            k.toLowerCase() === (z.name || '').toLowerCase() ||
+            (z.serial && k.toLowerCase().includes(z.serial.toLowerCase()))
+          );
+          const v = ensureVeh(existingKey || label);
+          v.zimmet = z;
+          if (!v.site && z.site) v.site = z.site;
+          if (z.person) v.person = z.person;
+        }
+      });
+
+      return Object.values(map).sort((a, b) => b.totalCost - a.totalCost);
+    }
+
+    function renderAraclarim() {
+      const list = getAllVehiclesAggregated();
+      const badge = document.getElementById('badgeAracCount');
+      if (badge) badge.textContent = list.length;
+
+      const q = (document.getElementById('araclarimSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const filtered = list.filter(v => {
+        if (!q) return true;
+        return `${v.vehicle} ${v.site} ${v.person}`.toLocaleLowerCase('tr-TR').includes(q);
+      });
+
+      const strip = document.getElementById('araclarimSummaryStrip');
+      if (strip) {
+        const totalSpend = list.reduce((a, v) => a + v.totalCost, 0);
+        const totalOps = list.reduce((a, v) => a + v.count, 0);
+        strip.innerHTML = `
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Kayıtlı Araç / Makine</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${list.length}</div></div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam Bakım / Tamir</div><div class="text-2xl font-extrabold text-amber-700 mt-1">${formatCurrency(totalSpend)}</div></div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam İşlem Adedi</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${totalOps}</div></div>
+        `;
+      }
+
+      const grid = document.getElementById('araclarimGrid');
+      if (!grid) return;
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-400">Aramanıza uygun araç veya makine bulunamadı.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(v => `
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3">
+          <div class="space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 text-amber-400 font-mono text-xs font-bold">
+                  <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                  ${escapeHtml(v.vehicle)}
+                </span>
+                <div class="text-[11px] text-slate-500 mt-1.5">${escapeHtml(v.site || 'Genel')} ${v.person ? '• Zimmetli: <strong>' + escapeHtml(v.person) + '</strong>' : ''}</div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Toplam Masraf</span>
+                <span class="text-base font-extrabold text-amber-700">${formatCurrency(v.totalCost)}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+              <div><span class="text-slate-400 block">İşlem</span><span class="font-bold text-slate-800">${v.count} Adet</span></div>
+              <div><span class="text-slate-400 block">Son İşlem</span><span class="font-bold text-slate-800">${v.lastDate ? formatDateTR(v.lastDate) : '-'}</span></div>
+              <div><span class="text-slate-400 block">Son KM</span><span class="font-bold text-slate-800">${escapeHtml(v.lastKm || '-')}</span></div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <button type="button" data-open-vehicle-detail="${escapeHtml(v.vehicle)}" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition">
+              <i data-lucide="history" class="w-3.5 h-3.5 text-sky-400"></i>
+              <span>Detay &amp; Geçmiş (${v.count})</span>
+            </button>
+            <button type="button" data-rename-vehicle="${escapeHtml(v.vehicle)}" class="p-2 rounded-lg text-xs bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 transition" title="Plaka / Araç Adını Düzenle">
+              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openVehicleDetailModal(vehicleName) {
+      currentDetailVehicleName = vehicleName;
+      renderVehicleDetailModal();
+      openModal('modalVehicleDetail');
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renameVehicle(oldName, newName) {
+      const cleanOld = (oldName || '').trim();
+      const cleanNew = (newName || '').trim();
+      if (!cleanOld || !cleanNew || cleanOld === cleanNew) return false;
+      let count = 0;
+      (appState.aracBakimlar || []).forEach(b => {
+        if ((b.vehicle || '').trim() === cleanOld) { b.vehicle = cleanNew; count++; }
+      });
+      if (currentDetailVehicleName === cleanOld) currentDetailVehicleName = cleanNew;
+      saveState();
+      showToast(`"${cleanOld}" aracı "${cleanNew}" olarak güncellendi (${count} bakım kaydı).`);
+      return true;
+    }
+
+    function promptRenameVehicle(oldName) {
+      const next = prompt(`"${oldName}" aracının yeni plaka / adını girin:`, oldName);
+      if (next === null) return;
+      const trimmed = next.trim();
+      if (!trimmed) { showToast('Araç adı boş olamaz.', 'error'); return; }
+      if (trimmed === oldName) return;
+      renameVehicle(oldName, trimmed);
+    }
+
+    function renderVehicleDetailModal() {
+      const veh = getAllVehiclesAggregated().find(v => v.vehicle === currentDetailVehicleName);
+      if (!veh) return;
+      const titleEl = document.getElementById('vehicleDetailTitle');
+      if (titleEl) titleEl.textContent = veh.vehicle;
+      const subEl = document.getElementById('vehicleDetailSubtitle');
+      if (subEl) subEl.textContent = `${veh.site || 'Genel'}${veh.person ? ' • Zimmetli: ' + veh.person : ''} • ${veh.count} Bakım/Tamir Kaydı`;
+
+      const kpis = document.getElementById('vehicleDetailKpis');
+      if (kpis) {
+        kpis.innerHTML = `
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Toplam Masraf</div><div class="text-sm font-extrabold text-amber-700 mt-0.5">${formatCurrency(veh.totalCost)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">İşlem Sayısı</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${veh.count}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Son İşlem / KM</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${veh.lastDate ? formatDateTR(veh.lastDate) : '-'} ${veh.lastKm ? '(' + escapeHtml(veh.lastKm) + ')' : ''}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Sonraki Bakım</div><div class="text-sm font-extrabold text-indigo-700 mt-0.5">${veh.nextDate ? formatDateTR(veh.nextDate) : '-'}</div></div>
+        `;
+      }
+
+      const hist = document.getElementById('vehicleDetailHistory');
+      if (!hist) return;
+      const sorted = [...veh.records].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      hist.innerHTML = sorted.length === 0
+        ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu araca ait bakım/tamir kaydı bulunmuyor.</div>'
+        : sorted.map(b => `
+          <div class="bg-white rounded-xl border border-slate-200 p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="space-y-0.5">
+              <div class="font-bold text-slate-900">${escapeHtml(b.type || 'Bakım')} — ${escapeHtml(b.description || '')}</div>
+              <div class="text-slate-500">${formatDateTR(b.date)} • Servis: ${escapeHtml(b.supplier || '-')} • Şantiye: ${escapeHtml(b.site || '-')} ${b.km ? '• ' + escapeHtml(b.km) : ''} ${b.invoiceNo ? '• Fatura: ' + escapeHtml(b.invoiceNo) : ''}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-amber-700 text-sm">${formatCurrency(b.cost)}</span>
+              <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
+              <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
+            </div>
+          </div>
+        `).join('');
     }
 
     function renderGlobalSearch() {
@@ -5624,6 +6103,61 @@ KURALLAR:
           saveState();
           showToast('Tüm liste sıfırlandı, kendi verilerinizi girebilirsiniz.');
         }
+      });
+
+      // Şantiye Detay, Şantiye Adı Düzenleme & Araçlarım Eventleri
+      document.addEventListener('click', (e) => {
+        const openSiteBtn = e.target.closest('[data-open-site-detail]');
+        if (openSiteBtn) {
+          openSiteDetailModal(openSiteBtn.getAttribute('data-open-site-detail'));
+          return;
+        }
+        const renameSiteBtn = e.target.closest('[data-rename-site]');
+        if (renameSiteBtn) {
+          promptRenameSite(renameSiteBtn.getAttribute('data-rename-site'));
+          return;
+        }
+        const subtabBtn = e.target.closest('[data-site-subtab]');
+        if (subtabBtn) {
+          currentDetailSiteSubtab = subtabBtn.getAttribute('data-site-subtab') || 'stok';
+          renderSiteDetailModal();
+          return;
+        }
+        const openVehBtn = e.target.closest('[data-open-vehicle-detail]');
+        if (openVehBtn) {
+          openVehicleDetailModal(openVehBtn.getAttribute('data-open-vehicle-detail'));
+          return;
+        }
+        const renameVehBtn = e.target.closest('[data-rename-vehicle]');
+        if (renameVehBtn) {
+          promptRenameVehicle(renameVehBtn.getAttribute('data-rename-vehicle'));
+          return;
+        }
+      });
+
+      document.getElementById('btnRenameCurrentSite')?.addEventListener('click', () => {
+        if (currentDetailSiteName) promptRenameSite(currentDetailSiteName);
+      });
+      document.getElementById('btnSiteDetailExcel')?.addEventListener('click', () => {
+        if (currentDetailSiteName) exportSiteToExcel(currentDetailSiteName);
+      });
+      document.getElementById('araclarimSearchInput')?.addEventListener('input', renderAraclarim);
+      document.getElementById('btnOpenNewVehicleBakim')?.addEventListener('click', () => {
+        document.getElementById('formAracBakim')?.reset();
+        const editId = document.getElementById('bakimEditId');
+        if (editId) editId.value = '';
+        openModal('modalAracBakim');
+      });
+      document.getElementById('btnRenameCurrentVehicle')?.addEventListener('click', () => {
+        if (currentDetailVehicleName) promptRenameVehicle(currentDetailVehicleName);
+      });
+      document.getElementById('btnAddBakimToVehicle')?.addEventListener('click', () => {
+        document.getElementById('formAracBakim')?.reset();
+        const editId = document.getElementById('bakimEditId');
+        if (editId) editId.value = '';
+        const vehInput = document.getElementById('bakimVehicleInput');
+        if (vehInput && currentDetailVehicleName) vehInput.value = currentDetailVehicleName;
+        openModal('modalAracBakim');
       });
 
       // Kullanıcı & Rol Yönetimi Eventleri
