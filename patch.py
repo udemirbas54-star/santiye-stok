@@ -1,14 +1,17 @@
-import base64, gzip, json, urllib.request
+import base64, zlib, gzip
 
-old = urllib.request.urlopen('https://raw.githubusercontent.com/udemirbas54-star/santiye-stok/main/index.html').read().decode('utf-8').replace('\r\n','\n').split('\n')
-ops = json.loads(gzip.decompress(base64.b64decode(open('p.b64').read().strip())).decode('utf-8'))
-out = []
-for op in ops:
-    if op.startswith('@'):
-        s, c = map(int, op[1:].split(':'))
-        out.extend(old[s:s+c])
-    else:
-        out.append(op[1:])
-res = '\n'.join(out)
-open('index.html', 'w', encoding='utf-8').write(res)
-print('PATCH_OK_LEN:', len(res))
+raw_b64 = open('p.b64').read().strip()
+print('RAW_B64_LEN:', len(raw_b64))
+
+data = base64.b64decode(raw_b64)
+print('DATA_LEN:', len(data))
+
+d = zlib.decompressobj(16 + zlib.MAX_WBITS)
+out = b''
+for i in range(len(data)):
+    try:
+        out += d.decompress(data[i:i+1])
+    except Exception as e:
+        print(f"FAILED AT BYTE {i}/{len(data)}: {e}")
+        break
+print('DECOMPRESSED SO FAR:', len(out))
