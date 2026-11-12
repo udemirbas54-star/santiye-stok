@@ -28,6 +28,17 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.05); }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 9999px; }
+    body.role-saha [data-delete-zimmet],
+    body.role-saha [data-delete-malzeme],
+    body.role-saha [data-delete-sarf],
+    body.role-saha [data-delete-bakim],
+    body.role-saha [data-delete-fatura],
+    body.role-saha #btnResetDataModal,
+    body.role-saha #btnOpenFirebaseModal,
+    body.role-saha #btnOpenUsersModal,
+    body.role-saha .admin-only {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="min-h-full text-slate-800 bg-slate-50 flex flex-col">
@@ -91,6 +102,19 @@
 
         <button id="btnResetDataModal" type="button" class="p-1.5 rounded-lg text-xs bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-800/60 transition" title="Verileri Sıfırla">
           <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        </button>
+
+        <div id="userRolePill" class="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-200" title="Aktif Kullanıcı ve Rol">
+          <span id="userRoleBadge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950">Admin</span>
+          <span id="userEmailShort" class="max-w-[110px] truncate text-slate-300">-</span>
+        </div>
+
+        <button id="btnOpenUsersModal" type="button" class="admin-only p-1.5 rounded-lg text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition" title="Kullanıcılar ve Roller">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+        </button>
+
+        <button id="btnLogout" type="button" class="p-1.5 rounded-lg text-xs bg-slate-800 hover:bg-rose-900/80 text-slate-300 hover:text-rose-200 border border-slate-700 transition" title="Çıkış Yap">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
         </button>
       </div>
     </div>
@@ -1349,6 +1373,72 @@
     <option value="Honda Çim Biçme Makinesi"></option>
   </datalist>
 
+  <!-- KULLANICI GİRİŞ EKRANI (AUTH GATE) -->
+  <div id="authOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="bg-slate-900 px-6 py-5 text-white flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow">
+          <i data-lucide="hard-hat" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold leading-tight">Şantiye Stok &amp; Fatura Takip</h1>
+          <p class="text-xs text-slate-400">Yetkili Kullanıcı Girişi</p>
+        </div>
+      </div>
+      <form id="authLoginForm" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">E-posta Adresi</label>
+          <input id="authEmailInput" type="email" required autocomplete="email" placeholder="ornek@firma.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Şifre</label>
+          <input id="authPasswordInput" type="password" required autocomplete="current-password" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none" />
+        </div>
+        <div id="authErrorBox" class="hidden text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3.5 py-2.5"></div>
+        <button id="authSubmitBtn" type="submit" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Giriş Yap</span>
+        </button>
+        <p class="text-[11px] text-slate-500 text-center">
+          Yeni kullanıcı hesapları yalnızca yönetici (Admin) tarafından oluşturulabilir.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- KULLANICI & ROL YÖNETİMİ MODALI (ADMIN ONLY) -->
+  <div id="modalUsers" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i>
+          <h3 class="text-base font-bold">Kullanıcı &amp; Rol Yönetimi (Admin)</h3>
+        </div>
+        <button type="button" data-close-modal="modalUsers" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-5">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Yeni Ekip Kullanıcısı Oluştur</h4>
+          <form id="createTeamUserForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input id="newUserEmail" type="email" required placeholder="personel@firma.com" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="newUserPassword" type="password" required minlength="6" placeholder="Şifre (en az 6 karakter)" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500" />
+            <select id="newUserRole" class="px-3 py-2 rounded-lg border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-amber-500 bg-white">
+              <option value="saha">Saha Personeli (Ekleme &amp; Görüntüleme, Silme Yok)</option>
+              <option value="admin">Admin (Tam Yetki)</option>
+            </select>
+            <button type="submit" class="px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">
+              + Kullanıcı Oluştur &amp; Rol Ata
+            </button>
+          </form>
+        </div>
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Tanımlı Roller</h4>
+          <div id="userRolesList" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden bg-white text-xs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
   <script>
     // =========================================================================
@@ -1642,6 +1732,10 @@
         delete clean.pdfData;
         return clean;
       });
+      if (!st.userRoles || typeof st.userRoles !== 'object' || Array.isArray(st.userRoles)) {
+        st.userRoles = {};
+      }
+      st.userRoles['udemirbas54@gmail.com'] = 'admin';
       return st;
     }
 
@@ -2124,6 +2218,191 @@
     }
 
     // =========================================================================
+    // FIREBASE AUTHENTICATION & ROL YÖNETİMİ (REST API)
+    // =========================================================================
+    const AUTH_STORAGE_KEY = 'santiye_stok_auth_v1';
+    const SUPER_ADMIN_EMAIL = 'udemirbas54@gmail.com';
+    let authSession = loadAuthSession();
+
+    function loadAuthSession() {
+      try {
+        const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveAuthSession(session) {
+      authSession = session;
+      try {
+        if (session) localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+        else localStorage.removeItem(AUTH_STORAGE_KEY);
+      } catch (e) {}
+    }
+
+    function getCurrentUserEmail() {
+      return (authSession?.email || '').trim().toLowerCase();
+    }
+
+    function getCurrentUserRole() {
+      const email = getCurrentUserEmail();
+      if (!email) return 'saha';
+      if (email === SUPER_ADMIN_EMAIL) return 'admin';
+      return appState?.userRoles?.[email] === 'admin' ? 'admin' : 'saha';
+    }
+
+    function isAdmin() {
+      return getCurrentUserRole() === 'admin';
+    }
+
+    function applyRoleUi() {
+      const role = getCurrentUserRole();
+      const email = getCurrentUserEmail();
+      document.body.classList.remove('role-admin', 'role-saha');
+      document.body.classList.add(role === 'admin' ? 'role-admin' : 'role-saha');
+      const badge = document.getElementById('userRoleBadge');
+      const shortEmail = document.getElementById('userEmailShort');
+      if (badge) {
+        badge.textContent = role === 'admin' ? 'Admin' : 'Saha';
+        badge.className = role === 'admin'
+          ? 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950'
+          : 'px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500 text-slate-950';
+      }
+      if (shortEmail) shortEmail.textContent = email || '-';
+    }
+
+    function showAuthOverlay(errorMsg = '') {
+      const overlay = document.getElementById('authOverlay');
+      const errBox = document.getElementById('authErrorBox');
+      if (overlay) overlay.classList.remove('hidden');
+      if (errBox) {
+        if (errorMsg) {
+          errBox.textContent = errorMsg;
+          errBox.classList.remove('hidden');
+        } else {
+          errBox.classList.add('hidden');
+        }
+      }
+    }
+
+    function hideAuthOverlay() {
+      document.getElementById('authOverlay')?.classList.add('hidden');
+    }
+
+    async function getValidIdToken() {
+      if (!authSession || !authSession.idToken) return null;
+      const now = Date.now();
+      if (authSession.expiresAt && now < authSession.expiresAt - 60000) {
+        return authSession.idToken;
+      }
+      if (!authSession.refreshToken) return null;
+      try {
+        const key = (appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey).trim();
+        const res = await fetch(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(key)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(authSession.refreshToken)}`
+        });
+        if (!res.ok) {
+          saveAuthSession(null);
+          return null;
+        }
+        const data = await res.json();
+        saveAuthSession({
+          ...authSession,
+          idToken: data.id_token,
+          refreshToken: data.refresh_token || authSession.refreshToken,
+          expiresAt: Date.now() + (Number(data.expires_in || 3600) * 1000)
+        });
+        return data.id_token;
+      } catch (e) {
+        return authSession.idToken || null;
+      }
+    }
+
+    async function signInWithEmailPassword(email, password) {
+      const key = (appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey).trim();
+      const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password, returnSecureToken: true })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = data?.error?.message || 'Giriş başarısız';
+        if (code.includes('INVALID_LOGIN_CREDENTIALS') || code.includes('INVALID_PASSWORD') || code.includes('EMAIL_NOT_FOUND')) {
+          throw new Error('E-posta veya şifre hatalı.');
+        }
+        if (code.includes('TOO_MANY_ATTEMPTS')) {
+          throw new Error('Çok fazla hatalı deneme yapıldı. Lütfen biraz bekleyin.');
+        }
+        throw new Error(`Giriş hatası: ${code}`);
+      }
+      saveAuthSession({
+        email: (data.email || email).trim().toLowerCase(),
+        uid: data.localId,
+        idToken: data.idToken,
+        refreshToken: data.refreshToken,
+        expiresAt: Date.now() + (Number(data.expiresIn || 3600) * 1000)
+      });
+      return authSession;
+    }
+
+    async function createTeamUser(email, password, role) {
+      const key = (appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey).trim();
+      const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password, returnSecureToken: false })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const code = data?.error?.message || 'Kullanıcı oluşturulamadı';
+        if (code.includes('EMAIL_EXISTS')) {
+          throw new Error('Bu e-posta zaten kayıtlı. Aşağıdan rolünü güncelleyebilirsiniz.');
+        }
+        if (code.includes('WEAK_PASSWORD')) {
+          throw new Error('Şifre en az 6 karakter olmalıdır.');
+        }
+        throw new Error(code);
+      }
+      const cleanEmail = email.trim().toLowerCase();
+      if (!appState.userRoles || typeof appState.userRoles !== 'object') appState.userRoles = {};
+      appState.userRoles[cleanEmail] = role === 'admin' ? 'admin' : 'saha';
+      saveState();
+      renderUserRolesList();
+    }
+
+    function renderUserRolesList() {
+      const container = document.getElementById('userRolesList');
+      if (!container) return;
+      const roles = { ...(appState.userRoles || {}), [SUPER_ADMIN_EMAIL]: 'admin' };
+      const entries = Object.entries(roles).sort((a, b) => a[0].localeCompare(b[0]));
+      container.innerHTML = entries.map(([email, role]) => {
+        const isSuper = email === SUPER_ADMIN_EMAIL;
+        return `
+          <div class="flex items-center justify-between gap-3 px-3.5 py-2.5">
+            <div class="min-w-0">
+              <div class="font-semibold text-slate-900 truncate">${escapeHtml(email)}</div>
+              <div class="text-[11px] text-slate-500">${isSuper ? 'Ana Yönetici (Değiştirilemez)' : (role === 'admin' ? 'Tam Yetkili Yönetici' : 'Saha Personeli (Silme & Ayarlar Kapalı)')}</div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              ${isSuper
+                ? '<span class="px-2 py-1 rounded-md bg-amber-100 text-amber-900 font-bold text-[11px]">Admin</span>'
+                : `<select data-role-email="${escapeHtml(email)}" class="user-role-select px-2 py-1 rounded-lg border border-slate-300 bg-white text-xs font-medium">
+                     <option value="saha" ${role !== 'admin' ? 'selected' : ''}>Saha</option>
+                     <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                   </select>
+                   <button type="button" data-remove-role-email="${escapeHtml(email)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-medium">Kaldır</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
     // FIREBASE FIRESTORE BULUT SENKRONİZASYONU (REST API)
     // =========================================================================
     function getFirestoreUrl() {
@@ -2134,6 +2413,12 @@
 
     async function pushToFirestore(silent = false) {
       try {
+        const idToken = await getValidIdToken();
+        if (!idToken) {
+          setSyncBadge('error', 'Giriş Gerekli');
+          showAuthOverlay('Devam etmek için giriş yapın.');
+          return false;
+        }
         setSyncBadge('syncing', 'Eşitleniyor...');
         const payload = {
           fields: {
@@ -2144,15 +2429,20 @@
         };
         const res = await fetch(getFirestoreUrl(), {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
           body: JSON.stringify(payload)
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           const msg = errData?.error?.message || `HTTP ${res.status}`;
           setSyncBadge('error', 'Eşitleme İzni Bekleniyor');
-          if (!silent) {
-            showToast(`Firestore bağlantı uyarısı: ${msg}. Firestore Rules sekmesinden 'allow read, write: if true;' kuralını yayınlayın.`, 'error');
+          if (res.status === 401 || res.status === 403) {
+            showAuthOverlay('Oturum süresi doldu veya yetkiniz yok. Lütfen tekrar giriş yapın.');
+          } else if (!silent) {
+            showToast(`Firestore bağlantı uyarısı: ${msg}`, 'error');
           }
           return false;
         }
@@ -2168,15 +2458,29 @@
 
     async function pullFromFirestore(silent = false) {
       try {
+        const idToken = await getValidIdToken();
+        if (!idToken) {
+          setSyncBadge('error', 'Giriş Gerekli');
+          showAuthOverlay();
+          return;
+        }
         setSyncBadge('syncing', 'Buluttan Çekiliyor...');
-        const res = await fetch(getFirestoreUrl(), { method: 'GET' });
+        const res = await fetch(getFirestoreUrl(), {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${idToken}` }
+        });
         if (res.status === 404) {
           await pushToFirestore(true);
           return;
         }
         if (!res.ok) {
-          setSyncBadge('error', 'Firestore Kural İzni Gerekli');
-          if (!silent) showToast('Firestore okuma izni kapalı. Rules sekmesinden allow read, write: if true; yapın.', 'error');
+          setSyncBadge('error', 'Firestore Yetki Hatası');
+          if (res.status === 401 || res.status === 403) {
+            saveAuthSession(null);
+            showAuthOverlay('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
+          } else if (!silent) {
+            showToast('Firestore okuma izni hatası.', 'error');
+          }
           return;
         }
         const doc = await res.json();
@@ -2192,6 +2496,7 @@
           if (remoteState && Array.isArray(remoteState.zimmetler)) {
             appState = normalizeAppState(remoteState);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            applyRoleUi();
             renderAll();
             setSyncBadge('ok', `${appConfig.projectId} Eşitlendi`);
             if (!silent) showToast('Firebase Firestore bulut verileri başarıyla yüklendi!');
@@ -4917,6 +5222,7 @@ KURALLAR:
 
         const delSarfBtn = e.target.closest('[data-delete-sarf]');
         if (delSarfBtn) {
+          if (!isAdmin()) { showToast('Silme yetkiniz yok (Saha rolü).', 'error'); return; }
           const id = delSarfBtn.getAttribute('data-delete-sarf');
           appState.sarfiyatlar = (appState.sarfiyatlar || []).filter(s => s.id !== id);
           saveState();
@@ -4959,6 +5265,7 @@ KURALLAR:
 
         const delBakimBtn = e.target.closest('[data-delete-bakim]');
         if (delBakimBtn) {
+          if (!isAdmin()) { showToast('Silme yetkiniz yok (Saha rolü).', 'error'); return; }
           const id = delBakimBtn.getAttribute('data-delete-bakim');
           appState.aracBakimlar = (appState.aracBakimlar || []).filter(b => b.id !== id);
           saveState();
@@ -5064,6 +5371,7 @@ KURALLAR:
 
         const delFaturaBtn = e.target.closest('[data-delete-fatura]');
         if (delFaturaBtn) {
+          if (!isAdmin()) { showToast('Silme yetkiniz yok (Saha rolü).', 'error'); return; }
           const id = delFaturaBtn.getAttribute('data-delete-fatura');
           appState.faturalar = appState.faturalar.filter(f => f.id !== id);
           saveState();
@@ -5108,6 +5416,7 @@ KURALLAR:
 
         const delZimmetBtn = e.target.closest('[data-delete-zimmet]');
         if (delZimmetBtn) {
+          if (!isAdmin()) { showToast('Silme yetkiniz yok (Saha rolü).', 'error'); return; }
           const id = delZimmetBtn.getAttribute('data-delete-zimmet');
           appState.zimmetler = appState.zimmetler.filter(z => z.id !== id);
           saveState();
@@ -5155,6 +5464,7 @@ KURALLAR:
 
         const delMalzemeBtn = e.target.closest('[data-delete-malzeme]');
         if (delMalzemeBtn) {
+          if (!isAdmin()) { showToast('Silme yetkiniz yok (Saha rolü).', 'error'); return; }
           const id = delMalzemeBtn.getAttribute('data-delete-malzeme');
           appState.malzemeler = appState.malzemeler.filter(m => m.id !== id);
           saveState();
@@ -5166,12 +5476,14 @@ KURALLAR:
       // Üst Bar Butonları: PWA, Firebase, CSV, Sıfırlama
       document.getElementById('btnOpenPwaModal')?.addEventListener('click', () => openModal('modalPwaInstall'));
       document.getElementById('btnOpenFirebaseModal')?.addEventListener('click', () => {
+        if (!isAdmin()) { showToast('Bu ayarlar yalnızca Admin içindir.', 'error'); return; }
         document.getElementById('fbProjectIdInput').value = appConfig.projectId || DEFAULT_FB_CONFIG.projectId;
         document.getElementById('fbApiKeyInput').value = appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey;
         document.getElementById('geminiApiKeyInput').value = appConfig.geminiKey || '';
         openModal('modalFirebase');
       });
       document.getElementById('btnOpenFbFromPwa')?.addEventListener('click', () => {
+        if (!isAdmin()) { showToast('Bu ayarlar yalnızca Admin içindir.', 'error'); return; }
         closeModal('modalPwaInstall');
         openModal('modalFirebase');
       });
@@ -5305,11 +5617,88 @@ KURALLAR:
 
       // Verileri Sıfırla / Temizle
       document.getElementById('btnResetDataModal')?.addEventListener('click', () => {
+        if (!isAdmin()) { showToast('Sıfırlama yetkiniz yok (Saha rolü).', 'error'); return; }
         if (confirm('Örnek verileri temizleyip sıfırdan boş bir şantiye stok listesiyle başlamak istiyor musunuz? (İptal derseniz varsayılan örnek veriler geri yüklenir)')) {
-          appState = { updatedAt: new Date().toISOString(), zimmetler: [], malzemeler: [], sarfiyatlar: [], aracBakimlar: [], transferler: [], faturalar: [] };
+          const keepRoles = appState.userRoles || { [SUPER_ADMIN_EMAIL]: 'admin' };
+          appState = { updatedAt: new Date().toISOString(), zimmetler: [], malzemeler: [], sarfiyatlar: [], aracBakimlar: [], transferler: [], faturalar: [], userRoles: keepRoles };
           saveState();
           showToast('Tüm liste sıfırlandı, kendi verilerinizi girebilirsiniz.');
         }
+      });
+
+      // Kullanıcı & Rol Yönetimi Eventleri
+      document.getElementById('btnOpenUsersModal')?.addEventListener('click', () => {
+        if (!isAdmin()) { showToast('Bu alan yalnızca Admin içindir.', 'error'); return; }
+        renderUserRolesList();
+        openModal('modalUsers');
+      });
+
+      document.getElementById('createTeamUserForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!isAdmin()) return;
+        const email = document.getElementById('newUserEmail')?.value || '';
+        const pass = document.getElementById('newUserPassword')?.value || '';
+        const role = document.getElementById('newUserRole')?.value || 'saha';
+        try {
+          await createTeamUser(email, pass, role);
+          e.target.reset();
+          showToast(`${email.trim().toLowerCase()} (${role.toUpperCase()}) kullanıcısı oluşturuldu.`);
+        } catch (err) {
+          showToast(err.message || 'Kullanıcı oluşturulamadı.', 'error');
+        }
+      });
+
+      document.getElementById('userRolesList')?.addEventListener('change', (e) => {
+        const sel = e.target.closest('.user-role-select');
+        if (!sel || !isAdmin()) return;
+        const email = sel.getAttribute('data-role-email');
+        if (!email || email === SUPER_ADMIN_EMAIL) return;
+        if (!appState.userRoles) appState.userRoles = {};
+        appState.userRoles[email] = sel.value === 'admin' ? 'admin' : 'saha';
+        saveState();
+        renderUserRolesList();
+        showToast(`${email} rolü "${sel.value === 'admin' ? 'Admin' : 'Saha'}" olarak güncellendi.`);
+      });
+
+      document.getElementById('userRolesList')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-remove-role-email]');
+        if (!btn || !isAdmin()) return;
+        const email = btn.getAttribute('data-remove-role-email');
+        if (!email || email === SUPER_ADMIN_EMAIL) return;
+        if (appState.userRoles) delete appState.userRoles[email];
+        saveState();
+        renderUserRolesList();
+        showToast(`${email} rol listesinden kaldırıldı.`);
+      });
+
+      // Giriş & Çıkış Eventleri
+      document.getElementById('authLoginForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmailInput')?.value || '';
+        const pass = document.getElementById('authPasswordInput')?.value || '';
+        const btn = document.getElementById('authSubmitBtn');
+        const errBox = document.getElementById('authErrorBox');
+        if (errBox) errBox.classList.add('hidden');
+        if (btn) btn.disabled = true;
+        try {
+          await signInWithEmailPassword(email, pass);
+          hideAuthOverlay();
+          document.getElementById('authPasswordInput').value = '';
+          applyRoleUi();
+          renderAll();
+          await pullFromFirestore(true);
+          showToast(`Hoş geldiniz, ${getCurrentUserEmail()}`);
+        } catch (err) {
+          showAuthOverlay(err.message || 'Giriş başarısız.');
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+
+      document.getElementById('btnLogout')?.addEventListener('click', () => {
+        saveAuthSession(null);
+        showAuthOverlay();
+        showToast('Oturum kapatıldı.');
       });
 
       // PWA Native Kurulum
@@ -5332,9 +5721,19 @@ KURALLAR:
       }
 
       updateAiStatusBadge();
-      renderAll();
-      // Başlangıçta bulut senkronizasyonu dene
-      pullFromFirestore(true);
+      if (window.lucide) lucide.createIcons();
+
+      // Başlangıç Oturum Kontrolü
+      getValidIdToken().then(token => {
+        if (token) {
+          hideAuthOverlay();
+          applyRoleUi();
+          renderAll();
+          pullFromFirestore(true);
+        } else {
+          showAuthOverlay();
+        }
+      });
     });
   </script>
 </body>
