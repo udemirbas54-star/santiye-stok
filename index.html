@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr" class="h-full">
 <head>
   <meta charset="UTF-8" />
@@ -77,6 +77,11 @@
       </div>
 
       <div class="flex items-center flex-wrap gap-1.5">
+        <button id="btnOpenFreeScannerTop" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition" title="Yapay zeka kotası harcamadan 100% ücretsiz & sınırsız fatura tara (0 TL)">
+          <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+          <span>Ücretsiz Tara</span>
+          <span class="text-[10px] bg-emerald-700/90 text-emerald-100 px-1.5 py-0.2 rounded font-mono font-bold">0 TL</span>
+        </button>
         <label for="quickInvoiceUpload" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition">
           <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
           <span>Fatura Oku</span>
@@ -648,6 +653,10 @@
           <p class="text-xs text-slate-500">Yüklenen PDF veya fotoğraf faturaların sadece <strong>fatura numarası, tedarikçi, tarih ve kalem içerikleri</strong> kaydedilir; sistemde gereksiz dosya yeri kaplamaz.</p>
         </div>
         <div class="flex items-center flex-wrap gap-2">
+          <button id="btnOpenFreeScannerTab" type="button" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
+            <i data-lucide="scan-line" class="w-4 h-4"></i>
+            <span>Ücretsiz Fatura Tarama Paneli (0 TL)</span>
+          </button>
           <label for="tabInvoicePhotoUpload" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition">
             <i data-lucide="file-up" class="w-4 h-4"></i>
             <span>PDF / Fotoğraftan Fatura İçeriği Oku</span>
@@ -1366,6 +1375,11 @@
           <label class="text-xs font-bold text-slate-700">Varsayılan Şantiye:</label>
           <input id="bulkDefaultSiteInput" type="text" list="siteSuggestions" value="Kadıköy Şantiyesi" class="px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white w-44" />
           <button id="btnBulkApplyDefaultSite" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition">Tümüne Uygula</button>
+          <select id="bulkEngineSelect" class="px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-semibold" title="Fatura Okuma Motoru">
+            <option value="FREE" selected>🟢 Ücretsiz Yerel (0 TL)</option>
+            <option value="AI">✨ Yapay Zeka (Gemini)</option>
+            <option value="AUTO">🔄 Otomatik</option>
+          </select>
           <select id="bulkTaxModeSelect" class="px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-semibold">
             <option value="NET">KDV Hariç Birim Fiyatlar</option>
             <option value="GROSS">KDV Dahil Birim Fiyatlar</option>
@@ -1388,6 +1402,204 @@
         <div class="flex items-center gap-2">
           <button type="button" data-close-modal="modalBulkInvoices" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">İptal</button>
           <button id="btnCommitBulkInvoices" type="button" class="px-5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">Seçili Faturaları İşle ve Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ÜCRETSİZ FATURA TARAMA PANELİ (0 TL - YEREL MOTOR & YAPAY ZEKA DESTEKLİ) -->
+  <div id="modalFreeScanner" class="fixed inset-0 z-50 hidden bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-6xl w-full overflow-hidden my-4 flex flex-col max-h-[94vh]">
+      <!-- Başlık ve Motor Seçici -->
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
+            <i data-lucide="scan-line" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm sm:text-base font-bold">Ücretsiz Fatura Tarama Paneli</h3>
+              <span id="freeScannerEngineBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🟢 0 TL • Yerel Tarayıcı</span>
+            </div>
+            <p class="text-[11px] text-slate-300">PDF.js ve Tesseract OCR ile tarayıcınızda 100% ücretsiz &amp; sınırsız çalışır. Yapay zeka kotası harcamaz.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="inline-flex items-center rounded-xl bg-slate-800 p-1 border border-slate-700">
+            <button id="btnFreeScannerEngineFree" type="button" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white transition shadow-xs">
+              🟢 Ücretsiz (0 TL)
+            </button>
+            <button id="btnFreeScannerEngineAi" type="button" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+              ✨ Yapay Zeka
+            </button>
+          </div>
+          <button type="button" data-close-modal="modalFreeScanner" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ana Gövde -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-slate-50/60 custom-scrollbar">
+        <!-- Yükleme & Sürükle-Bırak Alanı -->
+        <div id="freeScannerDropZone" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/60 rounded-2xl p-4 sm:p-5 text-center transition cursor-pointer">
+          <input id="freeScannerFileInput" type="file" accept="image/*,application/pdf,.pdf" multiple class="hidden" />
+          <div class="flex flex-col items-center justify-center gap-2">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+            </div>
+            <div class="text-sm font-bold text-slate-800">
+              Fatura PDF veya Fotoğraflarını Buraya Sürükleyin veya <span class="text-emerald-700 underline">Seçmek İçin Tıklayın</span>
+            </div>
+            <p class="text-xs text-slate-500 max-w-xl">
+              e-Fatura, e-Arşiv PDF faturaları ve fotoğrafları anında taranır. Tek fatura veya birden fazla faturayı aynı anda yükleyebilirsiniz.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tarama İlerleme Çubuğu -->
+        <div id="freeScannerProgressBox" class="hidden p-3 bg-white rounded-xl border border-emerald-200 shadow-xs flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="loader-2" class="w-4 h-4 text-emerald-600 animate-spin"></i>
+            <span id="freeScannerProgressText" class="text-xs font-bold text-slate-800">Taranıyor...</span>
+          </div>
+          <div class="w-40 bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div id="freeScannerProgressBar" class="bg-emerald-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Taranan Faturalar Sırası (Çoklu yüklemede) -->
+        <div id="freeScannerQueueBar" class="hidden flex items-center gap-2 overflow-x-auto pb-1"></div>
+
+        <!-- Ana Bölünmüş Görünüm (Önizleme + Ayrıştırma Formu) -->
+        <div id="freeScannerContent" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <!-- Sol Kolon: Belge Önizleme -->
+          <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-3.5 shadow-xs flex flex-col">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 truncate">
+                <i data-lucide="file-text" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                <span id="freeScannerDocTitle" class="truncate max-w-[200px]">Fatura Önizleme</span>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button id="btnFreeZoomOut" type="button" class="p-1 rounded text-slate-500 hover:bg-slate-100" title="Uzaklaştır"><i data-lucide="zoom-out" class="w-3.5 h-3.5"></i></button>
+                <button id="btnFreeZoomReset" type="button" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-slate-600 hover:bg-slate-100" title="Sıfırla">100%</button>
+                <button id="btnFreeZoomIn" type="button" class="p-1 rounded text-slate-500 hover:bg-slate-100" title="Yakınlaştır"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i></button>
+              </div>
+            </div>
+            <div class="relative flex-1 min-h-[300px] max-h-[500px] bg-slate-100 rounded-xl overflow-auto border border-slate-200/80 flex items-center justify-center p-2">
+              <img id="freeScannerImgPreview" class="max-w-full object-contain rounded shadow-xs transition-transform origin-top-left" alt="Fatura Önizlemesi" />
+              <div id="freeScannerNoPreview" class="hidden text-xs text-slate-400 flex flex-col items-center gap-2">
+                <i data-lucide="file-question" class="w-8 h-8 text-slate-300"></i>
+                <span>Görsel önizlemesi oluşturulamadı</span>
+              </div>
+            </div>
+            <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <span id="freeScannerDocMeta">e-Fatura / e-Arşiv Metin Katmanı</span>
+              <button id="btnFreeReScanAi" type="button" class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline flex items-center gap-1">
+                <i data-lucide="sparkles" class="w-3 h-3"></i>
+                <span>Yapay Zeka ile Tara</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sağ Kolon: Ayrıştırılan Bilgiler ve Kalemler -->
+          <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-3.5 flex flex-col">
+            <!-- Fatura Üst Bilgileri -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Fatura Numarası *</label>
+                <input id="freeInvoiceNo" type="text" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-mono font-bold" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Satıcı / Tedarikçi *</label>
+                <input id="freeSupplier" type="text" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 font-semibold" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Fatura Tarihi *</label>
+                <input id="freeDate" type="date" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300" />
+              </div>
+            </div>
+
+            <!-- Hedef Şantiye & Kayıt Türü -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] font-bold text-emerald-800 uppercase mb-1">Hedef Şantiye *</label>
+                <input id="freeSite" type="text" list="siteSuggestions" value="Kadıköy Şantiyesi" class="w-full px-2.5 py-1.5 text-xs rounded-lg border-2 border-emerald-400 bg-emerald-50/40 font-bold text-slate-900" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Kayıt Türü</label>
+                <select id="freeTargetType" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-bold text-slate-800">
+                  <option value="MALZEME">Şantiye Malzeme Stoğuna Ekle</option>
+                  <option value="ZIMMET">Kişisel / Saha Zimmetlerine Ekle</option>
+                  <option value="ARAC_BAKIM">Araç / Makine Bakım Giderine Ekle</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Araç Bakım Seçildiğinde Ek Alanlar -->
+            <div id="freeVehicleFields" class="hidden p-3 rounded-xl bg-rose-50/70 border border-rose-200 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div>
+                <label class="block text-[10px] font-bold text-rose-950 uppercase mb-1">Araç / Plaka *</label>
+                <input id="freeVehiclePlate" type="text" list="vehicleSuggestions" placeholder="34 SGH 084" class="w-full px-2 py-1 rounded border border-rose-300 bg-white font-mono font-bold" />
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-rose-950 uppercase mb-1">Bakım Türü</label>
+                <select id="freeMaintType" class="w-full px-2 py-1 rounded border border-rose-300 bg-white">
+                  <option value="Periyodik Bakım">Periyodik Bakım</option>
+                  <option value="Arıza / Tamir / Onarım">Arıza / Tamir / Onarım</option>
+                  <option value="Lastik / Akü / Yedek Parça">Lastik / Akü / Yedek Parça</option>
+                  <option value="Muayene / Sigorta / Kasko">Muayene / Sigorta / Kasko</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-rose-950 uppercase mb-1">KM / Saat</label>
+                <input id="freeVehicleKm" type="text" placeholder="142.500 KM" class="w-full px-2 py-1 rounded border border-rose-300 bg-white" />
+              </div>
+            </div>
+
+            <!-- Kalemler Tablosu -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/70 space-y-2 flex-1">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-800 uppercase">Ayrıştırılan Kalemler</span>
+                  <span id="freeItemCountBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">0 Kalem</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" id="btnFreeUseNet" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-100">KDV Hariç</button>
+                  <button type="button" id="btnFreeUseGross" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-600 text-white">KDV Dahil</button>
+                  <button type="button" id="btnFreeAddItem" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-white hover:bg-slate-700 ml-1">
+                    <i data-lucide="plus" class="w-3 h-3"></i>
+                    <span>Satır Ekle</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="freeItemsTable" class="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar"></div>
+
+              <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-900">
+                <span>Fatura Genel Toplamı:</span>
+                <span id="freeTotalDisplay" class="text-base text-emerald-700 font-extrabold font-mono">₺0,00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alt Çubuk (Footer) -->
+      <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2 text-xs text-slate-500">
+          <span id="freeScannerSummary">Henüz fatura taranmadı</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" data-close-modal="modalFreeScanner" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Kapat</button>
+          <button id="btnCommitFreeCurrent" type="button" class="hidden px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Bu Faturayı Stoğa / Listeye Kaydet</span>
+          </button>
+          <button id="btnCommitFreeAll" type="button" class="hidden px-5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="check-check" class="w-4 h-4"></i>
+            <span id="btnCommitFreeAllText">Tüm Faturaları Stoğa Kaydet</span>
+          </button>
         </div>
       </div>
     </div>
@@ -4298,32 +4510,75 @@
 
       // 2) FATURA TARİHİ
       let date = '';
-      const labeledDate = text.match(/(?:Fatura\s*Tarihi|Düzenleme\s*Tarihi)[\s:]*(\d{2})\s*[./-]\s*(\d{2})\s*[./-]\s*(20\d{2})/i);
+      const labeledDate = text.match(/(?:Fatura\s*Tarihi|Düzenleme\s*Tarihi|Belge\s*Tarihi)[\s\S]{0,40}?(\d{2})\s*[./-]\s*(\d{2})\s*[./-]\s*(20\d{2})/i);
       if (labeledDate) {
         date = `${labeledDate[3]}-${labeledDate[2]}-${labeledDate[1]}`;
-      } else {
+      } else if (Array.isArray(pageItems) && pageItems.length > 0) {
+        const dateLabelItem = pageItems.find(it => /(?:Düzenleme|Fatura)\s*Tarihi/i.test(it.str));
+        if (dateLabelItem) {
+          const nearbyDate = pageItems.find(it =>
+            it.page === dateLabelItem.page &&
+            /\b(\d{2})\s*[./-]\s*(\d{2})\s*[./-]\s*(20\d{2})\b/.test(it.str) &&
+            (Math.abs(it.y - dateLabelItem.y) < 20 || (it.y < dateLabelItem.y && it.y > dateLabelItem.y - 45))
+          );
+          if (nearbyDate) {
+            const m = nearbyDate.str.match(/\b(\d{2})\s*[./-]\s*(\d{2})\s*[./-]\s*(20\d{2})\b/);
+            if (m) date = `${m[3]}-${m[2]}-${m[1]}`;
+          }
+        }
+      }
+      if (!date) {
         const anyDate = text.match(/\b(\d{2})\s*[./-]\s*(\d{2})\s*[./-]\s*(20\d{2})\b/);
         if (anyDate) date = `${anyDate[3]}-${anyDate[2]}-${anyDate[1]}`;
       }
 
       // 3) TEDARİKÇİ / SATICI FİRMA
       let supplier = '';
-      const buyerKeywords = /IŞIK\s*PEYZAJ|ISIK\s*PEYZAJ|GREENMALL|GREEN\s*MALL|MÜŞTERİ\s*NO|SAYIN|ETTN|FATURA\s*TİPİ|ÖZELLEŞTİRME|SENARYO|E-ARŞİV|E-FATURA|MAL\s*HİZMET|SIRA\s*NO|VERGİ\s*DAİRESİ|VKN|TCKN|TEL\s*:|E-POSTA|WEB\s*SİTESİ|TİCARET\s*SİCİL|MERSİS/i;
+      const buyerKeywords = /IŞIK\s*PEYZAJ|ISIK\s*PEYZAJ|GREENMALL|GREEN\s*MALL|DEMİRBAŞ|MÜŞTERİ\s*NO|SAYIN|ETTN|FATURA\s*TİPİ|ÖZELLEŞTİRME|SENARYO|E-ARŞİV|E-FATURA|MAL\s*HİZMET|SIRA\s*NO|VERGİ\s*DAİRESİ|VKN|TCKN|TEL\s*:|E-POSTA|WEB\s*SİTESİ|TİCARET\s*SİCİL|MERSİS/i;
+      const companyKeywords = /(?:ŞİRKETİ|ŞTİ\.?|A\.Ş\.?|A\.\s*Ş\b|ANONİM|LİMİTED|LTD\.?|TİCARET|SANAYİ|OTOMOTİV|SERVİS|MARKET|MOTORLU|PETROL|HIRDAVAT|YAPI|İNŞAAT|YEDEK\s*PARÇA|LOJİSTİK|MÜHENDİSLİK|ELEKTRİK|ELEKTRONİK|GIDA|ORMAN|PEYZAJ|MOBİLYA|KİMYA|BOYA|PLASTİK|FABRİKA|SAN\b|TİC\b)/i;
       const addressCheck = /\b(MAH\.?|MAHALLESİ|CAD\.?|CADDESİ|SOK\.?|SOKAĞI|SK\.?|BULVARI|BLV\.?|NO\s*:|KAPI\s*NO|İSTANBUL|ANKARA|İZMİR|BURSA|KOCAELİ|ANTALYA|ADANA|KONYA|GAZİANTEP|MERSİN|SAKARYA|TEKİRDAĞ|ESKİŞEHİR|KAYSERİ|SAMSUN)\b/i;
 
-      // Yöntem A: PDF koordinatlarından SAYIN başlığının üstündeki sol üst Satıcı kutusu
+      function isInvalidSupplier(str) {
+        if (!str || typeof str !== 'string') return true;
+        const s = str.trim();
+        if (s.length < 3 || s.length > 130) return true;
+        // Tarih patternleri: 03.11.2026 vb. ASLA tedarikçi olamaz
+        if (/^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(s)) return true;
+        if (/\b\d{2}[./-]\d{2}[./-]\d{4}\b/.test(s) && !companyKeywords.test(s)) return true;
+        // Saat patternleri: 14:22:05 vb.
+        if (/^\d{1,2}[:.]\d{2}([:.]\d{2})?$/.test(s)) return true;
+        // Sadece rakam, tutar, para birimi
+        if (/^[\d.,\s₺$€%+\/\\()#-]+$/.test(s)) return true;
+        // UUID, barkod veya 16+ haneli kod
+        if (/^[a-f0-9-]{20,}$/i.test(s) || /^[A-Z0-9]{16,}$/.test(s)) return true;
+        // GİB Fatura numarası
+        if (/^[A-Z0-9]{3}202\d{10}$/i.test(s)) return true;
+        // İletişim / Web
+        if (/^(?:TEL|FAKS|FAX|GSM|TELEFON|WEB|E-POSTA|EMAIL|HTTP|WWW)[\s:.]/i.test(s)) return true;
+        if (/@|\.com|\.net|\.gov|\.org/i.test(s) && !companyKeywords.test(s)) return true;
+        // VKN, Vergi No, Sicil No
+        if (/^(?:VKN|TCKN|VERGİ\s*NO|TİC\.?\s*SİC\.?|MERSİS|VERGİ\s*DAİRESİ|V\.?D\.?)[\s:.]*\d*/i.test(s)) return true;
+        // Fatura meta kelimeleri
+        if (/^(?:FATURA|E-FATURA|E-ARŞİV|İRSALİYE|DÜZENLEME\s*TARİHİ|ETTN|SENARYO|ÖZELLEŞTİRME|SAYIN|MÜŞTERİ|SIRA\s*NO|MAL\s*HİZMET|BİRİM\s*FİYAT|KDV|MATRAH|ÖDENECEK|TOPLAM|YALNIZ|BANKA|IBAN|HESAP\s*NO|ŞUBE|SAYFA\s*NO)[\s:.]*$/i.test(s)) return true;
+        // Adres satırları
+        if (addressCheck.test(s) && !companyKeywords.test(s)) return true;
+        return false;
+      }
+
+      // YÖNTEM A: PDF koordinatlarından SAYIN başlığının üstündeki sol üst Satıcı kutusu
       if (Array.isArray(pageItems) && pageItems.length > 0) {
         const page1 = pageItems.filter(it => it.page === 1);
         const sayinItem = page1.find(it => /^SAYIN\b/i.test(it.str));
         if (sayinItem) {
           const sellerCandidates = page1
-            .filter(it => it.y > sayinItem.y + 8 && it.x < 330)
+            .filter(it => it.y > sayinItem.y + 6 && it.x < 360)
             .sort((a, b) => b.y - a.y || a.x - b.x);
+
           const sellerRows = [];
           let curY = null;
           let curLine = '';
           for (const it of sellerCandidates) {
-            if (curY !== null && Math.abs(it.y - curY) > 4) {
+            if (curY !== null && Math.abs(it.y - curY) > 4.5) {
               if (curLine.trim()) sellerRows.push(curLine.trim());
               curLine = it.str;
             } else {
@@ -4332,36 +4587,71 @@
             curY = it.y;
           }
           if (curLine.trim()) sellerRows.push(curLine.trim());
-          for (const row of sellerRows) {
-            if (row.length >= 4 && !buyerKeywords.test(row) && !addressCheck.test(row) && !/^\d+$/.test(row)) {
-              supplier = row;
+
+          // 1. Öncelik: Şirket unvanı anahtar kelimeleri içeren geçerli satır
+          for (let i = 0; i < sellerRows.length; i++) {
+            const row = sellerRows[i];
+            if (!isInvalidSupplier(row) && !buyerKeywords.test(row) && companyKeywords.test(row)) {
+              let fullTitle = row;
+              if (i + 1 < sellerRows.length) {
+                const nextRow = sellerRows[i + 1];
+                if (!isInvalidSupplier(nextRow) && !buyerKeywords.test(nextRow) && (companyKeywords.test(nextRow) || /^(?:VE|TİC|SAN|ŞTİ|LTD|A\.Ş)/i.test(nextRow))) {
+                  fullTitle += ' ' + nextRow;
+                }
+              }
+              supplier = fullTitle;
               break;
+            }
+          }
+
+          // 2. Öncelik: Şirket kelimesi olmasa bile SAYIN üstündeki en geçerli unvan satırı
+          if (!supplier) {
+            for (const row of sellerRows) {
+              if (!isInvalidSupplier(row) && !buyerKeywords.test(row) && row.length >= 5 && /[A-ZÇĞİÖŞÜa-zçğıöşü]/.test(row)) {
+                supplier = row;
+                break;
+              }
             }
           }
         }
       }
 
-      // Yöntem B: SAYIN satırından önceki veya adres satırından hemen önceki satıcı unvanı
+      // YÖNTEM B: Metin satırlarından SAYIN öncesi veya ilk VKN öncesi satıcı unvanı
       if (!supplier) {
         const sayinIdx = lines.findIndex(l => /^SAYIN\b/i.test(l));
         const searchLines = sayinIdx > 0 ? lines.slice(0, sayinIdx) : lines.slice(0, 35);
-        for (const l of searchLines) {
-          if (/(?:ŞİRKETİ|ŞTİ\.?|A\.Ş\.?|ANONİM|LİMİTED|LTD\.?|TİCARET|SANAYİ|MARKET|YAPI|MAKİNE|İNŞAAT|ELEKTRİK|BİLİŞİM|TEKNOLOJİ|PEYZAJ|OTOMOTİV|HIRDAVAT|ORMAN|TARIM)/i.test(l) && !buyerKeywords.test(l) && !addressCheck.test(l)) {
-            supplier = l;
+
+        for (let i = 0; i < searchLines.length; i++) {
+          const l = searchLines[i];
+          if (!isInvalidSupplier(l) && !buyerKeywords.test(l) && companyKeywords.test(l)) {
+            let fullTitle = l;
+            if (i + 1 < searchLines.length) {
+              const nextL = searchLines[i + 1];
+              if (!isInvalidSupplier(nextL) && !buyerKeywords.test(nextL) && (companyKeywords.test(nextL) || /^(?:VE|TİC|SAN|ŞTİ|LTD|A\.Ş)/i.test(nextL))) {
+                fullTitle += ' ' + nextL;
+              }
+            }
+            supplier = fullTitle;
             break;
           }
         }
+
         if (!supplier) {
-          for (let i = 1; i < lines.length; i++) {
-            if (addressCheck.test(lines[i])) {
-              const prev = lines[i - 1];
-              if (prev && prev.length >= 5 && prev.length <= 100 && !buyerKeywords.test(prev) && !addressCheck.test(prev) && !/\b202\d\b/.test(prev) && !/^\d/.test(prev)) {
+          for (let i = 1; i < searchLines.length; i++) {
+            if (addressCheck.test(searchLines[i])) {
+              const prev = searchLines[i - 1];
+              if (prev && !isInvalidSupplier(prev) && !buyerKeywords.test(prev) && /[A-ZÇĞİÖŞÜa-zçğıöşü]/.test(prev)) {
                 supplier = prev;
                 break;
               }
             }
           }
         }
+      }
+
+      // Temizlik: Başındaki "Satıcı:", "Tedarikçi:" gibi ön ekleri kaldır
+      if (supplier) {
+        supplier = supplier.replace(/^(?:Satıcı\s*Unvanı|Satıcı\s*Firma|Satıcı|Tedarikçi|Firma)[\s:]+/i, '').trim();
       }
 
       // Pazaryeri / Aracı e-Fatura notu (Örn. Hepsiburada / Trendyol)
@@ -4371,7 +4661,8 @@
         supplier = `${supplier} (Trendyol)`;
       }
 
-      // 4) ÖDENECEK TOPLAM TUTAR
+
+            // 4) ÖDENECEK TOPLAM TUTAR
       let payableTotal = 0;
       const payableMatch = text.match(/(?:Ödenecek\s*Tutar|Vergiler\s*Dahil\s*Toplam\s*Tutar|Genel\s*Toplam|Fatura\s*Tutarı|Toplam\s*Tutar)[\s:]*([\d.,]+)\s*(?:TL|TRY|₺|USD|EUR)?/i);
       if (payableMatch) payableTotal = parseTrNumber(payableMatch[1]);
@@ -4624,7 +4915,7 @@ KURALLAR:
     }
 
     // Tek noktadan fatura okuma: önce Yapay Zeka, olmazsa PDF metin / OCR yedeği
-    async function readInvoiceFile(file, forceTargetType = null, onProgress = () => {}) {
+    async function readInvoiceFile(file, forceTargetType = null, onProgress = () => {}, enginePreference = 'AUTO') {
       const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
       const extracted = {
         invoiceNo: '',
@@ -4658,8 +4949,9 @@ KURALLAR:
         aiPayload = await compressImageDataUrl(raw, 2000, 0.88);
       }
 
-      // 1) YAPAY ZEKA (öncelikli)
-      if (appConfig.geminiKey) {
+      // 1) YAPAY ZEKA (öncelikli veya isteğe bağlı)
+      const allowAi = enginePreference === 'AI' || (enginePreference === 'AUTO' && !!appConfig.geminiKey);
+      if (allowAi && appConfig.geminiKey) {
         onProgress('Yapay zeka faturayı okuyor...', 55);
         const ai = await callGeminiInvoiceParser(aiPayload, aiMime);
         if (ai && ai.items && ai.items.length) {
@@ -4677,6 +4969,7 @@ KURALLAR:
           }
           extracted.isMaintenance = extracted.targetType === 'ARAC_BAKIM';
           extracted.readBy = 'AI';
+          extracted.previewUrl = (pdfInfo ? (pdfInfo.previewDataUrl || pdfInfo.pagePreviewDataUrl) : aiPayload) || '';
           onProgress('Tamamlandı', 100);
           return extracted;
         }
@@ -4714,7 +5007,8 @@ KURALLAR:
       }
       if (!extracted.invoiceNo) extracted.invoiceNo = `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
       if (!extracted.supplier) extracted.supplier = 'Tedarikçi Firma';
-      extracted.readBy = 'YEDEK';
+      extracted.readBy = (enginePreference === 'FREE') ? 'FREE' : 'YEDEK';
+      extracted.previewUrl = (pdfInfo ? (pdfInfo.previewDataUrl || pdfInfo.pagePreviewDataUrl) : aiPayload) || '';
       onProgress('Tamamlandı', 100);
       return extracted;
     }
@@ -4906,7 +5200,8 @@ KURALLAR:
         renderBulkQueue();
 
         try {
-          const res = await readInvoiceFile(entry.file, null, () => {});
+          const enginePref = document.getElementById('bulkEngineSelect')?.value || 'FREE';
+          const res = await readInvoiceFile(entry.file, null, () => {}, enginePref);
           entry.invoiceNo = res.invoiceNo || `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
           entry.supplier = res.supplier || 'Tedarikçi Firma';
           entry.date = res.date || new Date().toISOString().slice(0, 10);
@@ -5140,6 +5435,465 @@ KURALLAR:
       });
 
       // Toplu Fatura Yükleme Inputları & Kuyruk Etkileşimleri
+      
+    // =========================================================================
+    // ÜCRETSİZ FATURA TARAMA PANELİ (0 TL - YEREL MOTOR & YAPAY ZEKA DESTEKLİ)
+    // =========================================================================
+    let freeScannerQueue = [];
+    let freeScannerActiveIndex = 0;
+    let freeScannerZoom = 1;
+    let freeScannerEngine = 'FREE'; // 'FREE' veya 'AI'
+
+    function formatFileSize(bytes) {
+      if (!bytes || isNaN(bytes)) return '0 KB';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function openFreeScannerModal(files = null) {
+      openModal('modalFreeScanner');
+      if (window.lucide?.createIcons) window.lucide.createIcons();
+      if (files && files.length > 0) {
+        handleFreeScannerFiles(files);
+      }
+    }
+
+    function setFreeScannerEngine(engine) {
+      freeScannerEngine = engine === 'AI' ? 'AI' : 'FREE';
+      const btnFree = document.getElementById('btnFreeScannerEngineFree');
+      const btnAi = document.getElementById('btnFreeScannerEngineAi');
+      const badge = document.getElementById('freeScannerEngineBadge');
+
+      if (freeScannerEngine === 'AI') {
+        btnFree?.classList.remove('bg-emerald-600', 'text-white', 'font-bold');
+        btnFree?.classList.add('text-slate-300', 'font-semibold');
+        btnAi?.classList.add('bg-indigo-600', 'text-white', 'font-bold');
+        btnAi?.classList.remove('text-slate-300', 'font-semibold');
+        if (badge) {
+          badge.textContent = '✨ Yapay Zeka (Gemini)';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40';
+        }
+      } else {
+        btnAi?.classList.remove('bg-indigo-600', 'text-white', 'font-bold');
+        btnAi?.classList.add('text-slate-300', 'font-semibold');
+        btnFree?.classList.add('bg-emerald-600', 'text-white', 'font-bold');
+        btnFree?.classList.remove('text-slate-300', 'font-semibold');
+        if (badge) {
+          badge.textContent = '🟢 0 TL • Yerel Tarayıcı';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        }
+      }
+    }
+
+    async function handleFreeScannerFiles(fileList) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+
+      const progBox = document.getElementById('freeScannerProgressBox');
+      const progText = document.getElementById('freeScannerProgressText');
+      const progBar = document.getElementById('freeScannerProgressBar');
+      const content = document.getElementById('freeScannerContent');
+
+      progBox?.classList.remove('hidden');
+      if (progText) progText.textContent = `Faturalar hazırlanıyor... (0/${files.length})`;
+      if (progBar) progBar.style.width = '5%';
+
+      const defaultSite = document.getElementById('freeSite')?.value.trim() || 'Kadıköy Şantiyesi';
+
+      freeScannerQueue = files.map((file, i) => ({
+        file,
+        fileName: file.name,
+        fileSize: file.size,
+        status: 'PENDING',
+        errorMsg: '',
+        extracted: null,
+        saved: false,
+        targetType: 'MALZEME',
+        site: defaultSite,
+        vehiclePlate: '',
+        maintType: 'Periyodik Bakım',
+        vehicleKm: '',
+        taxMode: 'GROSS',
+        calculatedTotal: 0
+      }));
+
+      freeScannerActiveIndex = 0;
+      freeScannerZoom = 1;
+      renderFreeScannerQueueBar();
+
+      for (let i = 0; i < freeScannerQueue.length; i++) {
+        const entry = freeScannerQueue[i];
+        entry.status = 'SCANNING';
+        renderFreeScannerQueueBar();
+
+        if (progText) progText.textContent = `${entry.fileName} yerel motorla okunuyor (${i + 1}/${files.length})...`;
+        if (progBar) progBar.style.width = `${Math.round(((i + 0.3) / files.length) * 100)}%`;
+
+        try {
+          const extracted = await readInvoiceFile(entry.file, null, (msg, pct) => {
+            if (progText) progText.textContent = `${entry.fileName}: ${msg}`;
+          }, freeScannerEngine);
+
+          entry.status = 'DONE';
+          entry.extracted = extracted;
+          entry.previewUrl = extracted.previewUrl || '';
+          entry.site = extracted.site || entry.site || defaultSite;
+          if (extracted.targetType) entry.targetType = extracted.targetType;
+          if (extracted.detectedPlate) entry.vehiclePlate = extracted.detectedPlate;
+          if (extracted.maintType) entry.maintType = extracted.maintType;
+          if (extracted.vehicleKm) entry.vehicleKm = extracted.vehicleKm;
+        } catch (err) {
+          console.error('Ücretsiz fatura okuma hatası:', err);
+          entry.status = 'ERROR';
+          entry.errorMsg = err?.message || 'Tarama hatası';
+        }
+
+        if (progBar) progBar.style.width = `${Math.round(((i + 1) / files.length) * 100)}%`;
+        renderFreeScannerQueueBar();
+
+        if (i === 0) {
+          content?.classList.remove('hidden');
+          renderFreeScannerActiveEntry();
+        }
+      }
+
+      progBox?.classList.add('hidden');
+      content?.classList.remove('hidden');
+      renderFreeScannerQueueBar();
+      renderFreeScannerActiveEntry();
+      const doneCount = freeScannerQueue.filter(x => x.status === 'DONE').length;
+      showToast(`${doneCount} fatura ücretsiz yerel motorla başarıyla tarandı!`, 'success');
+      if (window.lucide?.createIcons) window.lucide.createIcons();
+    }
+
+    function renderFreeScannerQueueBar() {
+      const bar = document.getElementById('freeScannerQueueBar');
+      if (!bar) return;
+      if (freeScannerQueue.length <= 1) {
+        bar.classList.add('hidden');
+        bar.innerHTML = '';
+        return;
+      }
+      bar.classList.remove('hidden');
+      bar.innerHTML = freeScannerQueue.map((entry, idx) => {
+        const isActive = idx === freeScannerActiveIndex;
+        const statusIcon =
+          entry.status === 'PENDING' ? '⏳' :
+          entry.status === 'SCANNING' ? '⚙️' :
+          entry.status === 'ERROR' ? '✕' :
+          entry.saved ? '✓ (Kayıtlı)' : '✓';
+        const activeClass = isActive
+          ? 'bg-emerald-600 text-white font-bold border-emerald-700 shadow-xs'
+          : entry.saved
+            ? 'bg-slate-100 text-slate-500 border-slate-200'
+            : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200';
+
+        return `
+          <button type="button" class="shrink-0 px-2.5 py-1 rounded-lg text-xs border transition flex items-center gap-1.5 ${activeClass}" data-free-queue-idx="${idx}">
+            <span>${statusIcon}</span>
+            <span class="truncate max-w-[140px]">${escapeHtml(entry.fileName)}</span>
+            ${entry.status === 'DONE' && entry.calculatedTotal > 0 ? `<span class="text-[10px] opacity-80 font-mono">${formatCurrency(entry.calculatedTotal)}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderFreeScannerActiveEntry() {
+      const entry = freeScannerQueue[freeScannerActiveIndex];
+      if (!entry) return;
+
+      const titleEl = document.getElementById('freeScannerDocTitle');
+      const imgEl = document.getElementById('freeScannerImgPreview');
+      const noPrevEl = document.getElementById('freeScannerNoPreview');
+      const metaEl = document.getElementById('freeScannerDocMeta');
+
+      if (titleEl) titleEl.textContent = entry.fileName;
+
+      const preview = entry.previewUrl || entry.extracted?.previewUrl;
+      if (preview) {
+        if (imgEl) {
+          imgEl.src = preview;
+          imgEl.classList.remove('hidden');
+          imgEl.style.transform = `scale(${freeScannerZoom})`;
+        }
+        noPrevEl?.classList.add('hidden');
+      } else {
+        imgEl?.classList.add('hidden');
+        noPrevEl?.classList.remove('hidden');
+      }
+
+      if (metaEl) {
+        const engineLabel = entry.extracted?.readBy === 'AI'
+          ? '✨ Yapay Zeka (Gemini)'
+          : '🟢 Ücretsiz Yerel Okuyucu (0 TL)';
+        metaEl.textContent = `${engineLabel} • ${formatFileSize(entry.fileSize || 0)}`;
+      }
+
+      const invNoInput = document.getElementById('freeInvoiceNo');
+      const supInput = document.getElementById('freeSupplier');
+      const dateInput = document.getElementById('freeDate');
+      const siteInput = document.getElementById('freeSite');
+      const targetSelect = document.getElementById('freeTargetType');
+      const vehicleBox = document.getElementById('freeVehicleFields');
+      const plateInput = document.getElementById('freeVehiclePlate');
+      const maintSelect = document.getElementById('freeMaintType');
+      const kmInput = document.getElementById('freeVehicleKm');
+
+      if (invNoInput) invNoInput.value = entry.extracted?.invoiceNo || '';
+      if (supInput) supInput.value = entry.extracted?.supplier || '';
+      if (dateInput) dateInput.value = entry.extracted?.date || new Date().toISOString().slice(0, 10);
+      if (siteInput) siteInput.value = entry.site || 'Kadıköy Şantiyesi';
+      if (targetSelect) targetSelect.value = entry.targetType || 'MALZEME';
+
+      if (entry.targetType === 'ARAC_BAKIM') {
+        vehicleBox?.classList.remove('hidden');
+        if (plateInput) plateInput.value = entry.vehiclePlate || '';
+        if (maintSelect) maintSelect.value = entry.maintType || 'Periyodik Bakım';
+        if (kmInput) kmInput.value = entry.vehicleKm || '';
+      } else {
+        vehicleBox?.classList.add('hidden');
+      }
+
+      renderFreeScannerItems();
+      updateFreeScannerFooter();
+    }
+
+    function renderFreeScannerItems() {
+      const entry = freeScannerQueue[freeScannerActiveIndex];
+      if (!entry) return;
+      const itemsContainer = document.getElementById('freeItemsTable');
+      const countBadge = document.getElementById('freeItemCountBadge');
+      const totalDisplay = document.getElementById('freeTotalDisplay');
+      if (!itemsContainer) return;
+
+      const items = entry.extracted?.items || [];
+      if (countBadge) countBadge.textContent = `${items.length} Kalem`;
+
+      const taxMode = entry.taxMode || 'GROSS';
+      let total = 0;
+
+      itemsContainer.innerHTML = items.map((it, idx) => {
+        const uc = taxMode === 'GROSS'
+          ? (Number(it.grossUnitCost ?? it.unitCost) || 0)
+          : (Number(it.netUnitCost ?? it.unitCost) || 0);
+        const lineTot = (Number(it.qty) || 1) * uc;
+        total += lineTot;
+
+        return `
+          <div class="free-item-row grid grid-cols-12 gap-1.5 items-center p-1.5 rounded-lg bg-white border border-slate-200 text-xs" data-item-idx="${idx}">
+            <input type="text" class="col-span-5 px-2 py-1 rounded border border-slate-200 font-medium item-name" value="${escapeHtml(it.name || '')}" placeholder="Kalem Adı" />
+            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-center font-mono item-qty" value="${it.qty || 1}" placeholder="Miktar" />
+            <input type="text" class="col-span-1 px-1 py-1 rounded border border-slate-200 text-center text-[11px] item-unit" value="${escapeHtml(it.unit || 'Adet')}" placeholder="Birim" />
+            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-right font-mono item-cost" value="${uc}" placeholder="Birim Fiyat" />
+            <div class="col-span-2 flex items-center justify-between pl-1">
+              <span class="font-bold text-slate-800 text-[11px]">${formatCurrency(lineTot)}</span>
+              <button type="button" class="text-rose-500 hover:text-rose-700 p-0.5 btn-del-free-item" data-del-idx="${idx}" title="Kalemi Sil">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      if (totalDisplay) totalDisplay.textContent = formatCurrency(total);
+      entry.calculatedTotal = total;
+    }
+
+    function updateFreeScannerFooter() {
+      const summaryEl = document.getElementById('freeScannerSummary');
+      const btnCurrent = document.getElementById('btnCommitFreeCurrent');
+      const btnAll = document.getElementById('btnCommitFreeAll');
+      const btnAllText = document.getElementById('btnCommitFreeAllText');
+
+      if (!freeScannerQueue.length) {
+        if (summaryEl) summaryEl.textContent = 'Henüz fatura taranmadı';
+        btnCurrent?.classList.add('hidden');
+        btnAll?.classList.add('hidden');
+        return;
+      }
+
+      const current = freeScannerQueue[freeScannerActiveIndex];
+      const unsavedCount = freeScannerQueue.filter(x => x.status === 'DONE' && !x.saved).length;
+      const totalAmt = freeScannerQueue.filter(x => x.status === 'DONE').reduce((s, x) => s + (x.calculatedTotal || 0), 0);
+
+      if (summaryEl) {
+        summaryEl.textContent = `Toplam ${freeScannerQueue.length} fatura (${unsavedCount} hazır) • Genel Tutar: ${formatCurrency(totalAmt)}`;
+      }
+
+      if (current && current.status === 'DONE') {
+        btnCurrent?.classList.remove('hidden');
+        if (current.saved) {
+          btnCurrent.innerHTML = '<i data-lucide="check-check" class="w-4 h-4 text-emerald-300"></i><span>Bu Fatura Kaydedildi</span>';
+          btnCurrent.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-slate-200 text-slate-500 cursor-default flex items-center gap-1.5';
+        } else {
+          btnCurrent.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i><span>Bu Faturayı Stoğa / Listeye Kaydet</span>';
+          btnCurrent.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1.5';
+        }
+      } else {
+        btnCurrent?.classList.add('hidden');
+      }
+
+      if (freeScannerQueue.length > 1 && unsavedCount > 0) {
+        btnAll?.classList.remove('hidden');
+        if (btnAllText) btnAllText.textContent = `Tüm Faturaları Stoğa Kaydet (${unsavedCount})`;
+      } else {
+        btnAll?.classList.add('hidden');
+      }
+
+      if (window.lucide?.createIcons) window.lucide.createIcons();
+    }
+
+    function syncFreeScannerCurrentInputs() {
+      const entry = freeScannerQueue[freeScannerActiveIndex];
+      if (!entry) return;
+
+      const invNo = document.getElementById('freeInvoiceNo')?.value.trim();
+      const sup = document.getElementById('freeSupplier')?.value.trim();
+      const dt = document.getElementById('freeDate')?.value;
+      const st = document.getElementById('freeSite')?.value.trim();
+      const tg = document.getElementById('freeTargetType')?.value;
+      const pl = (document.getElementById('freeVehiclePlate')?.value || '').trim();
+      const mt = document.getElementById('freeMaintType')?.value;
+      const km = (document.getElementById('freeVehicleKm')?.value || '').trim();
+
+      if (!entry.extracted) entry.extracted = {};
+      if (invNo) entry.extracted.invoiceNo = invNo;
+      if (sup) entry.extracted.supplier = sup;
+      if (dt) entry.extracted.date = dt;
+      if (st) entry.site = st;
+      if (tg) entry.targetType = tg;
+      if (pl) entry.vehiclePlate = pl;
+      if (mt) entry.maintType = mt;
+      if (km) entry.vehicleKm = km;
+
+      const newItems = [];
+      document.querySelectorAll('#freeItemsTable .free-item-row').forEach(row => {
+        const name = row.querySelector('.item-name')?.value.trim();
+        const qty = Number(row.querySelector('.item-qty')?.value) || 1;
+        const unit = row.querySelector('.item-unit')?.value.trim() || 'Adet';
+        const unitCost = Number(row.querySelector('.item-cost')?.value) || 0;
+        if (name) newItems.push({ name, qty, unit, unitCost });
+      });
+      if (newItems.length > 0) {
+        entry.extracted.items = newItems;
+      }
+    }
+
+    function commitFreeScannerEntry(idx) {
+      syncFreeScannerCurrentInputs();
+      const entry = freeScannerQueue[idx];
+      if (!entry || entry.status !== 'DONE' || !entry.extracted) return;
+
+      const invoiceNo = entry.extracted.invoiceNo || `GIB2026${Math.floor(10000000 + Math.random() * 89999999)}`;
+      const supplier = entry.extracted.supplier || 'Tedarikçi Firma';
+      const date = entry.extracted.date || new Date().toISOString().slice(0, 10);
+      const site = entry.site || 'Kadıköy Şantiyesi';
+      const targetType = entry.targetType || 'MALZEME';
+      const vehiclePlate = entry.vehiclePlate || '';
+      const maintType = entry.maintType || 'Periyodik Bakım';
+      const vehicleKm = entry.vehicleKm || '';
+
+      const items = (entry.extracted.items && entry.extracted.items.length)
+        ? entry.extracted.items
+        : [{ name: entry.fileName.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: entry.calculatedTotal || 0 }];
+
+      const total = items.reduce((s, i) => s + (Number(i.qty) || 1) * (Number(i.unitCost) || 0), 0);
+      const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
+      const targetLabel =
+        targetType === 'ARAC_BAKIM'
+          ? `Araç Bakım / Tamir (${vehiclePlate || 'Genel Araç'})`
+          : targetType === 'ZIMMET'
+            ? 'Zimmet Faturası'
+            : `Çoklu Şantiye Malzemesi (${items.length} Kalem)`;
+
+      const newId = 'FAT-' + Math.floor(1000 + Math.random() * 9000);
+      appState.faturalar.unshift({
+        id: newId,
+        invoiceNo,
+        supplier,
+        date,
+        site,
+        targetType: targetLabel,
+        vehicle: vehiclePlate,
+        title,
+        total,
+        items
+      });
+
+      if (targetType === 'ARAC_BAKIM') {
+        if (!Array.isArray(appState.aracBakimlar)) appState.aracBakimlar = [];
+        appState.aracBakimlar.unshift({
+          id: 'BKM-' + Math.floor(1000 + Math.random() * 9000),
+          vehicle: vehiclePlate || '34 FCV 671 (Renault Megane)',
+          type: maintType,
+          description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
+          cost: total,
+          date,
+          invoiceNo,
+          supplier,
+          site,
+          km: vehicleKm
+        });
+      } else if (targetType === 'ZIMMET') {
+        items.forEach((it, i) => {
+          appState.zimmetler.unshift({
+            id: 'ZIM-' + Math.floor(1000 + Math.random() * 9000) + i,
+            name: it.name,
+            category: 'El Aleti / Makine',
+            serial: `SN-${Math.floor(10000 + Math.random() * 89999)}`,
+            person: 'Kendim (Uğur Demirbaş)',
+            site,
+            supplier,
+            date,
+            invoiceNo,
+            cost: (Number(it.qty) || 1) * (Number(it.unitCost) || 0),
+            photos: []
+          });
+        });
+      } else {
+        items.forEach((it, i) => {
+          appState.malzemeler.unshift({
+            id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000) + i,
+            name: it.name,
+            category: 'Fatura Kalemi',
+            site,
+            qty: Number(it.qty) || 1,
+            unit: it.unit || 'Adet',
+            unitCost: Number(it.unitCost) || 0,
+            supplier,
+            date,
+            invoiceNo,
+            note: `${invoiceNo} nolu faturanın ${i + 1}. kalemi.`
+          });
+        });
+      }
+
+      entry.saved = true;
+      saveState();
+      renderFreeScannerQueueBar();
+      updateFreeScannerFooter();
+      showToast(`✓ Fatura (${invoiceNo}) ve ${items.length} kalem stoğa kaydedildi!`, 'success');
+    }
+
+    function commitFreeScannerAll() {
+      syncFreeScannerCurrentInputs();
+      const unsavedIndices = [];
+      freeScannerQueue.forEach((entry, idx) => {
+        if (entry.status === 'DONE' && !entry.saved) {
+          unsavedIndices.push(idx);
+        }
+      });
+      if (!unsavedIndices.length) {
+        showToast('Kaydedilecek yeni fatura bulunmuyor.', 'info');
+        return;
+      }
+      unsavedIndices.forEach(idx => {
+        commitFreeScannerEntry(idx);
+      });
+      closeModal('modalFreeScanner');
+      showToast(`✓ Toplam ${unsavedIndices.length} fatura başarıyla stoğa işlendi!`, 'success');
+    }
+
+
       ['bulkInvoiceUpload', 'tabBulkInvoiceUpload'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', e => {
           if (e.target.files?.length) {
@@ -5190,6 +5944,216 @@ KURALLAR:
           renderBulkQueue();
         }
       });
+
+      // =========================================================================
+      // ÜCRETSİZ FATURA TARAMA PANELİ ETKİLEŞİMLERİ
+      // =========================================================================
+      document.getElementById('btnOpenFreeScannerTop')?.addEventListener('click', () => openFreeScannerModal());
+      document.getElementById('btnOpenFreeScannerTab')?.addEventListener('click', () => openFreeScannerModal());
+
+      // Sürükle ve Bırak (Drag & Drop)
+      const freeDropZone = document.getElementById('freeScannerDropZone');
+      const freeFileInput = document.getElementById('freeScannerFileInput');
+
+      freeDropZone?.addEventListener('click', () => freeFileInput?.click());
+      freeFileInput?.addEventListener('change', e => {
+        if (e.target.files?.length) {
+          handleFreeScannerFiles(e.target.files);
+          e.target.value = '';
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        freeDropZone?.addEventListener(eventName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          freeDropZone.classList.add('border-emerald-600', 'bg-emerald-100/60');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        freeDropZone?.addEventListener(eventName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          freeDropZone.classList.remove('border-emerald-600', 'bg-emerald-100/60');
+        });
+      });
+
+      freeDropZone?.addEventListener('drop', e => {
+        const dt = e.dataTransfer;
+        if (dt?.files?.length) {
+          handleFreeScannerFiles(dt.files);
+        }
+      });
+
+      // Motor Butonları
+      document.getElementById('btnFreeScannerEngineFree')?.addEventListener('click', () => setFreeScannerEngine('FREE'));
+      document.getElementById('btnFreeScannerEngineAi')?.addEventListener('click', () => setFreeScannerEngine('AI'));
+
+      // Yakınlaştırma (Zoom)
+      document.getElementById('btnFreeZoomIn')?.addEventListener('click', () => {
+        freeScannerZoom = Math.min(2.5, freeScannerZoom + 0.2);
+        const img = document.getElementById('freeScannerImgPreview');
+        if (img) img.style.transform = `scale(${freeScannerZoom})`;
+        const rst = document.getElementById('btnFreeZoomReset');
+        if (rst) rst.textContent = `${Math.round(freeScannerZoom * 100)}%`;
+      });
+
+      document.getElementById('btnFreeZoomOut')?.addEventListener('click', () => {
+        freeScannerZoom = Math.max(0.4, freeScannerZoom - 0.2);
+        const img = document.getElementById('freeScannerImgPreview');
+        if (img) img.style.transform = `scale(${freeScannerZoom})`;
+        const rst = document.getElementById('btnFreeZoomReset');
+        if (rst) rst.textContent = `${Math.round(freeScannerZoom * 100)}%`;
+      });
+
+      document.getElementById('btnFreeZoomReset')?.addEventListener('click', () => {
+        freeScannerZoom = 1;
+        const img = document.getElementById('freeScannerImgPreview');
+        if (img) img.style.transform = 'scale(1)';
+        const rst = document.getElementById('btnFreeZoomReset');
+        if (rst) rst.textContent = '100%';
+      });
+
+      // Kuyruk Listesi Tıklama
+      document.getElementById('freeScannerQueueBar')?.addEventListener('click', e => {
+        const btn = e.target.closest('[data-free-queue-idx]');
+        if (btn) {
+          syncFreeScannerCurrentInputs();
+          freeScannerActiveIndex = Number(btn.getAttribute('data-free-queue-idx'));
+          renderFreeScannerQueueBar();
+          renderFreeScannerActiveEntry();
+        }
+      });
+
+      // KDV Hariç / Dahil Butonları
+      document.getElementById('btnFreeUseNet')?.addEventListener('click', () => {
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (entry) {
+          entry.taxMode = 'NET';
+          document.getElementById('btnFreeUseNet')?.classList.add('bg-emerald-600', 'text-white');
+          document.getElementById('btnFreeUseNet')?.classList.remove('bg-white', 'text-slate-700');
+          document.getElementById('btnFreeUseGross')?.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+          document.getElementById('btnFreeUseGross')?.classList.remove('bg-emerald-600', 'text-white');
+          renderFreeScannerItems();
+          updateFreeScannerFooter();
+        }
+      });
+
+      document.getElementById('btnFreeUseGross')?.addEventListener('click', () => {
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (entry) {
+          entry.taxMode = 'GROSS';
+          document.getElementById('btnFreeUseGross')?.classList.add('bg-emerald-600', 'text-white');
+          document.getElementById('btnFreeUseGross')?.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+          document.getElementById('btnFreeUseNet')?.classList.add('bg-white', 'text-slate-700');
+          document.getElementById('btnFreeUseNet')?.classList.remove('bg-emerald-600', 'text-white');
+          renderFreeScannerItems();
+          updateFreeScannerFooter();
+        }
+      });
+
+      // Yeni Kalem Satırı Ekleme
+      document.getElementById('btnFreeAddItem')?.addEventListener('click', () => {
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (!entry) return;
+        if (!entry.extracted) entry.extracted = { items: [] };
+        if (!Array.isArray(entry.extracted.items)) entry.extracted.items = [];
+        entry.extracted.items.push({ name: 'Yeni Kalem', qty: 1, unit: 'Adet', unitCost: 0 });
+        renderFreeScannerItems();
+        updateFreeScannerFooter();
+      });
+
+      // Kalemler Tablosu Düzenleme & Silme
+      document.getElementById('freeItemsTable')?.addEventListener('click', e => {
+        const delBtn = e.target.closest('.btn-del-free-item');
+        if (delBtn) {
+          const idx = Number(delBtn.getAttribute('data-del-idx'));
+          const entry = freeScannerQueue[freeScannerActiveIndex];
+          if (entry && entry.extracted?.items && idx >= 0) {
+            entry.extracted.items.splice(idx, 1);
+            renderFreeScannerItems();
+            updateFreeScannerFooter();
+          }
+        }
+      });
+
+      document.getElementById('freeItemsTable')?.addEventListener('input', e => {
+        const row = e.target.closest('.free-item-row');
+        if (!row) return;
+        const idx = Number(row.getAttribute('data-item-idx'));
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (entry && entry.extracted?.items && entry.extracted.items[idx]) {
+          const it = entry.extracted.items[idx];
+          if (e.target.classList.contains('item-name')) it.name = e.target.value;
+          if (e.target.classList.contains('item-qty')) it.qty = Number(e.target.value) || 1;
+          if (e.target.classList.contains('item-unit')) it.unit = e.target.value;
+          if (e.target.classList.contains('item-cost')) {
+            it.unitCost = Number(e.target.value) || 0;
+            it.grossUnitCost = it.unitCost;
+            it.netUnitCost = it.unitCost;
+          }
+          const uc = Number(it.unitCost) || 0;
+          const lineTot = (Number(it.qty) || 1) * uc;
+          const totEl = row.querySelector('.col-span-2 span');
+          if (totEl) totEl.textContent = formatCurrency(lineTot);
+
+          let tot = 0;
+          entry.extracted.items.forEach(item => {
+            tot += (Number(item.qty) || 1) * (Number(item.unitCost) || 0);
+          });
+          entry.calculatedTotal = tot;
+          const grandTotEl = document.getElementById('freeTotalDisplay');
+          if (grandTotEl) grandTotEl.textContent = formatCurrency(tot);
+          updateFreeScannerFooter();
+        }
+      });
+
+      // Kayıt Türü Değişimi
+      document.getElementById('freeTargetType')?.addEventListener('change', e => {
+        const vehicleBox = document.getElementById('freeVehicleFields');
+        if (e.target.value === 'ARAC_BAKIM') {
+          vehicleBox?.classList.remove('hidden');
+        } else {
+          vehicleBox?.classList.add('hidden');
+        }
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (entry) entry.targetType = e.target.value;
+      });
+
+      // Yapay Zeka ile Yeniden Tara Butonu
+      document.getElementById('btnFreeReScanAi')?.addEventListener('click', async () => {
+        const entry = freeScannerQueue[freeScannerActiveIndex];
+        if (!entry) return;
+        if (!appConfig.geminiKey) {
+          showToast('Yapay zeka için Gemini API anahtarı gerekiyor. ⚙ Ayarlar > Yapay Zeka sekmesinden girebilirsiniz.', 'info');
+          return;
+        }
+        showToast('Fatura yapay zeka ile yeniden taranıyor...', 'info');
+        try {
+          const extracted = await readInvoiceFile(entry.file, entry.targetType, (msg) => {
+            showToast(msg, 'info');
+          }, 'AI');
+          if (extracted) {
+            entry.extracted = extracted;
+          entry.previewUrl = extracted.previewUrl || '';
+            renderFreeScannerActiveEntry();
+            showToast('✓ Yapay zeka ile başarıyla yeniden okundu!', 'success');
+          }
+        } catch (err) {
+          showToast('Yapay zeka ile tarama başarısız oldu.', 'error');
+        }
+      });
+
+      // Kaydet Butonları
+      document.getElementById('btnCommitFreeCurrent')?.addEventListener('click', () => {
+        commitFreeScannerEntry(freeScannerActiveIndex);
+      });
+
+      document.getElementById('btnCommitFreeAll')?.addEventListener('click', () => {
+        commitFreeScannerAll();
+      });
+
 
       // Fatura Yükleme Inputları
       ['quickInvoiceUpload', 'dashboardInvoiceDrop', 'tabInvoicePhotoUpload'].forEach(id => {
