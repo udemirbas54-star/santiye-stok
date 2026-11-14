@@ -1762,7 +1762,7 @@
     </div>
   </div>
 
-  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-[120] flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
   <script>
     // =========================================================================
     // VARSAYILAN FIREBASE & UYGULAMA AYARLARI (santiye-stok)
@@ -4272,8 +4272,13 @@
     // =========================================================================
     // MODAL & FORM İŞLEMLERİ
     // =========================================================================
+    let activeModalZIndex = 60;
     function openModal(id) {
-      document.getElementById(id)?.classList.remove('hidden');
+      const el = document.getElementById(id);
+      if (!el) return;
+      activeModalZIndex += 1;
+      el.style.zIndex = String(activeModalZIndex);
+      el.classList.remove('hidden');
     }
 
     function closeModal(id) {
