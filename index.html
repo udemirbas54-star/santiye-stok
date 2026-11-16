@@ -62,7 +62,7 @@
 
   <!-- ÜST BAR (COMPACT HEADER) -->
   <header class="bg-slate-900 text-white border-b border-slate-800 md:sticky md:top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold shrink-0">
           <i data-lucide="hard-hat" class="w-4 h-4"></i>
@@ -140,7 +140,7 @@
     </div>
 
     <!-- SEKME MENÜSÜ (KOMPAKT) -->
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 border-t border-slate-800/80 bg-slate-900/95">
+    <div class="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 border-t border-slate-800/80 bg-slate-900/95">
       <nav class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-1" aria-label="Ana Modüller">
         <button type="button" data-tab="dashboard" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition bg-amber-500 text-slate-950">
           <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
@@ -186,7 +186,7 @@
   </header>
 
   <!-- ANA İÇERİK -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 lg:px-6 py-6 space-y-6">
 
     <!-- 1. SEKME: ÖZET & HIZLI ARAMA (DASHBOARD) -->
     <section id="tab-dashboard" class="tab-panel space-y-6">
@@ -479,17 +479,16 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
-                <th class="py-3 px-3 w-8 text-center">
+                <th class="py-2.5 px-3 w-8 text-center">
                   <input id="chkSelectAllMaterials" type="checkbox" class="rounded border-slate-300 text-indigo-600" title="Tümünü Seç" />
                 </th>
-                <th class="py-3 px-4">Malzeme Adı / Kategori</th>
-                <th class="py-3 px-4">Şantiye</th>
-                <th class="py-3 px-4 text-center">Mevcut Miktar</th>
-                <th class="py-3 px-4 text-right">Birim Maliyet</th>
-                <th class="py-3 px-4 text-right">Stok Maliyeti</th>
-                <th class="py-3 px-4">Nerede &amp; Ne Zaman Alındı</th>
-                <th class="py-3 px-4">Fatura No</th>
-                <th class="py-3 px-4 text-right">Sarf Düş / Transfer / İşlem</th>
+                <th class="py-2.5 px-3">Malzeme Adı / Kategori</th>
+                <th class="py-2.5 px-3">Şantiye</th>
+                <th class="py-2.5 px-3 text-center">Mevcut Miktar</th>
+                <th class="py-2.5 px-3 text-right">Birim Maliyet</th>
+                <th class="py-2.5 px-3 text-right">Stok Maliyeti</th>
+                <th class="py-2.5 px-3">Tedarikçi, Tarih &amp; Fatura No</th>
+                <th class="py-2.5 px-3 text-right">İşlemler</th>
               </tr>
             </thead>
             <tbody id="malzemeTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
@@ -615,15 +614,12 @@
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase">
-                <th class="py-3 px-4">Tarih</th>
-                <th class="py-3 px-4">Plaka / Araç / Makine</th>
-                <th class="py-3 px-4">Bakım Türü &amp; KM</th>
-                <th class="py-3 px-4">Yapılan İşlemler / Fatura İçeriği</th>
-                <th class="py-3 px-4">Servis / Tedarikçi &amp; Şantiye</th>
-                <th class="py-3 px-4">Fatura No</th>
-                <th class="py-3 px-4">Sonraki Bakım / Muayene</th>
-                <th class="py-3 px-4 text-right">Bakım Maliyeti</th>
-                <th class="py-3 px-4 text-right">İşlem</th>
+                <th class="py-2.5 px-3 w-[135px]">Tarih &amp; Plaka</th>
+                <th class="py-2.5 px-3 w-[140px]">Tür, KM &amp; Sonraki</th>
+                <th class="py-2.5 px-3">Yapılan İşlemler / Fatura İçeriği</th>
+                <th class="py-2.5 px-3 w-[220px]">Servis, Şantiye &amp; Fatura No</th>
+                <th class="py-2.5 px-3 text-right w-[140px]">Bakım Maliyeti</th>
+                <th class="py-2.5 px-3 text-right w-[105px]">İşlem</th>
               </tr>
             </thead>
             <tbody id="bakimTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm"></tbody>
@@ -3675,13 +3671,13 @@
           const secLine = getSecondaryTaxLabel(tb.netLineTotal, tb.grossLineTotal);
           return `
             <tr class="border-t border-slate-100 hover:bg-slate-50/70">
-              <td class="py-1.5 px-2.5 text-slate-800 font-medium">${escapeHtml(it.name || '-')}</td>
-              <td class="py-1.5 px-2 text-center text-slate-600 whitespace-nowrap font-semibold">${tb.qty} ${escapeHtml(it.unit || 'Adet')}</td>
-              <td class="py-1.5 px-2 text-right text-slate-600 whitespace-nowrap tabular-nums">
+              <td class="py-1 px-2 text-slate-800 font-medium break-words">${escapeHtml(it.name || '-')}</td>
+              <td class="py-1 px-1.5 text-center text-slate-600 whitespace-nowrap font-semibold">${tb.qty} ${escapeHtml(it.unit || 'Adet')}</td>
+              <td class="py-1 px-1.5 text-right text-slate-600 whitespace-nowrap tabular-nums">
                 <div>${formatCurrency(tb.activeUnitCost)}</div>
                 <div class="text-[10px] text-slate-400">${grossMode ? 'Hariç: ' + formatCurrency(tb.netUnitCost) : 'Dahil: ' + formatCurrency(tb.grossUnitCost)}</div>
               </td>
-              <td class="py-1.5 px-2.5 text-right text-slate-900 font-bold whitespace-nowrap tabular-nums">
+              <td class="py-1 px-2 text-right text-slate-900 font-bold whitespace-nowrap tabular-nums">
                 <div>${formatCurrency(tb.activeLineTotal)}</div>
                 <div class="text-[10px] font-medium text-emerald-700">${secLine}</div>
               </td>
@@ -3693,23 +3689,23 @@
           : '<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">KDV Hariç</span>';
         return `
           <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-            <table class="w-full text-xs border-collapse">
+            <table class="w-full text-[11px] sm:text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 text-[10px] font-bold uppercase text-slate-500">
-                  <th class="py-1.5 px-2.5 text-left">Kalem / Açıklama</th>
-                  <th class="py-1.5 px-2 text-center whitespace-nowrap">Miktar</th>
-                  <th class="py-1.5 px-2 text-right whitespace-nowrap">
+                  <th class="py-1 px-2 text-left">Kalem / Açıklama</th>
+                  <th class="py-1 px-1.5 text-center whitespace-nowrap">Miktar</th>
+                  <th class="py-1 px-1.5 text-right whitespace-nowrap">
                     <button type="button" data-toggle-tax-mode="1" class="inline-flex items-center gap-1 hover:text-slate-800 transition" title="KDV Hariç / KDV Dahil değiştir">Birim ${modeBadge}</button>
                   </th>
-                  <th class="py-1.5 px-2.5 text-right whitespace-nowrap">
+                  <th class="py-1 px-2 text-right whitespace-nowrap">
                     <button type="button" data-toggle-tax-mode="1" class="inline-flex items-center gap-1 hover:text-slate-800 transition" title="KDV Hariç / KDV Dahil değiştir">Tutar ${modeBadge}</button>
                   </th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
               <tfoot>
-                <tr class="bg-slate-50/90 border-t border-slate-200 text-[11px] font-semibold text-slate-600">
-                  <td colspan="4" class="py-1.5 px-2.5 text-right tabular-nums">
+                <tr class="bg-slate-50/90 border-t border-slate-200 text-[10px] sm:text-[11px] font-semibold text-slate-600">
+                  <td colspan="4" class="py-1 px-2 text-right tabular-nums">
                     KDV Hariç: <strong class="text-slate-800">${formatCurrency(invTax.netTotal)}</strong>
                     • KDV (%${invTax.kdvRate}): <strong class="text-slate-800">${formatCurrency(invTax.vatAmount)}</strong>
                     • KDV Dahil: <strong class="text-emerald-700">${formatCurrency(invTax.grossTotal)}</strong>
@@ -4608,7 +4604,7 @@
       const tbody = document.getElementById('malzemeTableBody');
       if (!tbody) return;
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Kayıtlı şantiye malzemesi bulunamadı.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400">Kayıtlı şantiye malzemesi bulunamadı.</td></tr>`;
         return;
       }
 
@@ -4618,46 +4614,48 @@
         const isCritical = qtyNum <= 3;
         return `
           <tr class="hover:bg-slate-50 ${isCritical ? 'bg-rose-50/40' : ''}">
-            <td class="py-3 px-3 text-center">
+            <td class="py-2.5 px-3 text-center">
               <input type="checkbox" class="malzeme-row-chk rounded border-slate-300 text-indigo-600" value="${escapeHtml(m.id)}" />
             </td>
-            <td class="py-3 px-4">
-              <div class="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
+            <td class="py-2.5 px-3 max-w-[260px]">
+              <div class="font-bold text-slate-900 flex items-center gap-1.5 flex-wrap break-words">
                 <span>${escapeHtml(m.name)}</span>
                 ${isCritical ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">Kritik Stok</span>` : ''}
               </div>
-              <div class="text-[11px] text-slate-500">${escapeHtml(m.category)} ${m.note ? '• ' + escapeHtml(m.note) : ''}</div>
+              <div class="text-[11px] text-slate-500 break-words">${escapeHtml(m.category)} ${m.note ? '• ' + escapeHtml(m.note) : ''}</div>
             </td>
-            <td class="py-3 px-4">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(m.site)}</span>
+            <td class="py-2.5 px-3">
+              <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">${escapeHtml(m.site)}</span>
             </td>
-            <td class="py-3 px-4 text-center">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
               <div class="inline-flex items-center gap-1 bg-slate-100 rounded-lg px-1.5 py-0.5">
                 <button type="button" data-qty-delta="-1" data-id="${escapeHtml(m.id)}" class="px-1.5 font-bold text-slate-600 hover:text-slate-900">-</button>
                 <span class="font-bold ${isCritical ? 'text-rose-700' : 'text-slate-900'} px-1">${m.qty} ${escapeHtml(m.unit)}</span>
                 <button type="button" data-qty-delta="1" data-id="${escapeHtml(m.id)}" class="px-1.5 font-bold text-slate-600 hover:text-slate-900">+</button>
               </div>
             </td>
-            <td class="py-3 px-4 text-right font-medium text-slate-700 tabular-nums">
+            <td class="py-2.5 px-3 text-right font-medium text-slate-700 tabular-nums whitespace-nowrap">
               <div>${formatCurrency(tb.activeUnitCost)}</div>
               <div class="text-[10px] text-slate-400">${isGrossDisplayMode() ? 'Hariç: ' + formatCurrency(tb.netUnitCost) : 'Dahil: ' + formatCurrency(tb.grossUnitCost)}</div>
             </td>
-            <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums">
+            <td class="py-2.5 px-3 text-right font-bold text-slate-900 tabular-nums whitespace-nowrap">
               <div>${formatCurrency(tb.activeTotal)}</div>
               <div class="text-[10px] font-medium text-emerald-700">${getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)}</div>
             </td>
-            <td class="py-3 px-4">
-              <div class="font-medium text-slate-800">${escapeHtml(m.supplier || '-')}</div>
-              <div class="text-[11px] text-slate-500">${formatDateTR(m.date)}</div>
+            <td class="py-2.5 px-3 max-w-[200px]">
+              <div class="font-medium text-slate-800 text-xs break-words">${escapeHtml(m.supplier || '-')}</div>
+              <div class="flex items-center flex-wrap gap-1 mt-0.5">
+                <span class="text-[11px] text-slate-500">${formatDateTR(m.date)}</span>
+                ${m.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(m.invoiceNo)}" class="px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-mono text-[10px] font-semibold" title="Fatura No Kopyala">${escapeHtml(m.invoiceNo)}</button>` : ''}
+              </div>
             </td>
-            <td class="py-3 px-4">
-              ${m.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(m.invoiceNo)}" class="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-900 font-mono text-xs font-semibold">${escapeHtml(m.invoiceNo)}</button>` : '-'}
-            </td>
-            <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-              <button type="button" data-consume-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-200" title="Kullanılan malzemeyi stoktan düş ve sarfiyat geçmişine işle">Sarf Düş</button>
-              <button type="button" data-quick-transfer="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100">Şantiyeye Geçir</button>
-              <button type="button" data-edit-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Düzenle</button>
-              <button type="button" data-delete-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+            <td class="py-2.5 px-3 text-right whitespace-nowrap">
+              <div class="inline-flex items-center justify-end flex-wrap gap-1">
+                <button type="button" data-consume-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-[11px] font-bold bg-rose-100 text-rose-800 hover:bg-rose-200 border border-rose-200" title="Kullanılan malzemeyi stoktan düş ve sarfiyat geçmişine işle">Sarf Düş</button>
+                <button type="button" data-quick-transfer="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100">Transfer</button>
+                <button type="button" data-edit-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200">Düzenle</button>
+                <button type="button" data-delete-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-[11px] font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+              </div>
             </td>
           </tr>
         `;
@@ -4967,39 +4965,39 @@
       const tbody = document.getElementById('bakimTableBody');
       if (tbody) {
         if (filtered.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Eşleşen araç bakım / tamir faturası bulunamadı.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">Eşleşen araç bakım / tamir faturası bulunamadı.</td></tr>`;
         } else {
           tbody.innerHTML = filtered.map(b => {
             const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
             const tb = getRecordTaxBreakdown(b, 'cost');
             return `
             <tr class="hover:bg-slate-50 align-top">
-              <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${formatDateTR(b.date)}</td>
-              <td class="py-3 px-4 whitespace-nowrap">
-                <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded bg-slate-900 text-amber-300 font-mono text-xs font-bold">${escapeHtml(b.vehicle)}</span>
+              <td class="py-2.5 px-3 whitespace-nowrap">
+                <div class="font-bold text-slate-900 text-xs">${formatDateTR(b.date)}</div>
+                <span class="inline-block mt-1 whitespace-nowrap px-2 py-0.5 rounded bg-slate-900 text-amber-300 font-mono text-[11px] font-bold">${escapeHtml(b.vehicle)}</span>
               </td>
-              <td class="py-3 px-4 whitespace-nowrap">
-                <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">${escapeHtml(b.type || 'Bakım')}</span>
-                ${b.km ? `<div class="text-[11px] font-semibold text-slate-600 mt-1">${escapeHtml(b.km)}</div>` : ''}
+              <td class="py-2.5 px-3">
+                <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">${escapeHtml(b.type || 'Bakım')}</span>
+                ${b.km ? `<div class="text-[11px] font-semibold text-slate-600 mt-1">KM: ${escapeHtml(b.km)}</div>` : ''}
+                ${b.nextDate ? `<div class="text-[11px] font-semibold text-indigo-700 mt-0.5">Sonraki: ${formatDateTR(b.nextDate)}</div>` : ''}
               </td>
-              <td class="py-3 px-4 min-w-[280px]">${renderInvoiceItemsMiniTable(linkedFatura, b.description)}</td>
-              <td class="py-3 px-4">
-                <div class="font-semibold text-slate-800">${escapeHtml(b.supplier || '-')}</div>
-                ${b.site ? `<span class="inline-block mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 whitespace-nowrap">${escapeHtml(b.site)}</span>` : ''}
+              <td class="py-2.5 px-3">${renderInvoiceItemsMiniTable(linkedFatura, b.description)}</td>
+              <td class="py-2.5 px-3 max-w-[220px]">
+                <div class="font-semibold text-slate-800 text-xs break-words leading-snug">${escapeHtml(b.supplier || '-')}</div>
+                <div class="flex items-center flex-wrap gap-1 mt-1.5">
+                  ${b.site ? `<span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800">${escapeHtml(b.site)}</span>` : ''}
+                  ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-mono text-[11px] font-bold transition" title="Fatura kalemlerini ve fiyatları gör">${escapeHtml(b.invoiceNo)}</button>` : ''}
+                </div>
               </td>
-              <td class="py-3 px-4 whitespace-nowrap">
-                ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-mono text-xs font-bold whitespace-nowrap transition" title="Fatura kalemlerini ve fiyatları gör">${escapeHtml(b.invoiceNo)}</button>` : '<span class="text-slate-400">-</span>'}
-              </td>
-              <td class="py-3 px-4 text-xs whitespace-nowrap">
-                ${b.nextDate ? `<span class="font-semibold text-indigo-700">${formatDateTR(b.nextDate)}</span>` : '<span class="text-slate-400">-</span>'}
-              </td>
-              <td class="py-3 px-4 text-right whitespace-nowrap tabular-nums">
+              <td class="py-2.5 px-3 text-right whitespace-nowrap tabular-nums">
                 <div class="font-extrabold text-slate-900">${formatCurrency(tb.active)}</div>
                 <div class="text-[10px] font-semibold text-emerald-700">${getSecondaryTaxLabel(tb.net, tb.gross)}</div>
               </td>
-              <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-                <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Düzenle</button>
-                <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+              <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                <div class="inline-flex flex-col sm:flex-row items-end justify-end gap-1">
+                  <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Düzenle</button>
+                  <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+                </div>
               </td>
             </tr>
           `;}).join('');
