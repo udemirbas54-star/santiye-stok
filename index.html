@@ -99,6 +99,12 @@
           <span>Transfer</span>
         </button>
 
+        <!-- Global KDV Görünümü Seçici -->
+        <div class="inline-flex items-center rounded-lg bg-slate-800 border border-slate-700 p-0.5" title="Tüm sistemde fiyatları KDV Hariç veya KDV Dahil görüntüle">
+          <button id="btnGlobalTaxNet" type="button" class="px-2 py-1 rounded-md text-[11px] font-bold transition bg-amber-500 text-slate-950 whitespace-nowrap">KDV Hariç</button>
+          <button id="btnGlobalTaxGross" type="button" class="px-2 py-1 rounded-md text-[11px] font-bold transition text-slate-300 hover:text-white whitespace-nowrap">KDV Dahil</button>
+        </div>
+
         <!-- Tek Tıkla İstediğin Şantiyeyi Excel İndir -->
         <div class="hidden sm:inline-flex items-center rounded-lg bg-emerald-950/90 border border-emerald-600/70 p-0.5">
           <select id="topExportSiteSelect" class="bg-transparent text-emerald-100 text-[11px] font-semibold px-1.5 py-1 outline-none cursor-pointer max-w-[130px]">
@@ -201,7 +207,7 @@
           <div class="min-w-0">
             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Zimmet Değeri</p>
             <p id="statZimmetValue" class="text-xl font-extrabold text-slate-900 mt-1">₺0,00</p>
-            <p class="text-[11px] text-slate-500 mt-1">Demirbaş &amp; ekipman</p>
+            <p id="statZimmetSub" class="text-[11px] text-slate-500 mt-1 truncate">Demirbaş &amp; ekipman</p>
           </div>
           <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
             <i data-lucide="smartphone" class="w-5 h-5"></i>
@@ -213,6 +219,7 @@
             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Aktif Stok + Sarfiyat</p>
             <p id="statMalzemeValue" class="text-xl font-extrabold text-emerald-700 mt-1">₺0,00</p>
             <p id="statMalzemeCount" class="text-[11px] text-slate-500 mt-1 truncate">0 kalem • Sarf: ₺0,00</p>
+            <p id="statMalzemeVatSub" class="text-[10px] font-semibold text-emerald-700/80 mt-0.5 truncate"></p>
           </div>
           <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
             <i data-lucide="package-check" class="w-5 h-5"></i>
@@ -223,7 +230,8 @@
           <div class="min-w-0">
             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Araç Bakım &amp; Tamir</p>
             <p id="statBakimValue" class="text-xl font-extrabold text-rose-700 mt-1">₺0,00</p>
-            <p id="statBakimCount" class="text-[11px] text-slate-500 mt-1">0 bakım/servis kaydı</p>
+            <p id="statBakimCount" class="text-[11px] text-slate-500 mt-1 truncate">0 bakım/servis kaydı</p>
+            <p id="statBakimVatSub" class="text-[10px] font-semibold text-rose-700/80 mt-0.5 truncate"></p>
           </div>
           <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
             <i data-lucide="car" class="w-5 h-5"></i>
@@ -235,6 +243,7 @@
             <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Kayıtlı Faturalar</p>
             <p id="statFaturaCount" class="text-xl font-extrabold text-slate-900 mt-1">0 Fatura</p>
             <p id="statFaturaValue" class="text-[11px] text-slate-500 mt-1 truncate">Toplam: ₺0,00</p>
+            <p id="statFaturaVatSub" class="text-[10px] font-semibold text-purple-700/80 mt-0.5 truncate"></p>
           </div>
           <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
             <i data-lucide="file-text" class="w-5 h-5"></i>
@@ -1576,9 +1585,12 @@
 
               <div id="freeItemsTable" class="space-y-1.5 max-h-56 overflow-y-auto custom-scrollbar"></div>
 
-              <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs font-bold text-slate-900">
-                <span>Fatura Genel Toplamı:</span>
-                <span id="freeTotalDisplay" class="text-base text-emerald-700 font-extrabold font-mono">₺0,00</span>
+              <div class="pt-2 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-slate-900">
+                <div>
+                  <span>Fatura Genel Toplamı:</span>
+                  <div id="freeTaxBreakdownNote" class="text-[11px] font-medium text-slate-500 mt-0.5"></div>
+                </div>
+                <span id="freeTotalDisplay" class="text-base text-emerald-700 font-extrabold font-mono tabular-nums">₺0,00</span>
               </div>
             </div>
           </div>
@@ -1764,7 +1776,7 @@
 
   <!-- FATURA DETAY & KALEMLİ FİYAT DÖKÜMÜ MODALI -->
   <div id="modalInvoiceDetail" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden">
       <div class="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2.5 min-w-0">
           <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
@@ -1775,7 +1787,11 @@
             <p id="invoiceDetailSubtitle" class="text-[11px] text-slate-400 truncate">Tedarikçi ve Şantiye Bilgisi</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="btnToggleInvoiceDetailTax" data-toggle-tax-mode="1" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 text-xs font-bold transition" title="Sistem genelinde KDV Hariç / KDV Dahil modunu değiştir">
+            <i data-lucide="percent" class="w-3.5 h-3.5"></i>
+            <span class="tax-mode-label">KDV Hariç Görünüm</span>
+          </button>
           <button id="btnPrintCurrentInvoiceDetail" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition">
             <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-400"></i>
             <span>Yazdır / PDF</span>
@@ -2476,7 +2492,9 @@
             projectId: parsed.projectId || DEFAULT_FB_CONFIG.projectId,
             apiKey: parsed.apiKey || DEFAULT_FB_CONFIG.apiKey,
             geminiKey: parsed.geminiKey || '',
-            autoSync: parsed.autoSync !== false
+            autoSync: parsed.autoSync !== false,
+            displayTaxMode: parsed.displayTaxMode === 'GROSS' ? 'GROSS' : 'NET',
+            defaultKdvRate: Number(parsed.defaultKdvRate) || 20
           };
         }
       } catch (e) {}
@@ -2484,7 +2502,9 @@
         projectId: DEFAULT_FB_CONFIG.projectId,
         apiKey: DEFAULT_FB_CONFIG.apiKey,
         geminiKey: '',
-        autoSync: true
+        autoSync: true,
+        displayTaxMode: 'NET',
+        defaultKdvRate: 20
       };
     }
 
@@ -2523,6 +2543,216 @@
     function formatCurrency(val) {
       const num = Number(val) || 0;
       return '₺' + num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // =========================================================================
+    // KDV DAHİL / KDV HARİÇ HESAPLAMA VE GÖRÜNÜM YARDIMCILARI
+    // =========================================================================
+    function isGrossDisplayMode() {
+      return appConfig?.displayTaxMode === 'GROSS';
+    }
+
+    function updateGlobalTaxToggleUi() {
+      const gross = isGrossDisplayMode();
+      const btnNet = document.getElementById('btnGlobalTaxNet');
+      const btnGross = document.getElementById('btnGlobalTaxGross');
+      if (btnNet && btnGross) {
+        btnNet.className = gross
+          ? 'px-2 py-1 rounded-md text-[11px] font-bold transition text-slate-300 hover:text-white whitespace-nowrap'
+          : 'px-2 py-1 rounded-md text-[11px] font-bold transition bg-amber-500 text-slate-950 whitespace-nowrap';
+        btnGross.className = gross
+          ? 'px-2 py-1 rounded-md text-[11px] font-bold transition bg-emerald-500 text-slate-950 whitespace-nowrap'
+          : 'px-2 py-1 rounded-md text-[11px] font-bold transition text-slate-300 hover:text-white whitespace-nowrap';
+      }
+      document.querySelectorAll('.tax-mode-label').forEach(el => {
+        el.textContent = gross ? 'KDV Dahil Görünüm' : 'KDV Hariç Görünüm';
+      });
+    }
+
+    function setGlobalTaxDisplayMode(mode) {
+      appConfig.displayTaxMode = mode === 'GROSS' ? 'GROSS' : 'NET';
+      saveConfig();
+      updateGlobalTaxToggleUi();
+      renderAll();
+      const rate = Number(appConfig.defaultKdvRate) || 20;
+      showToast(
+        isGrossDisplayMode() ? `Fiyat görünümü: KDV DAHİL (+%${rate})` : 'Fiyat görünümü: KDV HARİÇ',
+        'info'
+      );
+    }
+
+    /** Computes KDV-exclusive, KDV-inclusive, and active-mode prices for a single line item or material. */
+    function resolveKdvRate(val, fallback = 20) {
+      if (val !== undefined && val !== null && val !== '' && Number.isFinite(Number(val)) && Number(val) >= 0) {
+        return Number(val);
+      }
+      if (fallback !== undefined && fallback !== null && fallback !== '' && Number.isFinite(Number(fallback)) && Number(fallback) >= 0) {
+        return Number(fallback);
+      }
+      return Number(appConfig?.defaultKdvRate ?? 20);
+    }
+
+    function getItemTaxBreakdown(it, defaultRate = 20) {
+      const fallbackRate = resolveKdvRate(defaultRate, appConfig?.defaultKdvRate ?? 20);
+      const kdvRate = resolveKdvRate(it?.kdvRate, fallbackRate);
+      const rawNet = Number(it?.netUnitCost) || 0;
+      const rawGross = Number(it?.grossUnitCost) || 0;
+      const rawUnit = Number(it?.unitCost) || 0;
+
+      let net = 0;
+      let gross = 0;
+      if (it?.netUnitCost !== undefined && it?.grossUnitCost !== undefined && rawNet > 0 && rawGross >= rawNet) {
+        net = rawNet;
+        gross = rawGross;
+      } else if (it?.taxIncluded === true) {
+        gross = rawGross > 0 ? rawGross : rawUnit;
+        net = Number((gross / (1 + kdvRate / 100)).toFixed(2));
+      } else {
+        net = rawNet > 0 ? rawNet : rawUnit;
+        gross = Number((net * (1 + kdvRate / 100)).toFixed(2));
+      }
+
+      const qty = Number(it?.qty) || 0;
+      const effQty = (it && it.qty !== undefined) ? qty : 1;
+      const netLineTotal = Number((effQty * net).toFixed(2));
+      const grossLineTotal = Number((effQty * gross).toFixed(2));
+      const grossMode = isGrossDisplayMode();
+
+      return {
+        qty: effQty,
+        kdvRate,
+        netUnitCost: net,
+        grossUnitCost: gross,
+        netLineTotal,
+        grossLineTotal,
+        activeUnitCost: grossMode ? gross : net,
+        activeLineTotal: grossMode ? grossLineTotal : netLineTotal
+      };
+    }
+
+    /** Computes total Net, VAT, Gross, and active-mode total for an invoice record. */
+    function getInvoiceTaxBreakdown(f) {
+      const defRate = resolveKdvRate(f?.kdvRate, appConfig?.defaultKdvRate ?? 20);
+      const items = (f && Array.isArray(f.items) && f.items.length > 0) ? f.items : null;
+      let netTotal = 0;
+      let grossTotal = 0;
+      if (items) {
+        items.forEach(it => {
+          const itemInput = (f?.taxIncluded === true && it?.taxIncluded === undefined)
+            ? { ...it, taxIncluded: true }
+            : it;
+          const tb = getItemTaxBreakdown(itemInput, defRate);
+          netTotal += tb.netLineTotal;
+          grossTotal += tb.grossLineTotal;
+        });
+      } else {
+        const rawTotal = Number(f?.total) || 0;
+        const storedNet = Number(f?.netTotal) || 0;
+        const storedGross = Number(f?.grossTotal) || 0;
+        if (storedNet > 0 && storedGross > storedNet) {
+          netTotal = storedNet;
+          grossTotal = storedGross;
+        } else if (f?.taxIncluded === true) {
+          grossTotal = rawTotal;
+          netTotal = Number((grossTotal / (1 + defRate / 100)).toFixed(2));
+        } else {
+          netTotal = rawTotal;
+          grossTotal = Number((netTotal * (1 + defRate / 100)).toFixed(2));
+        }
+      }
+      netTotal = Number(netTotal.toFixed(2));
+      grossTotal = Number(grossTotal.toFixed(2));
+      const vatAmount = Number((grossTotal - netTotal).toFixed(2));
+      return {
+        kdvRate: defRate,
+        netTotal,
+        grossTotal,
+        vatAmount,
+        activeTotal: isGrossDisplayMode() ? grossTotal : netTotal
+      };
+    }
+
+    /** Computes Net, VAT, Gross, and active total for generic cost records (bakım, zimmet). */
+    function getRecordTaxBreakdown(rec, amountField = 'cost') {
+      const isBakim = Boolean(rec && ('vehicle' in rec || 'nextDate' in rec));
+      if (isBakim && rec?.invoiceNo && typeof findFaturaByIdOrNo === 'function') {
+        const linked = findFaturaByIdOrNo(rec.invoiceNo);
+        if (linked && Array.isArray(linked.items) && linked.items.length > 0 && !rec.manualCostOverride) {
+          const invTb = getInvoiceTaxBreakdown(linked);
+          if (invTb.netTotal > 0) {
+            return {
+              kdvRate: invTb.kdvRate,
+              net: invTb.netTotal,
+              gross: invTb.grossTotal,
+              vat: invTb.vatAmount,
+              active: invTb.activeTotal
+            };
+          }
+        }
+      }
+      const defRate = resolveKdvRate(rec?.kdvRate, appConfig?.defaultKdvRate ?? 20);
+      const rawAmount = Number(rec?.[amountField]) || 0;
+      let net = 0;
+      let gross = 0;
+      if (rec?.netCost !== undefined && rec?.grossCost !== undefined && Number(rec.netCost) > 0 && Number(rec.grossCost) >= Number(rec.netCost)) {
+        net = Number(rec.netCost);
+        gross = Number(rec.grossCost);
+      } else if (rec?.taxIncluded === true) {
+        gross = rawAmount;
+        net = Number((gross / (1 + defRate / 100)).toFixed(2));
+      } else {
+        net = rawAmount;
+        gross = Number((net * (1 + defRate / 100)).toFixed(2));
+      }
+      const vat = Number((gross - net).toFixed(2));
+      return {
+        kdvRate: defRate,
+        net,
+        gross,
+        vat,
+        active: isGrossDisplayMode() ? gross : net
+      };
+    }
+
+    function getMalzemeTaxBreakdown(m) {
+      const tb = getItemTaxBreakdown(m, resolveKdvRate(m?.kdvRate, appConfig?.defaultKdvRate ?? 20));
+      return {
+        kdvRate: tb.kdvRate,
+        netUnitCost: tb.netUnitCost,
+        grossUnitCost: tb.grossUnitCost,
+        activeUnitCost: tb.activeUnitCost,
+        netTotal: tb.netLineTotal,
+        grossTotal: tb.grossLineTotal,
+        activeTotal: tb.activeLineTotal
+      };
+    }
+
+    function getSarfiyatTaxBreakdown(s) {
+      const qty = Number(s?.qty) || 0;
+      const fallbackUnit = qty > 0 ? ((Number(s?.totalCost) || 0) / qty) : 0;
+      const tb = getItemTaxBreakdown({
+        qty,
+        unitCost: Number(s?.unitCost) || fallbackUnit,
+        netUnitCost: s?.netUnitCost,
+        grossUnitCost: s?.grossUnitCost,
+        kdvRate: s?.kdvRate,
+        taxIncluded: s?.taxIncluded
+      }, resolveKdvRate(s?.kdvRate, appConfig?.defaultKdvRate ?? 20));
+      return {
+        kdvRate: tb.kdvRate,
+        netUnitCost: tb.netUnitCost,
+        grossUnitCost: tb.grossUnitCost,
+        activeUnitCost: tb.activeUnitCost,
+        netTotal: tb.netLineTotal,
+        grossTotal: tb.grossLineTotal,
+        activeTotal: tb.activeLineTotal
+      };
+    }
+
+    function getSecondaryTaxLabel(netVal, grossVal) {
+      return isGrossDisplayMode()
+        ? `KDV Hariç: ${formatCurrency(netVal)}`
+        : `KDV Dahil: ${formatCurrency(grossVal)}`;
     }
 
     function formatDateTR(isoStr) {
@@ -2879,6 +3109,7 @@
 
     function calculateSiteSummaries() {
       const sites = getAllSiteNames();
+      const grossMode = isGrossDisplayMode();
       return sites.map(siteName => {
         const siteMats = (appState.malzemeler || []).filter(m => m.site === siteName);
         const siteSarf = (appState.sarfiyatlar || []).filter(s => s.site === siteName);
@@ -2886,13 +3117,22 @@
         const siteBakim = (appState.aracBakimlar || []).filter(b => b.site === siteName);
         const siteFaturalar = (appState.faturalar || []).filter(f => f.site === siteName);
 
-        const activeStockCost = siteMats.reduce((s, m) => s + (Number(m.qty) || 0) * (Number(m.unitCost) || 0), 0);
-        const consumedCost = siteSarf.reduce((s, x) => s + (Number(x.totalCost) || (Number(x.qty) || 0) * (Number(x.unitCost) || 0)), 0);
-        const zimmetCost = siteZimmet.reduce((s, z) => s + (Number(z.cost) || 0), 0);
-        const bakimCost = siteBakim.reduce((s, b) => s + (Number(b.cost) || 0), 0);
+        let activeStockCostNet = 0, activeStockCostGross = 0;
+        siteMats.forEach(m => { const tb = getMalzemeTaxBreakdown(m); activeStockCostNet += tb.netTotal; activeStockCostGross += tb.grossTotal; });
 
-        const operationalCost = activeStockCost + consumedCost + bakimCost;
-        const grandTotalWithZimmet = operationalCost + zimmetCost;
+        let consumedCostNet = 0, consumedCostGross = 0;
+        siteSarf.forEach(x => { const tb = getSarfiyatTaxBreakdown(x); consumedCostNet += tb.netTotal; consumedCostGross += tb.grossTotal; });
+
+        let zimmetCostNet = 0, zimmetCostGross = 0;
+        siteZimmet.forEach(z => { const tb = getRecordTaxBreakdown(z, 'cost'); zimmetCostNet += tb.net; zimmetCostGross += tb.gross; });
+
+        let bakimCostNet = 0, bakimCostGross = 0;
+        siteBakim.forEach(b => { const tb = getRecordTaxBreakdown(b, 'cost'); bakimCostNet += tb.net; bakimCostGross += tb.gross; });
+
+        const operationalCostNet = activeStockCostNet + consumedCostNet + bakimCostNet;
+        const operationalCostGross = activeStockCostGross + consumedCostGross + bakimCostGross;
+        const grandTotalWithZimmetNet = operationalCostNet + zimmetCostNet;
+        const grandTotalWithZimmetGross = operationalCostGross + zimmetCostGross;
 
         return {
           siteName,
@@ -2901,12 +3141,24 @@
           zimmetCount: siteZimmet.length,
           bakimCount: siteBakim.length,
           faturaCount: siteFaturalar.length,
-          activeStockCost,
-          consumedCost,
-          zimmetCost,
-          bakimCost,
-          operationalCost,
-          grandTotalWithZimmet
+          activeStockCostNet,
+          activeStockCostGross,
+          activeStockCost: grossMode ? activeStockCostGross : activeStockCostNet,
+          consumedCostNet,
+          consumedCostGross,
+          consumedCost: grossMode ? consumedCostGross : consumedCostNet,
+          zimmetCostNet,
+          zimmetCostGross,
+          zimmetCost: grossMode ? zimmetCostGross : zimmetCostNet,
+          bakimCostNet,
+          bakimCostGross,
+          bakimCost: grossMode ? bakimCostGross : bakimCostNet,
+          operationalCostNet,
+          operationalCostGross,
+          operationalCost: grossMode ? operationalCostGross : operationalCostNet,
+          grandTotalWithZimmetNet,
+          grandTotalWithZimmetGross,
+          grandTotalWithZimmet: grossMode ? grandTotalWithZimmetGross : grandTotalWithZimmetNet
         };
       });
     }
@@ -2929,12 +3181,16 @@
         // 1. Sayfa: Şantiye Maliyet Özeti
         const ozetRows = summaries.map(s => ({
           'Şantiye Adı': s.siteName,
-          'Aktif Depo Stok Maliyeti (₺)': Number(s.activeStockCost.toFixed(2)),
-          'Sarf Edilen (Harcanan) Malzeme (₺)': Number(s.consumedCost.toFixed(2)),
-          'Araç & Makine Bakım Gideri (₺)': Number(s.bakimCost.toFixed(2)),
-          'Şantiye Toplam Harcama (Stok+Sarf+Bakım) (₺)': Number(s.operationalCost.toFixed(2)),
-          'Zimmetli Demirbaş Değeri (₺)': Number(s.zimmetCost.toFixed(2)),
-          'Demirbaş Dahil Genel Toplam (₺)': Number(s.grandTotalWithZimmet.toFixed(2)),
+          'Aktif Depo Stok KDV Hariç (₺)': Number(s.activeStockCostNet.toFixed(2)),
+          'Aktif Depo Stok KDV Dahil (₺)': Number(s.activeStockCostGross.toFixed(2)),
+          'Sarf Edilen KDV Hariç (₺)': Number(s.consumedCostNet.toFixed(2)),
+          'Sarf Edilen KDV Dahil (₺)': Number(s.consumedCostGross.toFixed(2)),
+          'Araç Bakım Gideri KDV Hariç (₺)': Number(s.bakimCostNet.toFixed(2)),
+          'Araç Bakım Gideri KDV Dahil (₺)': Number(s.bakimCostGross.toFixed(2)),
+          'Toplam Harcama KDV Hariç (₺)': Number(s.operationalCostNet.toFixed(2)),
+          'Toplam Harcama KDV Dahil (₺)': Number(s.operationalCostGross.toFixed(2)),
+          'Zimmetli Demirbaş KDV Hariç (₺)': Number(s.zimmetCostNet.toFixed(2)),
+          'Zimmetli Demirbaş KDV Dahil (₺)': Number(s.zimmetCostGross.toFixed(2)),
           'Stok Kalem Sayısı': s.matCount,
           'Sarf İşlem Sayısı': s.sarfCount,
           'Zimmet Sayısı': s.zimmetCount
@@ -2942,89 +3198,126 @@
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(ozetRows.length ? ozetRows : [{ Bilgilendirme: 'Kayıt yok' }]), 'Santiye_Maliyet_Ozeti');
 
         // 2. Sayfa: Mevcut Malzeme Stoğu
-        const stokRows = mats.map(m => ({
-          'Şantiye': m.site || '',
-          'Malzeme Adı': m.name || '',
-          'Kategori': m.category || '',
-          'Mevcut Miktar': Number(m.qty) || 0,
-          'Birim': m.unit || 'Adet',
-          'Birim Maliyet (₺)': Number(m.unitCost) || 0,
-          'Toplam Stok Maliyeti (₺)': Number(((Number(m.qty) || 0) * (Number(m.unitCost) || 0)).toFixed(2)),
-          'Tedarikçi Firma': m.supplier || '',
-          'Alım Tarihi': m.date || '',
-          'Fatura No': m.invoiceNo || '',
-          'Açıklama': m.note || ''
-        }));
+        const stokRows = mats.map(m => {
+          const tb = getMalzemeTaxBreakdown(m);
+          return {
+            'Şantiye': m.site || '',
+            'Malzeme Adı': m.name || '',
+            'Kategori': m.category || '',
+            'Mevcut Miktar': Number(m.qty) || 0,
+            'Birim': m.unit || 'Adet',
+            'Birim Maliyet KDV Hariç (₺)': Number(tb.netUnitCost.toFixed(2)),
+            'Birim Maliyet KDV Dahil (₺)': Number(tb.grossUnitCost.toFixed(2)),
+            'Toplam Stok KDV Hariç (₺)': Number(tb.netTotal.toFixed(2)),
+            'Toplam Stok KDV Dahil (₺)': Number(tb.grossTotal.toFixed(2)),
+            'KDV (%)': tb.kdvRate,
+            'Tedarikçi Firma': m.supplier || '',
+            'Alım Tarihi': m.date || '',
+            'Fatura No': m.invoiceNo || '',
+            'Açıklama': m.note || ''
+          };
+        });
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(stokRows.length ? stokRows : [{ Bilgilendirme: 'Stok kaydı yok' }]), 'Mevcut_Malzeme_Stogu');
 
         // 3. Sayfa: Sarfiyat / Kullanım Geçmişi
-        const sarfRows = sarfs.map(s => ({
-          'Tarih': s.date || '',
-          'Şantiye': s.site || '',
-          'Harcanan Malzeme': s.name || '',
-          'Kullanılan Miktar': Number(s.qty) || 0,
-          'Birim': s.unit || 'Adet',
-          'Birim Maliyet (₺)': Number(s.unitCost) || 0,
-          'Toplam Sarf Maliyeti (₺)': Number((s.totalCost || (s.qty * s.unitCost) || 0).toFixed(2)),
-          'Kullanan Ekip / İmalat Açıklaması': s.usedByNote || '',
-          'Kaynak Fatura No': s.invoiceNo || ''
-        }));
+        const sarfRows = sarfs.map(s => {
+          const tb = getSarfiyatTaxBreakdown(s);
+          return {
+            'Tarih': s.date || '',
+            'Şantiye': s.site || '',
+            'Harcanan Malzeme': s.name || s.materialName || '',
+            'Kullanılan Miktar': Number(s.qty) || 0,
+            'Birim': s.unit || 'Adet',
+            'Birim KDV Hariç (₺)': Number(tb.netUnitCost.toFixed(2)),
+            'Birim KDV Dahil (₺)': Number(tb.grossUnitCost.toFixed(2)),
+            'Toplam Sarf KDV Hariç (₺)': Number(tb.netTotal.toFixed(2)),
+            'Toplam Sarf KDV Dahil (₺)': Number(tb.grossTotal.toFixed(2)),
+            'Kullanan Ekip / İmalat Açıklaması': s.usedByNote || s.note || '',
+            'Kaynak Fatura No': s.invoiceNo || ''
+          };
+        });
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(sarfRows.length ? sarfRows : [{ Bilgilendirme: 'Sarfiyat kaydı yok' }]), 'Sarf_Kullanim_Gecmisi');
 
         // 4. Sayfa: Araç & Makine Bakım Giderleri
-        const bakimRows = bakims.map(b => ({
-          'Tarih': b.date || '',
-          'Plaka / Araç / Makine': b.vehicle || '',
-          'Bakım / İşlem Türü': b.type || '',
-          'Yapılan İşlemler': b.description || '',
-          'Bakım Tutarı (₺)': Number(b.cost) || 0,
-          'Servis / Tedarikçi': b.supplier || '',
-          'Fatura No': b.invoiceNo || '',
-          'Şantiye': b.site || '',
-          'Araç KM / Saat': b.km || '',
-          'Sonraki Bakım Tarihi': b.nextDate || ''
-        }));
+        const bakimRows = bakims.map(b => {
+          const tb = getRecordTaxBreakdown(b, 'cost');
+          return {
+            'Tarih': b.date || '',
+            'Plaka / Araç / Makine': b.vehicle || '',
+            'Bakım / İşlem Türü': b.type || '',
+            'Yapılan İşlemler': b.description || '',
+            'Tutar KDV Hariç (₺)': Number(tb.net.toFixed(2)),
+            'KDV Tutarı (₺)': Number(tb.vat.toFixed(2)),
+            'Tutar KDV Dahil (₺)': Number(tb.gross.toFixed(2)),
+            'Servis / Tedarikçi': b.supplier || '',
+            'Fatura No': b.invoiceNo || '',
+            'Şantiye': b.site || '',
+            'Araç KM / Saat': b.km || '',
+            'Sonraki Bakım Tarihi': b.nextDate || ''
+          };
+        });
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(bakimRows.length ? bakimRows : [{ Bilgilendirme: 'Bakım kaydı yok' }]), 'Arac_Bakim_Giderleri');
 
         // 5. Sayfa: Zimmetler
-        const zimmetRows = zimmets.map(z => ({
-          'Şantiye': z.site || '',
-          'Zimmetli Kişi': z.person || '',
-          'Ekipman / Araç Adı': z.name || '',
-          'Kategori': z.category || '',
-          'Seri No / Plaka / IMEI': z.serial || '',
-          'Maliyet / Değer (₺)': Number(z.cost) || 0,
-          'Tedarikçi': z.supplier || '',
-          'Alım Tarihi': z.date || '',
-          'Fatura No': z.invoiceNo || ''
-        }));
+        const zimmetRows = zimmets.map(z => {
+          const tb = getRecordTaxBreakdown(z, 'cost');
+          return {
+            'Şantiye': z.site || '',
+            'Zimmetli Kişi': z.person || '',
+            'Ekipman / Araç Adı': z.name || '',
+            'Kategori': z.category || '',
+            'Seri No / Plaka / IMEI': z.serial || '',
+            'Değer KDV Hariç (₺)': Number(tb.net.toFixed(2)),
+            'Değer KDV Dahil (₺)': Number(tb.gross.toFixed(2)),
+            'Tedarikçi': z.supplier || '',
+            'Alım Tarihi': z.date || '',
+            'Fatura No': z.invoiceNo || ''
+          };
+        });
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(zimmetRows.length ? zimmetRows : [{ Bilgilendirme: 'Zimmet kaydı yok' }]), 'Santiye_Zimmetleri');
 
         // 6. Sayfa: Fatura İçerikleri
-        const faturaRows = faturas.map(f => ({
-          'Fatura No': f.invoiceNo || '',
-          'Tarih': f.date || '',
-          'Tedarikçi Firma': f.supplier || '',
-          'Şantiye': f.site || '',
-          'Tür': f.targetType || '',
-          'Fatura Kalem Özeti': f.title || '',
-          'Genel Toplam (₺)': Number(f.total) || 0
-        }));
+        const faturaRows = faturas.map(f => {
+          const tb = getInvoiceTaxBreakdown(f);
+          return {
+            'Fatura No': f.invoiceNo || '',
+            'Tarih': f.date || '',
+            'Tedarikçi Firma': f.supplier || '',
+            'Şantiye': f.site || '',
+            'Tür': f.targetType || '',
+            'Fatura Kalem Özeti': f.title || '',
+            'KDV Hariç Toplam (₺)': Number(tb.netTotal.toFixed(2)),
+            'KDV Tutarı (₺)': Number(tb.vatAmount.toFixed(2)),
+            'KDV Dahil Genel Toplam (₺)': Number(tb.grossTotal.toFixed(2))
+          };
+        });
         window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(faturaRows.length ? faturaRows : [{ Bilgilendirme: 'Fatura kaydı yok' }]), 'Fatura_Icerikleri');
 
         window.XLSX.writeFile(wb, `${label}_Maliyet_ve_Stok_Raporu_${dateStr}.xlsx`);
-        showToast(`${isAll ? 'Tüm Şantiyeler' : siteFilter} Excel (.xlsx) raporu indirildi!`);
+        showToast(`${isAll ? 'Tüm Şantiyeler' : siteFilter} Excel (.xlsx) raporu (KDV Hariç & Dahil) indirildi!`);
         return;
       }
 
       // Fallback CSV
       const rows = [
-        ['Bölüm', 'Şantiye', 'Kalem / Açıklama', 'Kategori / Tür', 'Miktar / Plaka', 'Birim Maliyet', 'Toplam Maliyet (TL)', 'Tedarikçi / Servis', 'Tarih', 'Fatura No']
+        ['Bölüm', 'Şantiye', 'Kalem / Açıklama', 'Kategori / Tür', 'Miktar / Plaka', 'Birim KDV Hariç', 'Birim KDV Dahil', 'Toplam KDV Hariç (TL)', 'Toplam KDV Dahil (TL)', 'Tedarikçi / Servis', 'Tarih', 'Fatura No']
       ];
-      mats.forEach(m => rows.push(['AKTİF STOK', m.site, m.name, m.category, `${m.qty} ${m.unit}`, m.unitCost, (m.qty * m.unitCost).toFixed(2), m.supplier, m.date, m.invoiceNo]));
-      sarfs.forEach(s => rows.push(['SARFİYAT (HARCANAN)', s.site, s.name, s.usedByNote, `${s.qty} ${s.unit}`, s.unitCost, (s.totalCost || 0).toFixed(2), s.supplier, s.date, s.invoiceNo]));
-      bakims.forEach(b => rows.push(['ARAÇ BAKIM', b.site, b.description, b.type, b.vehicle, b.cost, b.cost, b.supplier, b.date, b.invoiceNo]));
-      zimmets.forEach(z => rows.push(['ZİMMET', z.site, z.name, z.category, z.serial, z.cost, z.cost, z.supplier, z.date, z.invoiceNo]));
+      mats.forEach(m => {
+        const tb = getMalzemeTaxBreakdown(m);
+        rows.push(['AKTİF STOK', m.site, m.name, m.category, `${m.qty} ${m.unit}`, tb.netUnitCost.toFixed(2), tb.grossUnitCost.toFixed(2), tb.netTotal.toFixed(2), tb.grossTotal.toFixed(2), m.supplier, m.date, m.invoiceNo]);
+      });
+      sarfs.forEach(s => {
+        const tb = getSarfiyatTaxBreakdown(s);
+        rows.push(['SARFİYAT (HARCANAN)', s.site, s.name || s.materialName, s.usedByNote || s.note, `${s.qty} ${s.unit}`, tb.netUnitCost.toFixed(2), tb.grossUnitCost.toFixed(2), tb.netTotal.toFixed(2), tb.grossTotal.toFixed(2), s.supplier, s.date, s.invoiceNo]);
+      });
+      bakims.forEach(b => {
+        const tb = getRecordTaxBreakdown(b, 'cost');
+        rows.push(['ARAÇ BAKIM', b.site, b.description, b.type, b.vehicle, tb.net.toFixed(2), tb.gross.toFixed(2), tb.net.toFixed(2), tb.gross.toFixed(2), b.supplier, b.date, b.invoiceNo]);
+      });
+      zimmets.forEach(z => {
+        const tb = getRecordTaxBreakdown(z, 'cost');
+        rows.push(['ZİMMET', z.site, z.name, z.category, z.serial, tb.net.toFixed(2), tb.gross.toFixed(2), tb.net.toFixed(2), tb.gross.toFixed(2), z.supplier, z.date, z.invoiceNo]);
+      });
       const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a');
@@ -3038,6 +3331,7 @@
     // ARAYÜZ RENDER FONKSİYONLARI
     // =========================================================================
     function renderAll() {
+      updateGlobalTaxToggleUi();
       renderStatsAndBadges();
       renderDashboardAlerts();
       renderSiteCosts();
@@ -3078,11 +3372,27 @@
       setEl('badgeBakimCount', bakimCount);
       setEl('badgeSiteCount', sites.length);
 
-      const zimmetTotal = (appState.zimmetler || []).reduce((acc, z) => acc + (Number(z.cost) || 0), 0);
-      const malzemeTotal = (appState.malzemeler || []).reduce((acc, m) => acc + (Number(m.qty) || 0) * (Number(m.unitCost) || 0), 0);
-      const sarfTotal = (appState.sarfiyatlar || []).reduce((acc, s) => acc + (Number(s.totalCost) || (Number(s.qty) || 0) * (Number(s.unitCost) || 0)), 0);
-      const bakimTotal = (appState.aracBakimlar || []).reduce((acc, b) => acc + (Number(b.cost) || 0), 0);
-      const faturaTotal = (appState.faturalar || []).reduce((acc, f) => acc + (Number(f.total) || 0), 0);
+      let zimNet = 0, zimGross = 0;
+      (appState.zimmetler || []).forEach(z => { const tb = getRecordTaxBreakdown(z, 'cost'); zimNet += tb.net; zimGross += tb.gross; });
+
+      let malNet = 0, malGross = 0;
+      (appState.malzemeler || []).forEach(m => { const tb = getMalzemeTaxBreakdown(m); malNet += tb.netTotal; malGross += tb.grossTotal; });
+
+      let sarfNet = 0, sarfGross = 0;
+      (appState.sarfiyatlar || []).forEach(s => { const tb = getSarfiyatTaxBreakdown(s); sarfNet += tb.netTotal; sarfGross += tb.grossTotal; });
+
+      let bakimNet = 0, bakimGross = 0;
+      (appState.aracBakimlar || []).forEach(b => { const tb = getRecordTaxBreakdown(b, 'cost'); bakimNet += tb.net; bakimGross += tb.gross; });
+
+      let fatNet = 0, fatGross = 0;
+      (appState.faturalar || []).forEach(f => { const tb = getInvoiceTaxBreakdown(f); fatNet += tb.netTotal; fatGross += tb.grossTotal; });
+
+      const grossMode = isGrossDisplayMode();
+      const zimmetTotal = grossMode ? zimGross : zimNet;
+      const malzemeTotal = grossMode ? malGross : malNet;
+      const sarfTotal = grossMode ? sarfGross : sarfNet;
+      const bakimTotal = grossMode ? bakimGross : bakimNet;
+      const faturaTotal = grossMode ? fatGross : fatNet;
 
       const cars = (appState.zimmetler || []).filter(z => (z.category || '').includes('Araba')).length;
       const phones = (appState.zimmetler || []).filter(z => (z.category || '').includes('Telefon')).length;
@@ -3091,12 +3401,16 @@
       setEl('statZimmetCount', `${zimmetCount} Adet`);
       setEl('statZimmetBreakdown', `${cars} Araba • ${phones} Telefon • ${tools} Ekipman`);
       setEl('statZimmetValue', formatCurrency(zimmetTotal));
+      setEl('statZimmetSub', getSecondaryTaxLabel(zimNet, zimGross));
       setEl('statMalzemeValue', formatCurrency(malzemeTotal));
       setEl('statMalzemeCount', `${malzemeCount} kalem • Sarf: ${formatCurrency(sarfTotal)}`);
+      setEl('statMalzemeVatSub', getSecondaryTaxLabel(malNet + sarfNet, malGross + sarfGross));
       setEl('statBakimValue', formatCurrency(bakimTotal));
       setEl('statBakimCount', `${bakimCount} bakım/servis kaydı`);
+      setEl('statBakimVatSub', getSecondaryTaxLabel(bakimNet, bakimGross));
       setEl('statFaturaCount', `${faturaCount} Fatura`);
       setEl('statFaturaValue', `Toplam: ${formatCurrency(faturaTotal)}`);
+      setEl('statFaturaVatSub', getSecondaryTaxLabel(fatNet, fatGross));
 
       // Üst bar ve sekme şantiye Excel seçicilerini güncelle
       ['topExportSiteSelect', 'tabExportSiteSelect'].forEach(selId => {
@@ -3190,7 +3504,8 @@
               </div>
               <div class="text-right">
                 <span class="text-[10px] font-bold uppercase text-slate-400 block">Şantiye Harcama Toplamı</span>
-                <span class="text-lg font-extrabold text-slate-900">${formatCurrency(s.operationalCost)}</span>
+                <span class="text-lg font-extrabold text-slate-900 tabular-nums">${formatCurrency(s.operationalCost)}</span>
+                <span class="block text-[10px] font-semibold text-emerald-700 tabular-nums">${getSecondaryTaxLabel(s.operationalCostNet, s.operationalCostGross)}</span>
               </div>
             </div>
 
@@ -3292,20 +3607,32 @@
 
     function renderInvoiceItemsMiniTable(f, fallbackDesc = '') {
       const items = (f && Array.isArray(f.items) && f.items.length > 0) ? f.items : null;
+      const grossMode = isGrossDisplayMode();
       if (items) {
+        const invTax = getInvoiceTaxBreakdown(f);
+        const defRate = invTax.kdvRate;
         const rowsHtml = items.map(it => {
-          const qty = Number(it.qty) || 1;
-          const unitCost = Number(it.unitCost) || 0;
-          const lineTotal = qty * unitCost;
+          const itemInput = (f?.taxIncluded === true && it?.taxIncluded === undefined) ? { ...it, taxIncluded: true } : it;
+          const tb = getItemTaxBreakdown(itemInput, defRate);
+          const secLine = getSecondaryTaxLabel(tb.netLineTotal, tb.grossLineTotal);
           return `
             <tr class="border-t border-slate-100 hover:bg-slate-50/70">
               <td class="py-1.5 px-2.5 text-slate-800 font-medium">${escapeHtml(it.name || '-')}</td>
-              <td class="py-1.5 px-2 text-center text-slate-600 whitespace-nowrap font-semibold">${qty} ${escapeHtml(it.unit || 'Adet')}</td>
-              <td class="py-1.5 px-2 text-right text-slate-600 whitespace-nowrap tabular-nums">${formatCurrency(unitCost)}</td>
-              <td class="py-1.5 px-2.5 text-right text-slate-900 font-bold whitespace-nowrap tabular-nums">${formatCurrency(lineTotal)}</td>
+              <td class="py-1.5 px-2 text-center text-slate-600 whitespace-nowrap font-semibold">${tb.qty} ${escapeHtml(it.unit || 'Adet')}</td>
+              <td class="py-1.5 px-2 text-right text-slate-600 whitespace-nowrap tabular-nums">
+                <div>${formatCurrency(tb.activeUnitCost)}</div>
+                <div class="text-[10px] text-slate-400">${grossMode ? 'Hariç: ' + formatCurrency(tb.netUnitCost) : 'Dahil: ' + formatCurrency(tb.grossUnitCost)}</div>
+              </td>
+              <td class="py-1.5 px-2.5 text-right text-slate-900 font-bold whitespace-nowrap tabular-nums">
+                <div>${formatCurrency(tb.activeLineTotal)}</div>
+                <div class="text-[10px] font-medium text-emerald-700">${secLine}</div>
+              </td>
             </tr>
           `;
         }).join('');
+        const modeBadge = grossMode
+          ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">KDV Dahil</span>'
+          : '<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">KDV Hariç</span>';
         return `
           <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
             <table class="w-full text-xs border-collapse">
@@ -3313,11 +3640,24 @@
                 <tr class="bg-slate-50 text-[10px] font-bold uppercase text-slate-500">
                   <th class="py-1.5 px-2.5 text-left">Kalem / Açıklama</th>
                   <th class="py-1.5 px-2 text-center whitespace-nowrap">Miktar</th>
-                  <th class="py-1.5 px-2 text-right whitespace-nowrap">Birim Fiyat</th>
-                  <th class="py-1.5 px-2.5 text-right whitespace-nowrap">Tutar</th>
+                  <th class="py-1.5 px-2 text-right whitespace-nowrap">
+                    <button type="button" data-toggle-tax-mode="1" class="inline-flex items-center gap-1 hover:text-slate-800 transition" title="KDV Hariç / KDV Dahil değiştir">Birim ${modeBadge}</button>
+                  </th>
+                  <th class="py-1.5 px-2.5 text-right whitespace-nowrap">
+                    <button type="button" data-toggle-tax-mode="1" class="inline-flex items-center gap-1 hover:text-slate-800 transition" title="KDV Hariç / KDV Dahil değiştir">Tutar ${modeBadge}</button>
+                  </th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
+              <tfoot>
+                <tr class="bg-slate-50/90 border-t border-slate-200 text-[11px] font-semibold text-slate-600">
+                  <td colspan="4" class="py-1.5 px-2.5 text-right tabular-nums">
+                    KDV Hariç: <strong class="text-slate-800">${formatCurrency(invTax.netTotal)}</strong>
+                    • KDV (%${invTax.kdvRate}): <strong class="text-slate-800">${formatCurrency(invTax.vatAmount)}</strong>
+                    • KDV Dahil: <strong class="text-emerald-700">${formatCurrency(invTax.grossTotal)}</strong>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         `;
@@ -3371,13 +3711,30 @@
       if (subEl) subEl.textContent = `${f.supplier || '-'} • ${formatDateTR(f.date)} • ${f.site || '-'}`;
 
       const items = Array.isArray(f.items) ? f.items : [];
+      const invTax = getInvoiceTaxBreakdown(f);
       const kpisEl = document.getElementById('invoiceDetailKpis');
       if (kpisEl) {
         kpisEl.innerHTML = `
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Tedarikçi / Servis</div><div class="text-xs font-bold text-slate-900 mt-1 truncate" title="${escapeHtml(f.supplier || '-')}">${escapeHtml(f.supplier || '-')}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Tarih &amp; Şantiye</div><div class="text-xs font-bold text-slate-900 mt-1">${formatDateTR(f.date)} • ${escapeHtml(f.site || '-')}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Kalem Sayısı</div><div class="text-sm font-extrabold text-emerald-700 mt-0.5">${items.length} Kalem</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Genel Toplam</div><div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums">${formatCurrency(f.total)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Tedarikçi &amp; Şantiye</div>
+            <div class="text-xs font-bold text-slate-900 mt-1 truncate" title="${escapeHtml(f.supplier || '-')}">${escapeHtml(f.supplier || '-')}</div>
+            <div class="text-[11px] text-slate-500 truncate">${formatDateTR(f.date)} • ${escapeHtml(f.site || '-')}</div>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">KDV Hariç Toplam</div>
+            <div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums">${formatCurrency(invTax.netTotal)}</div>
+            <div class="text-[11px] text-slate-500">${items.length} Kalem</div>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Hesaplanan KDV (%${invTax.kdvRate})</div>
+            <div class="text-sm font-extrabold text-amber-700 mt-0.5 tabular-nums">${formatCurrency(invTax.vatAmount)}</div>
+            <div class="text-[11px] text-slate-500">Vergi Tutarı</div>
+          </div>
+          <div class="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200">
+            <div class="text-[10px] font-bold text-emerald-800 uppercase">KDV Dahil Genel Toplam</div>
+            <div class="text-sm font-extrabold text-emerald-800 mt-0.5 tabular-nums">${formatCurrency(invTax.grossTotal)}</div>
+            <div class="text-[11px] text-emerald-700 font-semibold">Ödenecek Tutar</div>
+          </div>
         `;
       }
 
@@ -3385,25 +3742,32 @@
       if (!tableBox) return;
       if (items.length === 0) {
         tableBox.innerHTML = `
-          <div class="p-6 text-center space-y-2">
+          <div class="p-6 text-center space-y-3">
             <div class="text-xs font-semibold text-slate-500">Bu faturada ayrıştırılmış kalem listesi yok.</div>
             ${f.title ? `<div class="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-3 inline-block text-left">${escapeHtml(f.title)}</div>` : ''}
+            <div class="text-xs font-semibold text-slate-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 inline-block">
+              KDV Hariç: <strong>${formatCurrency(invTax.netTotal)}</strong> • KDV (%${invTax.kdvRate}): <strong>${formatCurrency(invTax.vatAmount)}</strong> • KDV Dahil: <strong class="text-emerald-700">${formatCurrency(invTax.grossTotal)}</strong>
+            </div>
           </div>
         `;
         return;
       }
 
       const rowsHtml = items.map((it, idx) => {
-        const qty = Number(it.qty) || 1;
-        const unitCost = Number(it.unitCost) || 0;
-        const lineTotal = qty * unitCost;
+        const itemInput = (f?.taxIncluded === true && it?.taxIncluded === undefined) ? { ...it, taxIncluded: true } : it;
+        const tb = getItemTaxBreakdown(itemInput, invTax.kdvRate);
         return `
           <tr class="border-t border-slate-100 hover:bg-slate-50">
             <td class="py-2.5 px-3 text-center text-xs font-mono text-slate-400">${idx + 1}</td>
-            <td class="py-2.5 px-3 text-xs sm:text-sm font-semibold text-slate-900">${escapeHtml(it.name || '-')}</td>
-            <td class="py-2.5 px-3 text-center text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">${qty} ${escapeHtml(it.unit || 'Adet')}</td>
-            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap tabular-nums">${formatCurrency(unitCost)}</td>
-            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-extrabold text-slate-900 whitespace-nowrap tabular-nums">${formatCurrency(lineTotal)}</td>
+            <td class="py-2.5 px-3 text-xs sm:text-sm font-semibold text-slate-900">
+              ${escapeHtml(it.name || '-')}
+              <span class="ml-1 text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-500">%${tb.kdvRate} KDV</span>
+            </td>
+            <td class="py-2.5 px-3 text-center text-xs sm:text-sm font-bold text-slate-700 whitespace-nowrap">${tb.qty} ${escapeHtml(it.unit || 'Adet')}</td>
+            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap tabular-nums">${formatCurrency(tb.netUnitCost)}</td>
+            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-semibold text-emerald-700 whitespace-nowrap tabular-nums bg-emerald-50/30">${formatCurrency(tb.grossUnitCost)}</td>
+            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-bold text-slate-800 whitespace-nowrap tabular-nums">${formatCurrency(tb.netLineTotal)}</td>
+            <td class="py-2.5 px-3 text-right text-xs sm:text-sm font-extrabold text-emerald-800 whitespace-nowrap tabular-nums bg-emerald-50/40">${formatCurrency(tb.grossLineTotal)}</td>
           </tr>
         `;
       }).join('');
@@ -3416,15 +3780,28 @@
                 <th class="py-2.5 px-3 text-center w-10">#</th>
                 <th class="py-2.5 px-3">Kalem / Malzeme / İşlem Adı</th>
                 <th class="py-2.5 px-3 text-center">Miktar</th>
-                <th class="py-2.5 px-3 text-right">Birim Fiyat</th>
-                <th class="py-2.5 px-3 text-right">Satır Tutarı</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap">Birim (KDV Hariç)</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap text-emerald-800 bg-emerald-50/50">Birim (KDV Dahil)</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap">Tutar (KDV Hariç)</th>
+                <th class="py-2.5 px-3 text-right whitespace-nowrap text-emerald-800 bg-emerald-50/50">Tutar (KDV Dahil)</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
             <tfoot>
+              <tr class="bg-slate-50 border-t-2 border-slate-200">
+                <td colspan="5" class="py-2 px-3 text-right text-xs font-bold uppercase text-slate-600">KDV HARİÇ ARA TOPLAM</td>
+                <td class="py-2 px-3 text-right text-xs sm:text-sm font-extrabold text-slate-900 whitespace-nowrap tabular-nums">${formatCurrency(invTax.netTotal)}</td>
+                <td class="py-2 px-3 bg-emerald-50/30"></td>
+              </tr>
+              <tr class="bg-slate-50 border-t border-slate-200">
+                <td colspan="5" class="py-2 px-3 text-right text-xs font-bold uppercase text-amber-800">HESAPLANAN KDV (%${invTax.kdvRate})</td>
+                <td class="py-2 px-3 text-right text-xs sm:text-sm font-bold text-amber-700 whitespace-nowrap tabular-nums">${formatCurrency(invTax.vatAmount)}</td>
+                <td class="py-2 px-3 bg-emerald-50/30"></td>
+              </tr>
               <tr class="bg-amber-50 border-t-2 border-amber-200">
-                <td colspan="4" class="py-3 px-3 text-right text-xs font-extrabold uppercase text-amber-950">FATURA GENEL TOPLAMI</td>
-                <td class="py-3 px-3 text-right text-sm sm:text-base font-extrabold text-slate-950 whitespace-nowrap tabular-nums">${formatCurrency(f.total)}</td>
+                <td colspan="5" class="py-3 px-3 text-right text-xs font-extrabold uppercase text-amber-950">KDV DAHİL GENEL TOPLAM</td>
+                <td class="py-3 px-3 text-right text-xs font-semibold text-slate-600 whitespace-nowrap tabular-nums">${formatCurrency(invTax.netTotal)}</td>
+                <td class="py-3 px-3 text-right text-sm sm:text-base font-extrabold text-emerald-800 whitespace-nowrap tabular-nums bg-emerald-100/60">${formatCurrency(invTax.grossTotal)}</td>
               </tr>
             </tfoot>
           </table>
@@ -3441,11 +3818,23 @@
       const bakims = (appState.aracBakimlar || []).filter(b => (b.site || '').trim() === site);
       const fats = (appState.faturalar || []).filter(f => (f.site || '').trim() === site);
 
-      const matSum = mats.reduce((a, m) => a + (Number(m.qty) || 0) * (Number(m.unitCost) || 0), 0);
-      const sarfSum = sarfs.reduce((a, s) => a + (Number(s.totalCost) || (Number(s.qty) || 0) * (Number(s.unitCost) || 0)), 0);
-      const zimSum = zims.reduce((a, z) => a + (Number(z.cost) || 0), 0);
-      const bakimSum = bakims.reduce((a, b) => a + (Number(b.cost) || 0), 0);
-      const fatSum = fats.reduce((a, f) => a + (Number(f.total) || 0), 0);
+      let matNet = 0, matGross = 0;
+      mats.forEach(m => { const tb = getMalzemeTaxBreakdown(m); matNet += tb.netTotal; matGross += tb.grossTotal; });
+      let sarfNet = 0, sarfGross = 0;
+      sarfs.forEach(s => { const tb = getSarfiyatTaxBreakdown(s); sarfNet += tb.netTotal; sarfGross += tb.grossTotal; });
+      let zimNet = 0, zimGross = 0;
+      zims.forEach(z => { const tb = getRecordTaxBreakdown(z, 'cost'); zimNet += tb.net; zimGross += tb.gross; });
+      let bakimNet = 0, bakimGross = 0;
+      bakims.forEach(b => { const tb = getRecordTaxBreakdown(b, 'cost'); bakimNet += tb.net; bakimGross += tb.gross; });
+      let fatNet = 0, fatGross = 0;
+      fats.forEach(f => { const tb = getInvoiceTaxBreakdown(f); fatNet += tb.netTotal; fatGross += tb.grossTotal; });
+
+      const grossMode = isGrossDisplayMode();
+      const matSum = grossMode ? matGross : matNet;
+      const sarfSum = grossMode ? sarfGross : sarfNet;
+      const zimSum = grossMode ? zimGross : zimNet;
+      const bakimSum = grossMode ? bakimGross : bakimNet;
+      const fatSum = grossMode ? fatGross : fatNet;
 
       const titleEl = document.getElementById('siteDetailTitle');
       if (titleEl) titleEl.textContent = site;
@@ -3455,11 +3844,11 @@
       const kpisEl = document.getElementById('siteDetailKpis');
       if (kpisEl) {
         kpisEl.innerHTML = `
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Depo Stoğu (${mats.length})</div><div class="text-sm font-extrabold text-emerald-700 mt-0.5">${formatCurrency(matSum)}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Sarfiyat (${sarfs.length})</div><div class="text-sm font-extrabold text-orange-700 mt-0.5">${formatCurrency(sarfSum)}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Zimmet (${zims.length})</div><div class="text-sm font-extrabold text-blue-700 mt-0.5">${formatCurrency(zimSum)}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Araç Bakım (${bakims.length})</div><div class="text-sm font-extrabold text-rose-700 mt-0.5">${formatCurrency(bakimSum)}</div></div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Faturalar (${fats.length})</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${formatCurrency(fatSum)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Depo Stoğu (${mats.length})</div><div class="text-sm font-extrabold text-emerald-700 mt-0.5 tabular-nums">${formatCurrency(matSum)}</div><div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(matNet, matGross)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Sarfiyat (${sarfs.length})</div><div class="text-sm font-extrabold text-orange-700 mt-0.5 tabular-nums">${formatCurrency(sarfSum)}</div><div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(sarfNet, sarfGross)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Zimmet (${zims.length})</div><div class="text-sm font-extrabold text-blue-700 mt-0.5 tabular-nums">${formatCurrency(zimSum)}</div><div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(zimNet, zimGross)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Araç Bakım (${bakims.length})</div><div class="text-sm font-extrabold text-rose-700 mt-0.5 tabular-nums">${formatCurrency(bakimSum)}</div><div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(bakimNet, bakimGross)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Faturalar (${fats.length})</div><div class="text-sm font-extrabold text-slate-900 mt-0.5 tabular-nums">${formatCurrency(fatSum)}</div><div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(fatNet, fatGross)}</div></div>
         `;
       }
 
@@ -3476,7 +3865,9 @@
       if (currentDetailSiteSubtab === 'stok') {
         contentEl.innerHTML = mats.length === 0
           ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede kayıtlı stok yok.</div>'
-          : mats.map(m => `
+          : mats.map(m => {
+            const tb = getMalzemeTaxBreakdown(m);
+            return `
             <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div>
                 <div class="font-bold text-slate-900">${escapeHtml(m.name)} <span class="text-slate-400 font-normal">(${escapeHtml(m.category || 'Genel')})</span></div>
@@ -3485,7 +3876,8 @@
               <div class="flex items-center gap-2">
                 <div class="text-right mr-2">
                   <div class="font-extrabold text-slate-900">${m.qty} ${escapeHtml(m.unit || 'Adet')}</div>
-                  <div class="text-[11px] text-emerald-700 font-semibold">${formatCurrency((Number(m.qty)||0)*(Number(m.unitCost)||0))}</div>
+                  <div class="text-[11px] text-emerald-700 font-semibold tabular-nums">${formatCurrency(tb.activeTotal)}</div>
+                  <div class="text-[10px] text-slate-400 tabular-nums">${getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)}</div>
                 </div>
                 <button type="button" data-qty-delta="-1" data-id="${escapeHtml(m.id)}" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">-1</button>
                 <button type="button" data-qty-delta="1" data-id="${escapeHtml(m.id)}" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 font-bold">+1</button>
@@ -3493,43 +3885,54 @@
                 <button type="button" data-delete-malzeme="${escapeHtml(m.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
               </div>
             </div>
-          `).join('');
+          `;}).join('');
       } else if (currentDetailSiteSubtab === 'sarfiyat') {
         contentEl.innerHTML = sarfs.length === 0
           ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede sarfiyat kaydı yok.</div>'
-          : sarfs.map(s => `
+          : sarfs.map(s => {
+            const tb = getSarfiyatTaxBreakdown(s);
+            return `
             <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div>
-                <div class="font-bold text-slate-900">${escapeHtml(s.name)} — <span class="text-orange-700">${s.qty} ${escapeHtml(s.unit || 'Adet')}</span></div>
-                <div class="text-slate-500 mt-0.5">${escapeHtml(s.usedByNote || 'Şantiye tüketimi')} • ${formatDateTR(s.date)}</div>
+                <div class="font-bold text-slate-900">${escapeHtml(s.name || s.materialName)} — <span class="text-orange-700">${s.qty} ${escapeHtml(s.unit || 'Adet')}</span></div>
+                <div class="text-slate-500 mt-0.5">${escapeHtml(s.usedByNote || s.note || 'Şantiye tüketimi')} • ${formatDateTR(s.date)}</div>
               </div>
               <div class="flex items-center gap-2">
-                <span class="font-bold text-orange-700">${formatCurrency(s.totalCost || (Number(s.qty)||0)*(Number(s.unitCost)||0))}</span>
+                <div class="text-right">
+                  <div class="font-bold text-orange-700 tabular-nums">${formatCurrency(tb.activeTotal)}</div>
+                  <div class="text-[10px] text-slate-400 tabular-nums">${getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)}</div>
+                </div>
                 <button type="button" data-delete-sarf="${escapeHtml(s.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
               </div>
             </div>
-          `).join('');
+          `;}).join('');
       } else if (currentDetailSiteSubtab === 'zimmet') {
         contentEl.innerHTML = zims.length === 0
           ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede zimmet kaydı yok.</div>'
-          : zims.map(z => `
+          : zims.map(z => {
+            const tb = getRecordTaxBreakdown(z, 'cost');
+            return `
             <div class="bg-white rounded-xl border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
               <div>
                 <div class="font-bold text-slate-900">${escapeHtml(z.name)} <span class="text-slate-400 font-mono">(${escapeHtml(z.serial || '-')})</span></div>
                 <div class="text-slate-500 mt-0.5">Zimmetli: <strong>${escapeHtml(z.person || '-')}</strong> • ${escapeHtml(z.category || '')} • ${formatDateTR(z.date)}</div>
               </div>
               <div class="flex items-center gap-2">
-                <span class="font-bold text-blue-800">${formatCurrency(z.cost)}</span>
+                <div class="text-right">
+                  <div class="font-bold text-blue-800 tabular-nums">${formatCurrency(tb.active)}</div>
+                  <div class="text-[10px] text-slate-400 tabular-nums">${getSecondaryTaxLabel(tb.net, tb.gross)}</div>
+                </div>
                 <button type="button" data-edit-zimmet="${escapeHtml(z.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
                 <button type="button" data-delete-zimmet="${escapeHtml(z.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
               </div>
             </div>
-          `).join('');
+          `;}).join('');
       } else if (currentDetailSiteSubtab === 'bakim') {
         contentEl.innerHTML = bakims.length === 0
           ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede araç bakım kaydı yok.</div>'
           : bakims.map(b => {
             const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
+            const tb = getRecordTaxBreakdown(b, 'cost');
             return `
             <div class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2.5 text-xs">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -3539,7 +3942,10 @@
                   <span class="text-slate-500">${escapeHtml(b.supplier || '-')} • ${formatDateTR(b.date)} ${b.km ? '• ' + escapeHtml(b.km) : ''}</span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="font-extrabold text-rose-700 text-sm tabular-nums mr-1">${formatCurrency(b.cost)}</span>
+                  <div class="text-right mr-1">
+                    <span class="font-extrabold text-rose-700 text-sm tabular-nums block">${formatCurrency(tb.active)}</span>
+                    <span class="text-[10px] text-slate-500 tabular-nums">${getSecondaryTaxLabel(tb.net, tb.gross)}</span>
+                  </div>
                   ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 font-mono font-semibold whitespace-nowrap">Fatura Detayı (${escapeHtml(b.invoiceNo)})</button>` : ''}
                   <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
                   <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
@@ -3551,7 +3957,9 @@
       } else if (currentDetailSiteSubtab === 'fatura') {
         contentEl.innerHTML = fats.length === 0
           ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu şantiyede fatura kaydı yok.</div>'
-          : fats.map(f => `
+          : fats.map(f => {
+            const invTax = getInvoiceTaxBreakdown(f);
+            return `
             <div class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2.5 text-xs">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center flex-wrap gap-2">
@@ -3560,7 +3968,10 @@
                   <span class="text-slate-500">• ${formatDateTR(f.date)} • ${(f.items || []).length} Kalem</span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="font-extrabold text-slate-900 text-sm tabular-nums mr-1">${formatCurrency(f.total)}</span>
+                  <div class="text-right mr-1">
+                    <span class="font-extrabold text-slate-900 text-sm tabular-nums block">${formatCurrency(invTax.activeTotal)}</span>
+                    <span class="text-[10px] font-semibold text-emerald-700 tabular-nums">${getSecondaryTaxLabel(invTax.netTotal, invTax.grossTotal)}</span>
+                  </div>
                   <button type="button" data-view-fatura="${escapeHtml(f.id)}" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-semibold">Detay</button>
                   <button type="button" data-edit-fatura="${escapeHtml(f.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
                   <button type="button" data-delete-fatura="${escapeHtml(f.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
@@ -3568,7 +3979,7 @@
               </div>
               ${renderInvoiceItemsMiniTable(f, f.title)}
             </div>
-          `).join('');
+          `;}).join('');
       }
       if (window.lucide) window.lucide.createIcons();
     }
@@ -3580,6 +3991,7 @@
 
     function getAllVehiclesAggregated() {
       const map = {};
+      const grossMode = isGrossDisplayMode();
       const ensureVeh = (name) => {
         const key = (name || '').trim() || 'Belirtilmemiş Araç';
         if (!map[key]) {
@@ -3587,6 +3999,8 @@
             vehicle: key,
             records: [],
             zimmet: null,
+            totalNetCost: 0,
+            totalGrossCost: 0,
             totalCost: 0,
             count: 0,
             lastDate: '',
@@ -3601,8 +4015,11 @@
 
       (appState.aracBakimlar || []).forEach(b => {
         const v = ensureVeh(b.vehicle);
+        const tb = getRecordTaxBreakdown(b, 'cost');
         v.records.push(b);
-        v.totalCost += Number(b.cost) || 0;
+        v.totalNetCost += tb.net;
+        v.totalGrossCost += tb.gross;
+        v.totalCost = grossMode ? v.totalGrossCost : v.totalNetCost;
         v.count += 1;
         if (!v.lastDate || (b.date || '') >= v.lastDate) {
           v.lastDate = b.date || '';
@@ -3616,7 +4033,6 @@
         const cat = (z.category || '').toLowerCase();
         if (cat.includes('araç') || cat.includes('arac') || cat.includes('makine')) {
           const label = z.serial ? `${z.serial} - ${z.name}` : z.name;
-          // Eğer aynı plaka/isim zaten bakım kayıtlarında varsa eşleştir
           const existingKey = Object.keys(map).find(k =>
             k.toLowerCase() === (z.serial || '').toLowerCase() ||
             k.toLowerCase() === (z.name || '').toLowerCase() ||
@@ -3646,10 +4062,12 @@
       const strip = document.getElementById('araclarimSummaryStrip');
       if (strip) {
         const totalSpend = list.reduce((a, v) => a + v.totalCost, 0);
+        const totalNetSpend = list.reduce((a, v) => a + v.totalNetCost, 0);
+        const totalGrossSpend = list.reduce((a, v) => a + v.totalGrossCost, 0);
         const totalOps = list.reduce((a, v) => a + v.count, 0);
         strip.innerHTML = `
           <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Kayıtlı Araç / Makine</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${list.length}</div></div>
-          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam Bakım / Tamir</div><div class="text-2xl font-extrabold text-amber-700 mt-1">${formatCurrency(totalSpend)}</div></div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam Bakım / Tamir</div><div class="text-2xl font-extrabold text-amber-700 mt-1 tabular-nums">${formatCurrency(totalSpend)}</div><div class="text-[11px] font-semibold text-slate-500 mt-0.5 tabular-nums">${getSecondaryTaxLabel(totalNetSpend, totalGrossSpend)}</div></div>
           <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam İşlem Adedi</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${totalOps}</div></div>
         `;
       }
@@ -3674,7 +4092,8 @@
               </div>
               <div class="text-right">
                 <span class="text-[10px] font-bold uppercase text-slate-400 block">Toplam Masraf</span>
-                <span class="text-base font-extrabold text-amber-700">${formatCurrency(v.totalCost)}</span>
+                <span class="text-base font-extrabold text-amber-700 tabular-nums">${formatCurrency(v.totalCost)}</span>
+                <span class="block text-[10px] font-semibold text-emerald-700 tabular-nums">${getSecondaryTaxLabel(v.totalNetCost, v.totalGrossCost)}</span>
               </div>
             </div>
 
@@ -3739,7 +4158,7 @@
       const kpis = document.getElementById('vehicleDetailKpis');
       if (kpis) {
         kpis.innerHTML = `
-          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Toplam Masraf</div><div class="text-sm font-extrabold text-amber-700 mt-0.5">${formatCurrency(veh.totalCost)}</div></div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Toplam Masraf</div><div class="text-sm font-extrabold text-amber-700 mt-0.5 tabular-nums">${formatCurrency(veh.totalCost)}</div><div class="text-[10px] text-slate-500 tabular-nums">${getSecondaryTaxLabel(veh.totalNetCost, veh.totalGrossCost)}</div></div>
           <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">İşlem Sayısı</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${veh.count}</div></div>
           <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Son İşlem / KM</div><div class="text-sm font-extrabold text-slate-900 mt-0.5">${veh.lastDate ? formatDateTR(veh.lastDate) : '-'} ${veh.lastKm ? '(' + escapeHtml(veh.lastKm) + ')' : ''}</div></div>
           <div class="bg-white p-3 rounded-xl border border-slate-200"><div class="text-[10px] font-bold text-slate-400 uppercase">Sonraki Bakım</div><div class="text-sm font-extrabold text-indigo-700 mt-0.5">${veh.nextDate ? formatDateTR(veh.nextDate) : '-'}</div></div>
@@ -3753,6 +4172,7 @@
         ? '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Bu araca ait bakım/tamir kaydı bulunmuyor.</div>'
         : sorted.map(b => {
           const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
+          const tb = getRecordTaxBreakdown(b, 'cost');
           return `
           <div class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2.5 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -3765,7 +4185,10 @@
                 <div class="text-slate-500">Servis: ${escapeHtml(b.supplier || '-')} • Şantiye: ${escapeHtml(b.site || '-')} ${b.invoiceNo ? '• Fatura: <span class="font-mono font-semibold text-amber-800">' + escapeHtml(b.invoiceNo) + '</span>' : ''}</div>
               </div>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span class="font-extrabold text-amber-700 text-sm tabular-nums mr-1">${formatCurrency(b.cost)}</span>
+                <div class="text-right mr-1">
+                  <span class="font-extrabold text-amber-700 text-sm tabular-nums block">${formatCurrency(tb.active)}</span>
+                  <span class="text-[10px] text-slate-500 tabular-nums">${getSecondaryTaxLabel(tb.net, tb.gross)}</span>
+                </div>
                 ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 font-semibold whitespace-nowrap">Fatura Detayı</button>` : ''}
                 <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2.5 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold">Düzenle</button>
                 <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 font-semibold">Sil</button>
@@ -3785,13 +4208,15 @@
       appState.faturalar.forEach(f => {
         const hay = `${f.invoiceNo} ${f.supplier} ${f.title} ${f.site}`.toLocaleLowerCase('tr-TR');
         if (!q || hay.includes(q)) {
+          const tb = getInvoiceTaxBreakdown(f);
           results.push({
             type: 'FATURA',
             badge: 'Fatura Belgesi',
             badgeClass: 'bg-amber-100 text-amber-900',
             title: `${f.invoiceNo} — ${f.title}`,
             sub: `${f.supplier} • ${formatDateTR(f.date)} • ${f.site}`,
-            cost: formatCurrency(f.total),
+            cost: formatCurrency(tb.activeTotal),
+            secCost: getSecondaryTaxLabel(tb.netTotal, tb.grossTotal),
             invoiceNo: f.invoiceNo,
             faturaId: f.id
           });
@@ -3801,13 +4226,15 @@
       appState.zimmetler.forEach(z => {
         const hay = `${z.name} ${z.serial} ${z.person} ${z.supplier} ${z.invoiceNo} ${z.site}`.toLocaleLowerCase('tr-TR');
         if (!q || hay.includes(q)) {
+          const tb = getRecordTaxBreakdown(z, 'cost');
           results.push({
             type: 'ZIMMET',
             badge: `Zimmet (${z.category})`,
             badgeClass: 'bg-blue-100 text-blue-900',
             title: `${z.name} (${z.serial})`,
             sub: `Zimmetli: ${z.person} • ${z.supplier || '-'} • ${formatDateTR(z.date)}`,
-            cost: formatCurrency(z.cost),
+            cost: formatCurrency(tb.active),
+            secCost: getSecondaryTaxLabel(tb.net, tb.gross),
             invoiceNo: z.invoiceNo
           });
         }
@@ -3816,13 +4243,15 @@
       appState.malzemeler.forEach(m => {
         const hay = `${m.name} ${m.category} ${m.site} ${m.supplier} ${m.invoiceNo}`.toLocaleLowerCase('tr-TR');
         if (!q || hay.includes(q)) {
+          const tb = getMalzemeTaxBreakdown(m);
           results.push({
             type: 'MALZEME',
             badge: `Stok (${m.site})`,
             badgeClass: 'bg-emerald-100 text-emerald-900',
-            title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(m.unitCost)})`,
+            title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(tb.activeUnitCost)})`,
             sub: `Alındığı Yer: ${m.supplier || '-'} • ${formatDateTR(m.date)}`,
-            cost: formatCurrency((Number(m.qty) || 0) * (Number(m.unitCost) || 0)),
+            cost: formatCurrency(tb.activeTotal),
+            secCost: getSecondaryTaxLabel(tb.netTotal, tb.grossTotal),
             invoiceNo: m.invoiceNo
           });
         }
@@ -3843,7 +4272,10 @@
             <p class="text-[11px] text-slate-500 mt-0.5 truncate">${escapeHtml(r.sub)}</p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-900">${r.cost}</span>
+            <div class="text-right">
+              <span class="text-xs font-bold text-slate-900 block tabular-nums">${r.cost}</span>
+              <span class="text-[10px] text-emerald-700 tabular-nums">${r.secCost}</span>
+            </div>
             ${r.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(r.invoiceNo)}" class="px-2 py-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-[11px] font-mono font-semibold text-slate-700" title="Fatura No Kopyala">${escapeHtml(r.invoiceNo)}</button>` : ''}
           </div>
         </div>
@@ -3854,22 +4286,30 @@
       const tbody = document.getElementById('dashboardRecentTableBody');
       if (!tbody) return;
       const combined = [
-        ...appState.malzemeler.map(m => ({
-          title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(m.unitCost)})`,
-          sub: `Şantiye: ${m.site}`,
-          supplier: m.supplier || '-',
-          date: m.date || '',
-          invoiceNo: m.invoiceNo || '-',
-          cost: (Number(m.qty) || 0) * (Number(m.unitCost) || 0)
-        })),
-        ...appState.zimmetler.map(z => ({
-          title: `${z.name} (${z.serial})`,
-          sub: `Zimmet → ${z.person}`,
-          supplier: z.supplier || '-',
-          date: z.date || '',
-          invoiceNo: z.invoiceNo || '-',
-          cost: Number(z.cost) || 0
-        }))
+        ...appState.malzemeler.map(m => {
+          const tb = getMalzemeTaxBreakdown(m);
+          return {
+            title: `${m.name} (${m.qty} ${m.unit} x ${formatCurrency(tb.activeUnitCost)})`,
+            sub: `Şantiye: ${m.site}`,
+            supplier: m.supplier || '-',
+            date: m.date || '',
+            invoiceNo: m.invoiceNo || '-',
+            cost: tb.activeTotal,
+            secCost: getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)
+          };
+        }),
+        ...appState.zimmetler.map(z => {
+          const tb = getRecordTaxBreakdown(z, 'cost');
+          return {
+            title: `${z.name} (${z.serial})`,
+            sub: `Zimmet → ${z.person}`,
+            supplier: z.supplier || '-',
+            date: z.date || '',
+            invoiceNo: z.invoiceNo || '-',
+            cost: tb.active,
+            secCost: getSecondaryTaxLabel(tb.net, tb.gross)
+          };
+        })
       ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
       tbody.innerHTML = combined.map(item => `
@@ -3885,7 +4325,10 @@
               ${escapeHtml(item.invoiceNo)}
             </button>
           </td>
-          <td class="py-3 px-4 text-right font-bold text-slate-900">${formatCurrency(item.cost)}</td>
+          <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums">
+            <div>${formatCurrency(item.cost)}</div>
+            <div class="text-[10px] font-medium text-slate-500">${item.secCost}</div>
+          </td>
         </tr>
       `).join('');
     }
@@ -3964,7 +4407,15 @@
                 <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">${escapeHtml(z.category)}</span>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${docBadgeClass}">${escapeHtml(docBadgeLabel)}</span>
               </div>
-              <span class="text-sm font-extrabold text-slate-900">${formatCurrency(z.cost)}</span>
+              ${(() => {
+                const ztb = getRecordTaxBreakdown(z, 'cost');
+                return `
+                  <div class="text-right">
+                    <span class="text-sm font-extrabold text-slate-900 tabular-nums block">${formatCurrency(ztb.active)}</span>
+                    <span class="text-[10px] font-semibold text-slate-500 tabular-nums">${getSecondaryTaxLabel(ztb.net, ztb.gross)}</span>
+                  </div>
+                `;
+              })()}
             </div>
             ${(() => {
               const photos = getZimmetPhotos(z);
@@ -4063,7 +4514,7 @@
 
       tbody.innerHTML = filtered.map(m => {
         const qtyNum = Number(m.qty) || 0;
-        const total = qtyNum * (Number(m.unitCost) || 0);
+        const tb = getMalzemeTaxBreakdown(m);
         const isCritical = qtyNum <= 3;
         return `
           <tr class="hover:bg-slate-50 ${isCritical ? 'bg-rose-50/40' : ''}">
@@ -4087,8 +4538,14 @@
                 <button type="button" data-qty-delta="1" data-id="${escapeHtml(m.id)}" class="px-1.5 font-bold text-slate-600 hover:text-slate-900">+</button>
               </div>
             </td>
-            <td class="py-3 px-4 text-right font-medium text-slate-700">${formatCurrency(m.unitCost)}</td>
-            <td class="py-3 px-4 text-right font-bold text-slate-900">${formatCurrency(total)}</td>
+            <td class="py-3 px-4 text-right font-medium text-slate-700 tabular-nums">
+              <div>${formatCurrency(tb.activeUnitCost)}</div>
+              <div class="text-[10px] text-slate-400">${isGrossDisplayMode() ? 'Hariç: ' + formatCurrency(tb.netUnitCost) : 'Dahil: ' + formatCurrency(tb.grossUnitCost)}</div>
+            </td>
+            <td class="py-3 px-4 text-right font-bold text-slate-900 tabular-nums">
+              <div>${formatCurrency(tb.activeTotal)}</div>
+              <div class="text-[10px] font-medium text-emerald-700">${getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)}</div>
+            </td>
             <td class="py-3 px-4">
               <div class="font-medium text-slate-800">${escapeHtml(m.supplier || '-')}</div>
               <div class="text-[11px] text-slate-500">${formatDateTR(m.date)}</div>
@@ -4111,28 +4568,37 @@
       const tbody = document.getElementById('sarfiyatTableBody');
       const badge = document.getElementById('sarfTotalSummaryBadge');
       const list = appState.sarfiyatlar || [];
-      const totalSarfCost = list.reduce((s, x) => s + (Number(x.totalCost) || (Number(x.qty) || 0) * (Number(x.unitCost) || 0)), 0);
-      if (badge) badge.textContent = `Toplam Sarf Maliyeti: ${formatCurrency(totalSarfCost)} (${list.length} Kayıt)`;
+      let netSum = 0, grossSum = 0, activeSum = 0;
+      list.forEach(x => {
+        const tb = getSarfiyatTaxBreakdown(x);
+        netSum += tb.netTotal;
+        grossSum += tb.grossTotal;
+        activeSum += tb.activeTotal;
+      });
+      if (badge) badge.textContent = `Toplam Sarf Maliyeti: ${formatCurrency(activeSum)} (${getSecondaryTaxLabel(netSum, grossSum)}) • ${list.length} Kayıt`;
       if (!tbody) return;
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Henüz sarf / kullanım düşümü yapılmadı.</td></tr>`;
         return;
       }
       tbody.innerHTML = list.map(s => {
-        const tot = Number(s.totalCost) || (Number(s.qty) || 0) * (Number(s.unitCost) || 0);
+        const tb = getSarfiyatTaxBreakdown(s);
         return `
           <tr class="hover:bg-slate-50">
             <td class="py-2.5 px-4 font-semibold text-slate-800">${formatDateTR(s.date)}</td>
             <td class="py-2.5 px-4">
-              <div class="font-bold text-slate-900">${escapeHtml(s.materialName)}</div>
+              <div class="font-bold text-slate-900">${escapeHtml(s.materialName || s.name)}</div>
               <div class="text-[11px] font-mono text-amber-800">${escapeHtml(s.invoiceNo || '')}</div>
             </td>
             <td class="py-2.5 px-4">
               <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200">${escapeHtml(s.site)}</span>
             </td>
             <td class="py-2.5 px-4 text-center font-bold text-rose-700">-${s.qty} ${escapeHtml(s.unit)}</td>
-            <td class="py-2.5 px-4 text-right font-bold text-slate-900">${formatCurrency(tot)}</td>
-            <td class="py-2.5 px-4 text-slate-700">${escapeHtml(s.note || '-')}</td>
+            <td class="py-2.5 px-4 text-right font-bold text-slate-900 tabular-nums">
+              <div>${formatCurrency(tb.activeTotal)}</div>
+              <div class="text-[10px] font-medium text-slate-500">${getSecondaryTaxLabel(tb.netTotal, tb.grossTotal)}</div>
+            </td>
+            <td class="py-2.5 px-4 text-slate-700">${escapeHtml(s.note || s.usedByNote || '-')}</td>
             <td class="py-2.5 px-4 text-right">
               <button type="button" data-delete-sarf="${escapeHtml(s.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Kaydı Sil</button>
             </td>
@@ -4155,10 +4621,14 @@
       const cardsGrid = document.getElementById('vehicleSummaryCardsGrid');
       if (cardsGrid) {
         const byVehicle = {};
+        const grossMode = isGrossDisplayMode();
         list.forEach(b => {
           const v = b.vehicle || 'Belirtilmemiş Araç';
-          if (!byVehicle[v]) byVehicle[v] = { vehicle: v, totalCost: 0, count: 0, lastDate: '', lastKm: '', nextDate: '', site: b.site || '' };
-          byVehicle[v].totalCost += Number(b.cost) || 0;
+          const tb = getRecordTaxBreakdown(b, 'cost');
+          if (!byVehicle[v]) byVehicle[v] = { vehicle: v, totalCost: 0, netCost: 0, grossCost: 0, count: 0, lastDate: '', lastKm: '', nextDate: '', site: b.site || '' };
+          byVehicle[v].netCost += tb.net;
+          byVehicle[v].grossCost += tb.gross;
+          byVehicle[v].totalCost = grossMode ? byVehicle[v].grossCost : byVehicle[v].netCost;
           byVehicle[v].count += 1;
           if (!byVehicle[v].lastDate || (b.date || '') >= byVehicle[v].lastDate) {
             byVehicle[v].lastDate = b.date || '';
@@ -4183,7 +4653,8 @@
                 </div>
                 <div class="text-right">
                   <span class="text-[10px] font-bold uppercase text-slate-400 block">Toplam Gider</span>
-                  <span class="text-base font-extrabold text-amber-700">${formatCurrency(v.totalCost)}</span>
+                  <span class="text-base font-extrabold text-amber-700 tabular-nums">${formatCurrency(v.totalCost)}</span>
+                  <span class="block text-[10px] font-semibold text-emerald-700 tabular-nums">${getSecondaryTaxLabel(v.netCost, v.grossCost)}</span>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-100">
@@ -4227,6 +4698,7 @@
 
       tbody.innerHTML = filtered.map(b => {
         const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
+        const tb = getRecordTaxBreakdown(b, 'cost');
         return `
         <tr class="hover:bg-slate-50 align-top">
           <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${formatDateTR(b.date)}</td>
@@ -4248,7 +4720,10 @@
           <td class="py-3 px-4 text-xs whitespace-nowrap">
             ${b.nextDate ? `<span class="font-semibold text-indigo-700">${formatDateTR(b.nextDate)}</span>` : '<span class="text-slate-400">-</span>'}
           </td>
-          <td class="py-3 px-4 text-right font-extrabold text-slate-900 whitespace-nowrap tabular-nums">${formatCurrency(b.cost)}</td>
+          <td class="py-3 px-4 text-right whitespace-nowrap tabular-nums">
+            <div class="font-extrabold text-slate-900">${formatCurrency(tb.active)}</div>
+            <div class="text-[10px] font-semibold text-emerald-700">${getSecondaryTaxLabel(tb.net, tb.gross)}</div>
+          </td>
           <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
             <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Düzenle</button>
             <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
@@ -4264,26 +4739,31 @@
         return;
       }
       const rows = [
-        ['Tarih', 'Araç Plaka / Makine', 'Bakım / İşlem Türü', 'Yapılan İşlem & Değişen Parçalar', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'Sonraki Bakım Tarihi', 'Tutar (TL)'],
-        ...list.map(b => [
-          formatDateTR(b.date),
-          b.vehicle,
-          b.type,
-          b.description,
-          b.supplier || '',
-          b.invoiceNo || '',
-          b.site || '',
-          b.km || '',
-          b.nextDate ? formatDateTR(b.nextDate) : '',
-          Number(b.cost) || 0
-        ])
+        ['Tarih', 'Araç Plaka / Makine', 'Bakım / İşlem Türü', 'Yapılan İşlem & Değişen Parçalar', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'Sonraki Bakım Tarihi', 'Tutar KDV Hariç (TL)', 'KDV (TL)', 'Tutar KDV Dahil (TL)'],
+        ...list.map(b => {
+          const tb = getRecordTaxBreakdown(b, 'cost');
+          return [
+            formatDateTR(b.date),
+            b.vehicle,
+            b.type,
+            b.description,
+            b.supplier || '',
+            b.invoiceNo || '',
+            b.site || '',
+            b.km || '',
+            b.nextDate ? formatDateTR(b.nextDate) : '',
+            Number(tb.net.toFixed(2)),
+            Number(tb.vat.toFixed(2)),
+            Number(tb.gross.toFixed(2))
+          ];
+        })
       ];
       const wb = window.XLSX.utils.book_new();
       const ws = window.XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 20 }, { wch: 42 }, { wch: 28 }, { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
+      ws['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 20 }, { wch: 42 }, { wch: 28 }, { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 18 }];
       window.XLSX.utils.book_append_sheet(wb, ws, 'Arac_Bakim_Giderleri');
       window.XLSX.writeFile(wb, `Arac_Makine_Bakim_Raporu_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      showToast('Araç & makine bakım raporu Excel (.xlsx) olarak indirildi!');
+      showToast('Araç & makine bakım raporu (KDV Hariç & Dahil) Excel (.xlsx) olarak indirildi!');
     }
 
     function renderTransferler() {
@@ -4319,20 +4799,29 @@
     }
 
     function printInvoiceSummary(f) {
-      const win = window.open('', '_blank', 'width=850,height=900');
+      const win = window.open('', '_blank', 'width=920,height=900');
       if (!win) {
         showToast('Yazdırma penceresi için açılır pencere izni verin.', 'error');
         return;
       }
+      const invTax = getInvoiceTaxBreakdown(f);
       const rowsHtml = (f.items || []).map((it, idx) => {
-        const lineTot = (Number(it.qty) || 1) * (Number(it.unitCost) || 0);
+        const itemForTax = (f.taxIncluded !== undefined && it.taxIncluded === undefined)
+          ? { ...it, taxIncluded: f.taxIncluded }
+          : it;
+        const tb = getItemTaxBreakdown(itemForTax, f.kdvRate ?? 20);
         return `
           <tr>
             <td style="text-align:center;">${idx + 1}</td>
             <td><strong>${escapeHtml(it.name)}</strong></td>
-            <td style="text-align:center;">${it.qty} ${escapeHtml(it.unit || 'Adet')}</td>
-            <td style="text-align:right;">${formatCurrency(it.unitCost)}</td>
-            <td style="text-align:right;font-weight:bold;">${formatCurrency(lineTot)}</td>
+            <td style="text-align:center;">${tb.qty} ${escapeHtml(it.unit || 'Adet')}</td>
+            <td style="text-align:center;">%${tb.kdvRate}</td>
+            <td style="text-align:right;">
+              <div>${formatCurrency(tb.netUnitCost)}</div>
+              <div style="font-size:10px;color:#475569;">Dahil: ${formatCurrency(tb.grossUnitCost)}</div>
+            </td>
+            <td style="text-align:right;">${formatCurrency(tb.netLineTotal)}</td>
+            <td style="text-align:right;font-weight:bold;">${formatCurrency(tb.grossLineTotal)}</td>
           </tr>
         `;
       }).join('');
@@ -4363,18 +4852,28 @@
         <table>
           <thead>
             <tr>
-              <th style="width:45px;text-align:center;">#</th>
+              <th style="width:40px;text-align:center;">#</th>
               <th>Malzeme / Hizmet / Bakım Kalemi</th>
-              <th style="width:110px;text-align:center;">Miktar</th>
-              <th style="width:130px;text-align:right;">Birim Fiyat</th>
-              <th style="width:140px;text-align:right;">Tutar</th>
+              <th style="width:95px;text-align:center;">Miktar</th>
+              <th style="width:55px;text-align:center;">KDV</th>
+              <th style="width:130px;text-align:right;">Birim (Hariç / Dahil)</th>
+              <th style="width:125px;text-align:right;">KDV Hariç</th>
+              <th style="width:130px;text-align:right;">KDV Dahil</th>
             </tr>
           </thead>
           <tbody>
             ${rowsHtml}
             <tr>
-              <td colspan="4" style="text-align:right;font-weight:bold;background:#f8fafc;">FATURA GENEL TOPLAMI</td>
-              <td style="text-align:right;font-weight:bold;background:#f8fafc;">${formatCurrency(f.total)}</td>
+              <td colspan="5" style="text-align:right;font-weight:600;background:#f8fafc;">KDV HARİÇ ARA TOPLAM</td>
+              <td colspan="2" style="text-align:right;font-weight:700;background:#f8fafc;">${formatCurrency(invTax.netTotal)}</td>
+            </tr>
+            <tr>
+              <td colspan="5" style="text-align:right;font-weight:600;background:#f8fafc;">HESAPLANAN KDV (%${invTax.kdvRate})</td>
+              <td colspan="2" style="text-align:right;font-weight:700;background:#f8fafc;">${formatCurrency(invTax.vatAmount)}</td>
+            </tr>
+            <tr>
+              <td colspan="5" style="text-align:right;font-weight:bold;background:#fef3c7;">KDV DAHİL GENEL TOPLAM</td>
+              <td colspan="2" style="text-align:right;font-weight:bold;background:#fef3c7;">${formatCurrency(invTax.grossTotal)}</td>
             </tr>
           </tbody>
         </table>
@@ -4429,7 +4928,13 @@
                   <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 whitespace-nowrap">${escapeHtml(f.targetType || 'Fatura İçeriği')}</span>
                   ${f.vehicle ? `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-slate-900 text-amber-300 whitespace-nowrap">${escapeHtml(f.vehicle)}</span>` : ''}
                 </div>
-                <span class="text-base font-extrabold text-slate-900 tabular-nums whitespace-nowrap">${formatCurrency(f.total)}</span>
+                <div class="text-right shrink-0">
+                  ${(() => {
+                    const invTax = getInvoiceTaxBreakdown(f);
+                    return `<div class="text-base font-extrabold text-slate-900 tabular-nums whitespace-nowrap">${formatCurrency(invTax.activeTotal)}</div>
+                            <div class="text-[11px] font-medium text-slate-500 tabular-nums whitespace-nowrap">${getSecondaryTaxLabel(invTax.netTotal, invTax.grossTotal)}</div>`;
+                  })()}
+                </div>
               </div>
 
               <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
@@ -4503,29 +5008,92 @@
       }
     }
 
+    let currentModalLastParsedItems = [];
+    let currentModalTaxIncluded = false;
+
+    function syncFaturaRowTaxDataset(row) {
+      if (!row) return;
+      const costInp = row.querySelector('.line-cost');
+      const kdvSel = row.querySelector('.line-kdv');
+      const kdvRate = Math.max(0, Number(kdvSel?.value ?? row.dataset.kdvRate ?? 20) || 0);
+      row.dataset.kdvRate = String(kdvRate);
+      if (!costInp || costInp.value === '') {
+        row.dataset.netUnitCost = '';
+        row.dataset.grossUnitCost = '';
+        return;
+      }
+      const val = Number(costInp.value) || 0;
+      const mult = 1 + kdvRate / 100;
+      if (currentModalTaxIncluded) {
+        row.dataset.grossUnitCost = String(Number(val.toFixed(4)));
+        row.dataset.netUnitCost = String(Number((val / mult).toFixed(4)));
+      } else {
+        row.dataset.netUnitCost = String(Number(val.toFixed(4)));
+        row.dataset.grossUnitCost = String(Number((val * mult).toFixed(4)));
+      }
+    }
+
+    function updateFaturaTaxButtonsUi() {
+      const btnNet = document.getElementById('btnUseNetPrices');
+      const btnGross = document.getElementById('btnUseGrossPrices');
+      if (!btnNet || !btnGross) return;
+      if (currentModalTaxIncluded) {
+        btnGross.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-500 transition';
+        btnNet.className = 'px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 transition';
+      } else {
+        btnNet.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-500 transition';
+        btnGross.className = 'px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 transition';
+      }
+    }
+
     function addFaturaLineItemRow(item = { name: '', qty: 1, unit: 'Adet', unitCost: '' }) {
       const container = document.getElementById('faturaLineItemsContainer');
       if (!container) return;
+      const hasPrice = item.unitCost !== '' && item.unitCost !== undefined && item.unitCost !== null;
+      const tb = hasPrice ? getItemTaxBreakdown(item, item.kdvRate ?? 20) : null;
+      const kdvRate = tb ? tb.kdvRate : (item.kdvRate !== undefined ? Number(item.kdvRate) || 0 : 20);
+      const displayVal = tb
+        ? Number((currentModalTaxIncluded ? tb.grossUnitCost : tb.netUnitCost).toFixed(2))
+        : '';
+
+      const stdRates = [20, 10, 18, 8, 1, 0];
+      if (!stdRates.includes(kdvRate)) stdRates.unshift(kdvRate);
+      const kdvOptions = stdRates.map(r => `<option value="${r}" ${r === kdvRate ? 'selected' : ''}>%${r}</option>`).join('');
+
       const row = document.createElement('div');
       row.className = 'fatura-line-row grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg border border-slate-200';
+      row.dataset.kdvRate = String(kdvRate);
+      row.dataset.netUnitCost = tb ? String(tb.netUnitCost) : '';
+      row.dataset.grossUnitCost = tb ? String(tb.grossUnitCost) : '';
       row.innerHTML = `
-        <div class="col-span-12 sm:col-span-5">
-          <input type="text" required placeholder="Malzeme / Ekipman / Bakım Kalemi Adı" value="${escapeHtml(item.name)}" class="line-name w-full px-2.5 py-1.5 text-xs rounded border border-slate-300" />
-        </div>
-        <div class="col-span-4 sm:col-span-2">
-          <input type="number" step="0.01" required placeholder="Miktar" value="${item.qty ?? 1}" class="line-qty w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
-        </div>
-        <div class="col-span-4 sm:col-span-2">
-          <input type="text" placeholder="Birim" value="${escapeHtml(item.unit || 'Adet')}" class="line-unit w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        <div class="col-span-12 sm:col-span-4">
+          <input type="text" required placeholder="Malzeme / Ekipman / Bakım Kalemi Adı" value="${escapeHtml(item.name || '')}" class="line-name w-full px-2.5 py-1.5 text-xs rounded border border-slate-300" />
         </div>
         <div class="col-span-3 sm:col-span-2">
-          <input type="number" step="0.01" required placeholder="Birim ₺" value="${item.unitCost ?? ''}" class="line-cost w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+          <input type="number" step="0.01" required placeholder="Miktar" value="${item.qty ?? 1}" class="line-qty w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-3 sm:col-span-2">
+          <input type="text" placeholder="Birim" value="${escapeHtml(item.unit || 'Adet')}" class="line-unit w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
+        </div>
+        <div class="col-span-2 sm:col-span-1">
+          <select class="line-kdv w-full px-1 py-1.5 text-xs rounded border border-slate-300 bg-slate-50 font-semibold" title="KDV Oranı">${kdvOptions}</select>
+        </div>
+        <div class="col-span-3 sm:col-span-2">
+          <input type="number" step="0.01" required placeholder="Birim ₺" value="${displayVal}" class="line-cost w-full px-2 py-1.5 text-xs rounded border border-slate-300" />
         </div>
         <div class="col-span-1 text-right">
           <button type="button" class="btn-remove-line text-rose-600 hover:text-rose-800 font-bold text-sm px-1">&times;</button>
         </div>
       `;
-      row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', updateFaturaModalTotal));
+      row.querySelector('.line-qty')?.addEventListener('input', updateFaturaModalTotal);
+      row.querySelector('.line-cost')?.addEventListener('input', () => {
+        syncFaturaRowTaxDataset(row);
+        updateFaturaModalTotal();
+      });
+      row.querySelector('.line-kdv')?.addEventListener('change', () => {
+        syncFaturaRowTaxDataset(row);
+        updateFaturaModalTotal();
+      });
       row.querySelector('.btn-remove-line').addEventListener('click', () => {
         if (container.querySelectorAll('.fatura-line-row').length > 1) {
           row.remove();
@@ -4537,46 +5105,60 @@
     }
 
     function updateFaturaModalTotal() {
-      let sum = 0;
+      let netSum = 0;
+      let grossSum = 0;
       document.querySelectorAll('#faturaLineItemsContainer .fatura-line-row').forEach(row => {
         const q = Number(row.querySelector('.line-qty')?.value) || 0;
-        const c = Number(row.querySelector('.line-cost')?.value) || 0;
-        sum += q * c;
+        const kdv = Number(row.querySelector('.line-kdv')?.value ?? row.dataset.kdvRate ?? 20) || 0;
+        const costVal = row.querySelector('.line-cost')?.value;
+        if (costVal === '' || costVal === undefined) return;
+        let netUnit = Number(row.dataset.netUnitCost);
+        let grossUnit = Number(row.dataset.grossUnitCost);
+        if (!Number.isFinite(netUnit) || !Number.isFinite(grossUnit) || row.dataset.netUnitCost === '') {
+          const raw = Number(costVal) || 0;
+          const mult = 1 + kdv / 100;
+          netUnit = currentModalTaxIncluded ? (raw / mult) : raw;
+          grossUnit = currentModalTaxIncluded ? raw : (raw * mult);
+        }
+        netSum += q * netUnit;
+        grossSum += q * grossUnit;
       });
+      const vatSum = grossSum - netSum;
+      const activeSum = currentModalTaxIncluded ? grossSum : netSum;
       const disp = document.getElementById('faturaModalTotalDisplay');
-      if (disp) disp.textContent = formatCurrency(sum);
-      return sum;
+      if (disp) {
+        disp.textContent = `${formatCurrency(activeSum)} (${currentModalTaxIncluded ? 'KDV Dahil' : 'KDV Hariç'})`;
+      }
+      const box = document.getElementById('faturaTaxSummaryBox');
+      const txt = document.getElementById('faturaTaxSummaryText');
+      if (box && txt) {
+        txt.innerHTML = `KDV Hariç: <strong>${formatCurrency(netSum)}</strong> • KDV: <strong>${formatCurrency(vatSum)}</strong> • KDV Dahil: <strong>${formatCurrency(grossSum)}</strong>`;
+        box.classList.remove('hidden');
+        box.classList.add('flex');
+      }
+      updateFaturaTaxButtonsUi();
+      return activeSum;
     }
 
-    let currentModalLastParsedItems = [];
-
     function applyParsedInvoiceTaxMode(includeVat) {
-      if (!currentModalLastParsedItems || !currentModalLastParsedItems.length) return;
-      const container = document.getElementById('faturaLineItemsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-      currentModalLastParsedItems.forEach(it => {
-        const net = Number(it.netUnitCost ?? it.unitCost) || 0;
-        const kdv = Number(it.kdvRate) || 0;
-        const gross = Number(it.grossUnitCost) || Number((net * (1 + kdv / 100)).toFixed(2));
-        addFaturaLineItemRow({
-          name: it.name,
-          qty: it.qty,
-          unit: it.unit || 'Adet',
-          unitCost: includeVat ? gross : Number(net.toFixed(2))
-        });
-      });
-      const btnNet = document.getElementById('btnUseNetPrices');
-      const btnGross = document.getElementById('btnUseGrossPrices');
-      if (btnNet && btnGross) {
-        if (includeVat) {
-          btnGross.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-500 transition';
-          btnNet.className = 'px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 transition';
-        } else {
-          btnNet.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-500 transition';
-          btnGross.className = 'px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900 font-semibold hover:bg-amber-100 transition';
+      currentModalTaxIncluded = Boolean(includeVat);
+      document.querySelectorAll('#faturaLineItemsContainer .fatura-line-row').forEach(row => {
+        const costInp = row.querySelector('.line-cost');
+        if (!costInp || costInp.value === '') return;
+        const kdv = Number(row.querySelector('.line-kdv')?.value ?? row.dataset.kdvRate ?? 20) || 0;
+        let netVal = Number(row.dataset.netUnitCost);
+        let grossVal = Number(row.dataset.grossUnitCost);
+        if (!Number.isFinite(netVal) || !Number.isFinite(grossVal) || row.dataset.netUnitCost === '') {
+          const raw = Number(costInp.value) || 0;
+          const mult = 1 + kdv / 100;
+          netVal = currentModalTaxIncluded ? (raw / mult) : raw;
+          grossVal = currentModalTaxIncluded ? raw : (raw * mult);
+          row.dataset.netUnitCost = String(netVal);
+          row.dataset.grossUnitCost = String(grossVal);
         }
-      }
+        costInp.value = Number((currentModalTaxIncluded ? grossVal : netVal).toFixed(2));
+      });
+      updateFaturaTaxButtonsUi();
       updateFaturaModalTotal();
     }
 
@@ -4586,15 +5168,15 @@
       if (!box || !txt) return;
       if (parsed && parsed.items && parsed.items.some(x => (Number(x.kdvRate) || 0) > 0)) {
         const rates = [...new Set(parsed.items.map(x => Number(x.kdvRate) || 0).filter(r => r > 0))];
-        const netSum = parsed.items.reduce((s, x) => s + (Number(x.qty) || 1) * (Number(x.netUnitCost ?? x.unitCost) || 0), 0);
-        const grossSum = parsed.payableTotal || parsed.items.reduce((s, x) => s + (Number(x.qty) || 1) * (Number(x.grossUnitCost ?? x.unitCost) || 0), 0);
-        txt.innerHTML = `Faturada <strong>%${rates.join('/')} KDV</strong> tespit edildi (KDV Hariç: <strong>${formatCurrency(netSum)}</strong> • KDV Dahil: <strong>${formatCurrency(grossSum)}</strong>)`;
-        box.classList.remove('hidden');
-        box.classList.add('flex');
+        const netSum = parsed.items.reduce((s, x) => s + (Number(x.qty) || 1) * getItemTaxBreakdown(x, x.kdvRate ?? 20).netUnitCost, 0);
+        const grossSum = parsed.payableTotal || parsed.items.reduce((s, x) => s + (Number(x.qty) || 1) * getItemTaxBreakdown(x, x.kdvRate ?? 20).grossUnitCost, 0);
+        txt.innerHTML = `Faturada <strong>%${rates.join('/')} KDV</strong> (KDV Hariç: <strong>${formatCurrency(netSum)}</strong> • KDV Dahil: <strong>${formatCurrency(grossSum)}</strong>)`;
       } else {
-        box.classList.add('hidden');
-        box.classList.remove('flex');
+        updateFaturaModalTotal();
       }
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+      updateFaturaTaxButtonsUi();
     }
 
     function openFaturaModalForCreate(prefill = null) {
@@ -4619,6 +5201,7 @@
       currentModalDocType = 'Metin';
       currentModalFileName = prefill?.fileName || '';
       currentModalLastParsedItems = prefill?.items ? prefill.items.map(x => ({ ...x })) : [];
+      currentModalTaxIncluded = prefill?.taxIncluded !== undefined ? Boolean(prefill.taxIncluded) : isGrossDisplayMode();
 
       const pdfBadge = document.getElementById('faturaModalPdfBadge');
       const pdfName = document.getElementById('faturaModalPdfName');
@@ -4655,13 +5238,19 @@
       currentModalDocType = 'Metin';
       currentModalFileName = '';
       currentModalLastParsedItems = [];
-      updateFaturaTaxSummaryBanner(null);
+      currentModalTaxIncluded = f.taxIncluded !== undefined ? Boolean(f.taxIncluded) : isGrossDisplayMode();
 
       document.getElementById('faturaModalPdfBadge')?.classList.add('hidden');
       document.getElementById('faturaModalPreviewImg')?.classList.add('hidden');
       const container = document.getElementById('faturaLineItemsContainer');
       container.innerHTML = '';
-      (f.items || []).forEach(it => addFaturaLineItemRow(it));
+      (f.items || []).forEach(it => {
+        const itemForTax = (f.taxIncluded !== undefined && it.taxIncluded === undefined)
+          ? { ...it, taxIncluded: f.taxIncluded, kdvRate: it.kdvRate ?? f.kdvRate ?? 20 }
+          : { ...it, kdvRate: it.kdvRate ?? f.kdvRate ?? 20 };
+        addFaturaLineItemRow(itemForTax);
+      });
+      updateFaturaTaxSummaryBanner(null);
       openModal('modalFatura');
     }
 
@@ -4931,6 +5520,10 @@
         }
       }
 
+      let detectedKdvRate = 20;
+      const kdvHdrMatch = text.match(/(?:Hesaplanan\s*KDV|KDV\s*Oran[ıi]|KDV)[^\d\n]{0,15}%?\s*(1|8|10|18|20)\b/i);
+      if (kdvHdrMatch) detectedKdvRate = Number(kdvHdrMatch[1]) || 20;
+
       // Yedek kalem yakalayıcı (standart dışı tablo veya tek kalemli faturalar için)
       if (items.length === 0) {
         const simpleRegex = new RegExp(
@@ -4944,14 +5537,16 @@
           const unit = normalizeTrUnit(sm[3]);
           const cost = parseTrNumber(sm[4]);
           if (name && cost > 0 && !/Toplam|Matrah|Hesaplanan/i.test(name)) {
+            const netCost = Number(cost.toFixed(2));
+            const grossCost = Number((netCost * (1 + detectedKdvRate / 100)).toFixed(2));
             items.push({
               name,
               qty,
               unit,
-              unitCost: Number(cost.toFixed(2)),
-              netUnitCost: Number(cost.toFixed(2)),
-              grossUnitCost: Number(cost.toFixed(2)),
-              kdvRate: 0
+              unitCost: netCost,
+              netUnitCost: netCost,
+              grossUnitCost: grossCost,
+              kdvRate: detectedKdvRate
             });
           }
         }
@@ -4960,14 +5555,16 @@
       // Eğer elektrik/su/hizmet faturasıysa ve tablo kalemi yoksa Ödenecek Tutar ile kalem oluştur
       if (items.length === 0 && payableTotal > 0) {
         const cleanFallback = (supplier || fallbackName.replace(/\.[^.]+$/, '') || 'Fatura Hizmet / Malzeme Bedeli');
+        const grossCost = Number(payableTotal.toFixed(2));
+        const netCost = Number((grossCost / (1 + detectedKdvRate / 100)).toFixed(2));
         items.push({
           name: cleanFallback,
           qty: 1,
           unit: 'Adet',
-          unitCost: Number(payableTotal.toFixed(2)),
-          netUnitCost: Number(payableTotal.toFixed(2)),
-          grossUnitCost: Number(payableTotal.toFixed(2)),
-          kdvRate: 0
+          unitCost: netCost,
+          netUnitCost: netCost,
+          grossUnitCost: grossCost,
+          kdvRate: detectedKdvRate
         });
       }
 
@@ -4987,6 +5584,7 @@
         date,
         supplier,
         payableTotal,
+        kdvRate: items[0]?.kdvRate ?? detectedKdvRate,
         detectedPlate,
         isMaintenance,
         items
@@ -5136,6 +5734,7 @@ KURALLAR:
         site: '',
         items: [],
         payableTotal: 0,
+        kdvRate: 20,
         detectedPlate: '',
         maintType: '',
         vehicleKm: '',
@@ -5173,6 +5772,7 @@ KURALLAR:
           extracted.site = ai.site || '';
           extracted.items = ai.items;
           extracted.payableTotal = Number(ai.payableTotal) || 0;
+          extracted.kdvRate = Number(ai.items[0]?.kdvRate ?? 20) || 20;
           extracted.detectedPlate = ai.vehiclePlate || '';
           extracted.maintType = ai.maintType || '';
           extracted.vehicleKm = ai.vehicleKm || '';
@@ -5207,6 +5807,7 @@ KURALLAR:
         if (parsed.date) extracted.date = parsed.date;
         if (parsed.supplier) extracted.supplier = parsed.supplier;
         if (parsed.payableTotal) extracted.payableTotal = parsed.payableTotal;
+        extracted.kdvRate = parsed.kdvRate || 20;
         if (parsed.detectedPlate) extracted.detectedPlate = parsed.detectedPlate;
         if (parsed.items?.length) extracted.items = parsed.items;
         if (!forceTargetType && parsed.isMaintenance) {
@@ -5215,7 +5816,10 @@ KURALLAR:
         }
       }
       if (!extracted.items.length) {
-        extracted.items = [{ name: file.name.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: extracted.payableTotal || 0 }];
+        const kRate = extracted.kdvRate || 20;
+        const grossFB = Number((extracted.payableTotal || 0).toFixed(2));
+        const netFB = Number((grossFB / (1 + kRate / 100)).toFixed(2));
+        extracted.items = [{ name: file.name.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: netFB, netUnitCost: netFB, grossUnitCost: grossFB, kdvRate: kRate }];
       }
       if (!extracted.invoiceNo) extracted.invoiceNo = `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
       if (!extracted.supplier) extracted.supplier = 'Tedarikçi Firma';
@@ -5311,11 +5915,18 @@ KURALLAR:
 
       const taxMode = document.getElementById('bulkTaxModeSelect')?.value || 'NET';
       listEl.innerHTML = bulkInvoiceQueue.map((entry, idx) => {
+        const isGross = taxMode === 'GROSS';
+        let netTotal = 0;
+        let grossTotal = 0;
         const items = (entry.items || []).map(it => {
-          const uc = taxMode === 'GROSS' ? (Number(it.grossUnitCost ?? it.unitCost) || 0) : (Number(it.netUnitCost ?? it.unitCost) || 0);
-          return { ...it, effectiveUnitCost: uc };
+          const tb = getItemTaxBreakdown(it, it.kdvRate ?? entry.kdvRate ?? 20);
+          netTotal += tb.netLineTotal;
+          grossTotal += tb.grossLineTotal;
+          return { ...it, effectiveUnitCost: isGross ? tb.grossUnitCost : tb.netUnitCost };
         });
-        entry.total = items.reduce((s, i) => s + (Number(i.qty) || 1) * i.effectiveUnitCost, 0);
+        entry.netTotal = Number(netTotal.toFixed(2));
+        entry.grossTotal = Number(grossTotal.toFixed(2));
+        entry.total = isGross ? entry.grossTotal : entry.netTotal;
 
         const statusBadge =
           entry.status === 'PENDING' ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">⏳ Sırada</span>` :
@@ -5335,7 +5946,10 @@ KURALLAR:
                 ${statusBadge}
               </label>
               <div class="flex items-center gap-2">
-                <span class="text-sm font-extrabold text-slate-900">${formatCurrency(entry.total)}</span>
+                <div class="text-right">
+                  <div class="text-sm font-extrabold text-slate-900">${formatCurrency(entry.total)}</div>
+                  <div class="text-[10px] text-slate-500">${getSecondaryTaxLabel(entry.netTotal || entry.total, entry.grossTotal || entry.total)}</div>
+                </div>
                 <button type="button" data-bulk-remove="${idx}" class="text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded text-xs font-bold" title="Listeden Çıkar">&times;</button>
               </div>
             </div>
@@ -5451,17 +6065,28 @@ KURALLAR:
         return;
       }
       const taxMode = document.getElementById('bulkTaxModeSelect')?.value || 'NET';
+      const isGross = taxMode === 'GROSS';
       let malCount = 0, zimCount = 0, bakCount = 0;
 
       chosen.forEach(entry => {
         const site = (entry.site || 'Kadıköy Şantiyesi').trim();
-        const items = (entry.items || []).map(it => ({
-          name: it.name,
-          qty: Number(it.qty) || 1,
-          unit: it.unit || 'Adet',
-          unitCost: taxMode === 'GROSS' ? (Number(it.grossUnitCost ?? it.unitCost) || 0) : (Number(it.netUnitCost ?? it.unitCost) || 0)
-        }));
-        const total = items.reduce((s, i) => s + i.qty * i.unitCost, 0);
+        const invKdvRate = Number(entry.kdvRate ?? 20) || 20;
+        const items = (entry.items || []).map(it => {
+          const tb = getItemTaxBreakdown(it, it.kdvRate ?? invKdvRate);
+          return {
+            name: it.name,
+            qty: tb.qty,
+            unit: it.unit || 'Adet',
+            unitCost: isGross ? tb.grossUnitCost : tb.netUnitCost,
+            netUnitCost: tb.netUnitCost,
+            grossUnitCost: tb.grossUnitCost,
+            kdvRate: tb.kdvRate,
+            taxIncluded: isGross
+          };
+        });
+        const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
+        const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
+        const total = isGross ? grossTotal : netTotal;
         const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
         const targetLabel =
           entry.targetType === 'ARAC_BAKIM' ? `Araç Bakım / Tamir (${entry.detectedPlate || 'Genel Araç'})` :
@@ -5478,6 +6103,10 @@ KURALLAR:
           vehicle: entry.detectedPlate || '',
           title,
           total,
+          netTotal,
+          grossTotal,
+          kdvRate: invKdvRate,
+          taxIncluded: isGross,
           items
         });
 
@@ -5489,6 +6118,10 @@ KURALLAR:
             type: entry.maintType || 'Periyodik Bakım',
             description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
             cost: total,
+            netCost: netTotal,
+            grossCost: grossTotal,
+            kdvRate: invKdvRate,
+            taxIncluded: isGross,
             date: entry.date,
             invoiceNo: entry.invoiceNo,
             supplier: entry.supplier,
@@ -5509,7 +6142,11 @@ KURALLAR:
               supplier: entry.supplier,
               date: entry.date,
               invoiceNo: entry.invoiceNo,
-              cost: it.qty * it.unitCost,
+              cost: Number((it.qty * it.unitCost).toFixed(2)),
+              netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
+              grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
+              kdvRate: it.kdvRate,
+              taxIncluded: isGross,
               photo: '',
               photos: []
             });
@@ -5525,6 +6162,10 @@ KURALLAR:
               qty: it.qty,
               unit: it.unit,
               unitCost: it.unitCost,
+              netUnitCost: it.netUnitCost,
+              grossUnitCost: it.grossUnitCost,
+              kdvRate: it.kdvRate,
+              taxIncluded: isGross,
               supplier: entry.supplier,
               date: entry.date,
               invoiceNo: entry.invoiceNo,
@@ -5811,9 +6452,74 @@ KURALLAR:
       }).join('');
     }
 
+    function applyFreeItemCostValue(it, rawVal, taxMode, defaultRate = 20) {
+      const kdvRate = Math.max(0, Number(it.kdvRate ?? defaultRate) || 0);
+      const val = Number(rawVal) || 0;
+      const mult = 1 + kdvRate / 100;
+      it.kdvRate = kdvRate;
+      if ((taxMode || 'GROSS') === 'GROSS') {
+        it.grossUnitCost = Number(val.toFixed(4));
+        it.netUnitCost = Number((val / mult).toFixed(4));
+        it.unitCost = it.grossUnitCost;
+      } else {
+        it.netUnitCost = Number(val.toFixed(4));
+        it.grossUnitCost = Number((val * mult).toFixed(4));
+        it.unitCost = it.netUnitCost;
+      }
+      return it;
+    }
+
+    function updateFreeScannerTaxModeButtons(taxMode) {
+      const btnNet = document.getElementById('btnFreeUseNet');
+      const btnGross = document.getElementById('btnFreeUseGross');
+      const isGross = (taxMode || 'GROSS') === 'GROSS';
+      if (btnNet) {
+        btnNet.classList.toggle('bg-emerald-600', !isGross);
+        btnNet.classList.toggle('text-white', !isGross);
+        btnNet.classList.toggle('bg-white', isGross);
+        btnNet.classList.toggle('text-slate-700', isGross);
+      }
+      if (btnGross) {
+        btnGross.classList.toggle('bg-emerald-600', isGross);
+        btnGross.classList.toggle('text-white', isGross);
+        btnGross.classList.toggle('bg-white', !isGross);
+        btnGross.classList.toggle('text-slate-700', !isGross);
+        btnGross.classList.toggle('border', !isGross);
+        btnGross.classList.toggle('border-slate-300', !isGross);
+      }
+    }
+
+    function updateFreeScannerTotalsSummary(entry) {
+      if (!entry) return;
+      const taxMode = entry.taxMode || 'GROSS';
+      const defaultRate = Number(entry.extracted?.kdvRate ?? 20) || 20;
+      let netTotal = 0;
+      let grossTotal = 0;
+      (entry.extracted?.items || []).forEach(it => {
+        const tb = getItemTaxBreakdown(it, it.kdvRate ?? defaultRate);
+        netTotal += tb.netLineTotal;
+        grossTotal += tb.grossLineTotal;
+      });
+      netTotal = Number(netTotal.toFixed(2));
+      grossTotal = Number(grossTotal.toFixed(2));
+      const vatTotal = Number((grossTotal - netTotal).toFixed(2));
+      const total = taxMode === 'GROSS' ? grossTotal : netTotal;
+
+      const totalDisplay = document.getElementById('freeTotalDisplay');
+      const taxNoteEl = document.getElementById('freeTaxBreakdownNote');
+      if (totalDisplay) totalDisplay.textContent = formatCurrency(total);
+      if (taxNoteEl) {
+        taxNoteEl.innerHTML = `KDV Hariç: <strong>${formatCurrency(netTotal)}</strong> • KDV: <strong>${formatCurrency(vatTotal)}</strong> • KDV Dahil: <strong>${formatCurrency(grossTotal)}</strong>`;
+      }
+      entry.calculatedTotal = total;
+      entry.netTotal = netTotal;
+      entry.grossTotal = grossTotal;
+    }
+
     function renderFreeScannerActiveEntry() {
       const entry = freeScannerQueue[freeScannerActiveIndex];
       if (!entry) return;
+      updateFreeScannerTaxModeButtons(entry.taxMode || 'GROSS');
 
       const titleEl = document.getElementById('freeScannerDocTitle');
       const imgEl = document.getElementById('freeScannerImgPreview');
@@ -5883,21 +6589,19 @@ KURALLAR:
       if (countBadge) countBadge.textContent = `${items.length} Kalem`;
 
       const taxMode = entry.taxMode || 'GROSS';
-      let total = 0;
+      const defaultRate = Number(entry.extracted?.kdvRate ?? 20) || 20;
 
       itemsContainer.innerHTML = items.map((it, idx) => {
-        const uc = taxMode === 'GROSS'
-          ? (Number(it.grossUnitCost ?? it.unitCost) || 0)
-          : (Number(it.netUnitCost ?? it.unitCost) || 0);
-        const lineTot = (Number(it.qty) || 1) * uc;
-        total += lineTot;
+        const tb = getItemTaxBreakdown(it, it.kdvRate ?? defaultRate);
+        const uc = taxMode === 'GROSS' ? tb.grossUnitCost : tb.netUnitCost;
+        const lineTot = taxMode === 'GROSS' ? tb.grossLineTotal : tb.netLineTotal;
 
         return `
           <div class="free-item-row grid grid-cols-12 gap-1.5 items-center p-1.5 rounded-lg bg-white border border-slate-200 text-xs" data-item-idx="${idx}">
             <input type="text" class="col-span-5 px-2 py-1 rounded border border-slate-200 font-medium item-name" value="${escapeHtml(it.name || '')}" placeholder="Kalem Adı" />
-            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-center font-mono item-qty" value="${it.qty || 1}" placeholder="Miktar" />
+            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-center font-mono item-qty" value="${tb.qty || 1}" placeholder="Miktar" />
             <input type="text" class="col-span-1 px-1 py-1 rounded border border-slate-200 text-center text-[11px] item-unit" value="${escapeHtml(it.unit || 'Adet')}" placeholder="Birim" />
-            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-right font-mono item-cost" value="${uc}" placeholder="Birim Fiyat" />
+            <input type="number" step="any" min="0" class="col-span-2 px-1.5 py-1 rounded border border-slate-200 text-right font-mono item-cost" value="${Number(uc.toFixed(2))}" placeholder="Birim Fiyat" />
             <div class="col-span-2 flex items-center justify-between pl-1">
               <span class="font-bold text-slate-800 text-[11px]">${formatCurrency(lineTot)}</span>
               <button type="button" class="text-rose-500 hover:text-rose-700 p-0.5 btn-del-free-item" data-del-idx="${idx}" title="Kalemi Sil">&times;</button>
@@ -5906,8 +6610,7 @@ KURALLAR:
         `;
       }).join('');
 
-      if (totalDisplay) totalDisplay.textContent = formatCurrency(total);
-      entry.calculatedTotal = total;
+      updateFreeScannerTotalsSummary(entry);
     }
 
     function updateFreeScannerFooter() {
@@ -5977,13 +6680,35 @@ KURALLAR:
       if (mt) entry.maintType = mt;
       if (km) entry.vehicleKm = km;
 
+      const taxMode = entry.taxMode || 'GROSS';
+      const defaultRate = Number(entry.extracted?.kdvRate ?? 20) || 20;
+      const prevItems = Array.isArray(entry.extracted.items) ? entry.extracted.items : [];
       const newItems = [];
       document.querySelectorAll('#freeItemsTable .free-item-row').forEach(row => {
+        const idx = Number(row.getAttribute('data-item-idx'));
+        const prev = (!Number.isNaN(idx) && prevItems[idx]) ? prevItems[idx] : {};
         const name = row.querySelector('.item-name')?.value.trim();
+        if (!name) return;
         const qty = Number(row.querySelector('.item-qty')?.value) || 1;
         const unit = row.querySelector('.item-unit')?.value.trim() || 'Adet';
-        const unitCost = Number(row.querySelector('.item-cost')?.value) || 0;
-        if (name) newItems.push({ name, qty, unit, unitCost });
+        const rawCost = Number(row.querySelector('.item-cost')?.value) || 0;
+        const prevTb = getItemTaxBreakdown(prev, prev.kdvRate ?? defaultRate);
+        const expectedDisplayed = taxMode === 'GROSS' ? prevTb.grossUnitCost : prevTb.netUnitCost;
+
+        if (prev.netUnitCost !== undefined && prev.grossUnitCost !== undefined && Math.abs(rawCost - expectedDisplayed) < 0.015) {
+          newItems.push({
+            ...prev,
+            name,
+            qty,
+            unit,
+            kdvRate: prevTb.kdvRate,
+            netUnitCost: prevTb.netUnitCost,
+            grossUnitCost: prevTb.grossUnitCost,
+            unitCost: expectedDisplayed
+          });
+        } else {
+          newItems.push(applyFreeItemCostValue({ ...prev, name, qty, unit }, rawCost, taxMode, defaultRate));
+        }
       });
       if (newItems.length > 0) {
         entry.extracted.items = newItems;
@@ -6003,12 +6728,30 @@ KURALLAR:
       const vehiclePlate = entry.vehiclePlate || '';
       const maintType = entry.maintType || 'Periyodik Bakım';
       const vehicleKm = entry.vehicleKm || '';
+      const isGross = (entry.taxMode || 'GROSS') === 'GROSS';
+      const invKdvRate = Number(entry.extracted.kdvRate ?? 20) || 20;
 
-      const items = (entry.extracted.items && entry.extracted.items.length)
+      const rawItems = (entry.extracted.items && entry.extracted.items.length)
         ? entry.extracted.items
-        : [{ name: entry.fileName.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: entry.calculatedTotal || 0 }];
+        : [{ name: entry.fileName.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: entry.calculatedTotal || 0, taxIncluded: isGross, kdvRate: invKdvRate }];
 
-      const total = items.reduce((s, i) => s + (Number(i.qty) || 1) * (Number(i.unitCost) || 0), 0);
+      const items = rawItems.map(it => {
+        const tb = getItemTaxBreakdown(it, it.kdvRate ?? invKdvRate);
+        return {
+          name: it.name,
+          qty: tb.qty,
+          unit: it.unit || 'Adet',
+          unitCost: isGross ? tb.grossUnitCost : tb.netUnitCost,
+          netUnitCost: tb.netUnitCost,
+          grossUnitCost: tb.grossUnitCost,
+          kdvRate: tb.kdvRate,
+          taxIncluded: isGross
+        };
+      });
+
+      const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
+      const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
+      const total = isGross ? grossTotal : netTotal;
       const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
       const targetLabel =
         targetType === 'ARAC_BAKIM'
@@ -6028,6 +6771,10 @@ KURALLAR:
         vehicle: vehiclePlate,
         title,
         total,
+        netTotal,
+        grossTotal,
+        kdvRate: invKdvRate,
+        taxIncluded: isGross,
         items
       });
 
@@ -6039,6 +6786,10 @@ KURALLAR:
           type: maintType,
           description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
           cost: total,
+          netCost: netTotal,
+          grossCost: grossTotal,
+          kdvRate: invKdvRate,
+          taxIncluded: isGross,
           date,
           invoiceNo,
           supplier,
@@ -6057,7 +6808,11 @@ KURALLAR:
             supplier,
             date,
             invoiceNo,
-            cost: (Number(it.qty) || 1) * (Number(it.unitCost) || 0),
+            cost: Number((it.qty * it.unitCost).toFixed(2)),
+            netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
+            grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
+            kdvRate: it.kdvRate,
+            taxIncluded: isGross,
             photos: []
           });
         });
@@ -6068,9 +6823,13 @@ KURALLAR:
             name: it.name,
             category: 'Fatura Kalemi',
             site,
-            qty: Number(it.qty) || 1,
-            unit: it.unit || 'Adet',
-            unitCost: Number(it.unitCost) || 0,
+            qty: it.qty,
+            unit: it.unit,
+            unitCost: it.unitCost,
+            netUnitCost: it.netUnitCost,
+            grossUnitCost: it.grossUnitCost,
+            kdvRate: it.kdvRate,
+            taxIncluded: isGross,
             supplier,
             date,
             invoiceNo,
@@ -6243,10 +7002,7 @@ KURALLAR:
         const entry = freeScannerQueue[freeScannerActiveIndex];
         if (entry) {
           entry.taxMode = 'NET';
-          document.getElementById('btnFreeUseNet')?.classList.add('bg-emerald-600', 'text-white');
-          document.getElementById('btnFreeUseNet')?.classList.remove('bg-white', 'text-slate-700');
-          document.getElementById('btnFreeUseGross')?.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-300');
-          document.getElementById('btnFreeUseGross')?.classList.remove('bg-emerald-600', 'text-white');
+          updateFreeScannerTaxModeButtons('NET');
           renderFreeScannerItems();
           updateFreeScannerFooter();
         }
@@ -6256,10 +7012,7 @@ KURALLAR:
         const entry = freeScannerQueue[freeScannerActiveIndex];
         if (entry) {
           entry.taxMode = 'GROSS';
-          document.getElementById('btnFreeUseGross')?.classList.add('bg-emerald-600', 'text-white');
-          document.getElementById('btnFreeUseGross')?.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-300');
-          document.getElementById('btnFreeUseNet')?.classList.add('bg-white', 'text-slate-700');
-          document.getElementById('btnFreeUseNet')?.classList.remove('bg-emerald-600', 'text-white');
+          updateFreeScannerTaxModeButtons('GROSS');
           renderFreeScannerItems();
           updateFreeScannerFooter();
         }
@@ -6271,7 +7024,7 @@ KURALLAR:
         if (!entry) return;
         if (!entry.extracted) entry.extracted = { items: [] };
         if (!Array.isArray(entry.extracted.items)) entry.extracted.items = [];
-        entry.extracted.items.push({ name: 'Yeni Kalem', qty: 1, unit: 'Adet', unitCost: 0 });
+        entry.extracted.items.push({ name: 'Yeni Kalem', qty: 1, unit: 'Adet', unitCost: 0, netUnitCost: 0, grossUnitCost: 0, kdvRate: entry.extracted?.kdvRate ?? 20 });
         renderFreeScannerItems();
         updateFreeScannerFooter();
       });
@@ -6297,26 +7050,20 @@ KURALLAR:
         const entry = freeScannerQueue[freeScannerActiveIndex];
         if (entry && entry.extracted?.items && entry.extracted.items[idx]) {
           const it = entry.extracted.items[idx];
+          const taxMode = entry.taxMode || 'GROSS';
+          const defaultRate = Number(entry.extracted?.kdvRate ?? 20) || 20;
           if (e.target.classList.contains('item-name')) it.name = e.target.value;
           if (e.target.classList.contains('item-qty')) it.qty = Number(e.target.value) || 1;
           if (e.target.classList.contains('item-unit')) it.unit = e.target.value;
           if (e.target.classList.contains('item-cost')) {
-            it.unitCost = Number(e.target.value) || 0;
-            it.grossUnitCost = it.unitCost;
-            it.netUnitCost = it.unitCost;
+            applyFreeItemCostValue(it, Number(e.target.value) || 0, taxMode, defaultRate);
           }
-          const uc = Number(it.unitCost) || 0;
-          const lineTot = (Number(it.qty) || 1) * uc;
+          const tb = getItemTaxBreakdown(it, it.kdvRate ?? defaultRate);
+          const lineTot = taxMode === 'GROSS' ? tb.grossLineTotal : tb.netLineTotal;
           const totEl = row.querySelector('.col-span-2 span');
           if (totEl) totEl.textContent = formatCurrency(lineTot);
 
-          let tot = 0;
-          entry.extracted.items.forEach(item => {
-            tot += (Number(item.qty) || 1) * (Number(item.unitCost) || 0);
-          });
-          entry.calculatedTotal = tot;
-          const grandTotEl = document.getElementById('freeTotalDisplay');
-          if (grandTotEl) grandTotEl.textContent = formatCurrency(tot);
+          updateFreeScannerTotalsSummary(entry);
           updateFreeScannerFooter();
         }
       });
@@ -6454,11 +7201,34 @@ KURALLAR:
           const name = row.querySelector('.line-name').value.trim();
           const qty = Number(row.querySelector('.line-qty').value) || 1;
           const unit = row.querySelector('.line-unit').value.trim() || 'Adet';
-          const unitCost = Number(row.querySelector('.line-cost').value) || 0;
-          if (name) items.push({ name, qty, unit, unitCost });
+          const rawCost = Number(row.querySelector('.line-cost').value) || 0;
+          const kdvRate = Math.max(0, Number(row.querySelector('.line-kdv')?.value ?? row.dataset.kdvRate ?? 20) || 0);
+          const mult = 1 + kdvRate / 100;
+          let netUnitCost = Number(row.dataset.netUnitCost);
+          let grossUnitCost = Number(row.dataset.grossUnitCost);
+          if (!Number.isFinite(netUnitCost) || !Number.isFinite(grossUnitCost) || row.dataset.netUnitCost === '') {
+            netUnitCost = currentModalTaxIncluded ? Number((rawCost / mult).toFixed(4)) : Number(rawCost.toFixed(4));
+            grossUnitCost = currentModalTaxIncluded ? Number(rawCost.toFixed(4)) : Number((rawCost * mult).toFixed(4));
+          }
+          const unitCost = currentModalTaxIncluded ? Number(grossUnitCost.toFixed(2)) : Number(netUnitCost.toFixed(2));
+          if (name) {
+            items.push({
+              name,
+              qty,
+              unit,
+              unitCost,
+              netUnitCost: Number(netUnitCost.toFixed(2)),
+              grossUnitCost: Number(grossUnitCost.toFixed(2)),
+              kdvRate,
+              taxIncluded: currentModalTaxIncluded
+            });
+          }
         });
 
-        const total = items.reduce((s, i) => s + i.qty * i.unitCost, 0);
+        const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
+        const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
+        const total = currentModalTaxIncluded ? grossTotal : netTotal;
+        const invKdvRate = items[0]?.kdvRate ?? 20;
         const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
         const targetLabel =
           targetType === 'ARAC_BAKIM'
@@ -6471,6 +7241,7 @@ KURALLAR:
           const idx = appState.faturalar.findIndex(f => f.id === editId);
           if (idx > -1) {
             appState.faturalar[idx] = {
+              ...appState.faturalar[idx],
               id: editId,
               invoiceNo,
               supplier,
@@ -6480,6 +7251,10 @@ KURALLAR:
               vehicle: vehiclePlate,
               title,
               total,
+              netTotal,
+              grossTotal,
+              kdvRate: invKdvRate,
+              taxIncluded: currentModalTaxIncluded,
               items
             };
           }
@@ -6496,6 +7271,10 @@ KURALLAR:
             vehicle: vehiclePlate,
             title,
             total,
+            netTotal,
+            grossTotal,
+            kdvRate: invKdvRate,
+            taxIncluded: currentModalTaxIncluded,
             items
           });
 
@@ -6507,6 +7286,10 @@ KURALLAR:
               type: maintType,
               description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
               cost: total,
+              netCost: netTotal,
+              grossCost: grossTotal,
+              kdvRate: invKdvRate,
+              taxIncluded: currentModalTaxIncluded,
               date,
               invoiceNo,
               supplier,
@@ -6528,7 +7311,11 @@ KURALLAR:
                   supplier,
                   date,
                   invoiceNo,
-                  cost: it.qty * it.unitCost,
+                  cost: Number((it.qty * it.unitCost).toFixed(2)),
+                  netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
+                  grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
+                  kdvRate: it.kdvRate,
+                  taxIncluded: currentModalTaxIncluded,
                   photo: ''
                 });
               } else {
@@ -6540,6 +7327,10 @@ KURALLAR:
                   qty: it.qty,
                   unit: it.unit,
                   unitCost: it.unitCost,
+                  netUnitCost: it.netUnitCost,
+                  grossUnitCost: it.grossUnitCost,
+                  kdvRate: it.kdvRate,
+                  taxIncluded: currentModalTaxIncluded,
                   supplier,
                   date,
                   invoiceNo,
@@ -6570,8 +7361,11 @@ KURALLAR:
           return;
         }
 
-        const unitCost = Number(m.unitCost) || 0;
+        const tb = getMalzemeTaxBreakdown(m);
+        const unitCost = isGrossDisplayMode() ? tb.grossUnitCost : tb.netUnitCost;
         const totalCost = Number((qty * unitCost).toFixed(2));
+        const netTotalCost = Number((qty * tb.netUnitCost).toFixed(2));
+        const grossTotalCost = Number((qty * tb.grossUnitCost).toFixed(2));
         m.qty = Number((Number(m.qty) - qty).toFixed(2));
 
         if (!Array.isArray(appState.sarfiyatlar)) appState.sarfiyatlar = [];
@@ -6584,7 +7378,13 @@ KURALLAR:
           qty,
           unit: m.unit,
           unitCost,
+          netUnitCost: tb.netUnitCost,
+          grossUnitCost: tb.grossUnitCost,
           totalCost,
+          netTotalCost,
+          grossTotalCost,
+          kdvRate: tb.kdvRate,
+          taxIncluded: isGrossDisplayMode(),
           invoiceNo: m.invoiceNo || '',
           note: note || 'Şantiye imalatında kullanıldı'
         });
@@ -6593,6 +7393,39 @@ KURALLAR:
         saveState();
         showToast(`${qty} ${m.unit} ${m.name} stoktan düşüldü ve şantiye sarf maliyetine işlendi!`);
       });
+
+      function buildEditedTaxMeta(inputVal, existingRec, isUnitCost = false) {
+        const isGross = isGrossDisplayMode();
+        const raw = Number(inputVal) || 0;
+        const kdvRate = existingRec?.kdvRate ?? 20;
+        if (existingRec) {
+          const prevTb = isUnitCost ? getMalzemeTaxBreakdown(existingRec) : getRecordTaxBreakdown(existingRec, 'cost');
+          const prevActive = isUnitCost ? prevTb.activeUnitCost : prevTb.active;
+          if (Math.abs(raw - prevActive) < 0.015) {
+            return isUnitCost
+              ? {
+                  unitCost: Number((isGross ? prevTb.grossUnitCost : prevTb.netUnitCost).toFixed(2)),
+                  netUnitCost: prevTb.netUnitCost,
+                  grossUnitCost: prevTb.grossUnitCost,
+                  kdvRate: prevTb.kdvRate,
+                  taxIncluded: isGross
+                }
+              : {
+                  cost: Number((isGross ? prevTb.gross : prevTb.net).toFixed(2)),
+                  netCost: prevTb.net,
+                  grossCost: prevTb.gross,
+                  kdvRate: prevTb.kdvRate,
+                  taxIncluded: isGross
+                };
+          }
+        }
+        const mult = 1 + kdvRate / 100;
+        const net = isGross ? Number((raw / mult).toFixed(2)) : Number(raw.toFixed(2));
+        const gross = isGross ? Number(raw.toFixed(2)) : Number((raw * mult).toFixed(2));
+        return isUnitCost
+          ? { unitCost: Number(raw.toFixed(2)), netUnitCost: net, grossUnitCost: gross, kdvRate, taxIncluded: isGross }
+          : { cost: Number(raw.toFixed(2)), netCost: net, grossCost: gross, kdvRate, taxIncluded: isGross, ...(existingRec ? { manualCostOverride: true } : {}) };
+      }
 
       // Araç & Makine Bakım Modal Açma ve Kayıt
       document.getElementById('btnOpenAracBakimModal')?.addEventListener('click', () => {
@@ -6607,12 +7440,15 @@ KURALLAR:
       document.getElementById('formAracBakim')?.addEventListener('submit', e => {
         e.preventDefault();
         const editId = document.getElementById('bakimEditId').value;
+        const existing = editId ? (appState.aracBakimlar || []).find(x => x.id === editId) : null;
+        const taxMeta = buildEditedTaxMeta(document.getElementById('bakimCostInput').value, existing, false);
         const rec = {
+          ...(existing || {}),
           id: editId || ('BKM-' + Math.floor(1000 + Math.random() * 9000)),
           vehicle: document.getElementById('bakimVehicleInput').value.trim(),
           type: document.getElementById('bakimTypeInput').value,
           description: document.getElementById('bakimDescInput').value.trim(),
-          cost: Number(document.getElementById('bakimCostInput').value) || 0,
+          ...taxMeta,
           date: document.getElementById('bakimDateInput').value,
           invoiceNo: document.getElementById('bakimInvoiceNoInput').value.trim(),
           supplier: document.getElementById('bakimSupplierInput').value.trim(),
@@ -6639,7 +7475,20 @@ KURALLAR:
               vehicle: rec.vehicle,
               title: `${rec.type}: ${rec.description}`,
               total: rec.cost,
-              items: [{ name: `${rec.vehicle} - ${rec.description}`, qty: 1, unit: 'Adet', unitCost: rec.cost }]
+              netTotal: rec.netCost,
+              grossTotal: rec.grossCost,
+              kdvRate: rec.kdvRate,
+              taxIncluded: rec.taxIncluded,
+              items: [{
+                name: `${rec.vehicle} - ${rec.description}`,
+                qty: 1,
+                unit: 'Adet',
+                unitCost: rec.cost,
+                netUnitCost: rec.netCost,
+                grossUnitCost: rec.grossCost,
+                kdvRate: rec.kdvRate,
+                taxIncluded: rec.taxIncluded
+              }]
             });
           }
           showToast('Araç bakım / tamir faturası kaydedildi!');
@@ -6771,13 +7620,15 @@ KURALLAR:
       document.getElementById('formZimmet')?.addEventListener('submit', e => {
         e.preventDefault();
         const editId = document.getElementById('zimmetEditId').value;
+        const existing = editId ? appState.zimmetler.find(z => z.id === editId) : null;
+        const taxMeta = buildEditedTaxMeta(document.getElementById('zimmetCost').value, existing, false);
         const item = {
           id: editId || ('ZIM-' + Math.floor(1000 + Math.random() * 9000)),
           name: document.getElementById('zimmetName').value.trim(),
           category: document.getElementById('zimmetCategory').value,
           serial: document.getElementById('zimmetSerial').value.trim(),
           person: document.getElementById('zimmetPerson').value.trim(),
-          cost: Number(document.getElementById('zimmetCost').value) || 0,
+          ...taxMeta,
           invoiceNo: document.getElementById('zimmetInvoiceNo').value.trim(),
           date: document.getElementById('zimmetDate').value,
           supplier: document.getElementById('zimmetSupplier').value.trim(),
@@ -6815,13 +7666,15 @@ KURALLAR:
       document.getElementById('formMalzeme')?.addEventListener('submit', e => {
         e.preventDefault();
         const editId = document.getElementById('malzemeEditId').value;
+        const existing = editId ? appState.malzemeler.find(m => m.id === editId) : null;
+        const taxMeta = buildEditedTaxMeta(document.getElementById('malzemeUnitCost').value, existing, true);
         const item = {
           id: editId || ('MLZ-' + Math.floor(1000 + Math.random() * 9000)),
           name: document.getElementById('malzemeName').value.trim(),
           category: document.getElementById('malzemeCategory').value.trim(),
           qty: Number(document.getElementById('malzemeQty').value) || 1,
           unit: document.getElementById('malzemeUnit').value,
-          unitCost: Number(document.getElementById('malzemeUnitCost').value) || 0,
+          ...taxMeta,
           site: document.getElementById('malzemeSite').value.trim(),
           supplier: document.getElementById('malzemeSupplier').value.trim(),
           invoiceNo: document.getElementById('malzemeInvoiceNo').value.trim(),
@@ -6927,8 +7780,9 @@ KURALLAR:
           const id = consumeBtn.getAttribute('data-consume-malzeme');
           const m = appState.malzemeler.find(x => x.id === id);
           if (m) {
+            const tb = getMalzemeTaxBreakdown(m);
             document.getElementById('sarfMalzemeId').value = m.id;
-            document.getElementById('sarfMalzemeInfoBox').innerHTML = `<strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.site)})<br/><span class="text-xs text-rose-700">Mevcut Stok: <strong>${m.qty} ${escapeHtml(m.unit)}</strong> • Birim Maliyet: <strong>${formatCurrency(m.unitCost)}</strong></span>`;
+            document.getElementById('sarfMalzemeInfoBox').innerHTML = `<strong>${escapeHtml(m.name)}</strong> (${escapeHtml(m.site)})<br/><span class="text-xs text-rose-700">Mevcut Stok: <strong>${m.qty} ${escapeHtml(m.unit)}</strong> • Birim Maliyet: <strong>${formatCurrency(tb.activeUnitCost)}</strong> (${getSecondaryTaxLabel(tb.netUnitCost, tb.grossUnitCost)})</span>`;
             const qInp = document.getElementById('sarfQtyInput');
             qInp.max = m.qty;
             qInp.value = Math.min(1, Number(m.qty) || 1);
@@ -6966,11 +7820,12 @@ KURALLAR:
           const id = editBakimBtn.getAttribute('data-edit-bakim');
           const b = (appState.aracBakimlar || []).find(x => x.id === id);
           if (b) {
+            const tb = getRecordTaxBreakdown(b, 'cost');
             document.getElementById('bakimEditId').value = b.id;
             document.getElementById('bakimVehicleInput').value = b.vehicle || '';
             document.getElementById('bakimTypeInput').value = b.type || 'Periyodik Bakım';
             document.getElementById('bakimDescInput').value = b.description || '';
-            document.getElementById('bakimCostInput').value = b.cost || 0;
+            document.getElementById('bakimCostInput').value = Number(tb.active.toFixed(2));
             document.getElementById('bakimDateInput').value = b.date || '';
             document.getElementById('bakimInvoiceNoInput').value = b.invoiceNo || '';
             document.getElementById('bakimSupplierInput').value = b.supplier || '';
@@ -7021,7 +7876,8 @@ KURALLAR:
           const id = copyAccBtn.getAttribute('data-copy-accounting-msg');
           const f = appState.faturalar.find(x => x.id === id);
           if (f) {
-            const msg = `Muhasebe Fatura Sorgu Bilgisi:\nFatura No: ${f.invoiceNo}\nTedarikçi: ${f.supplier}\nTarih: ${formatDateTR(f.date)}\nŞantiye: ${f.site}\nToplam Tutar: ${formatCurrency(f.total)}\nKalemler: ${f.title}`;
+            const invTax = getInvoiceTaxBreakdown(f);
+            const msg = `Muhasebe Fatura Sorgu Bilgisi:\nFatura No: ${f.invoiceNo}\nTedarikçi: ${f.supplier}\nTarih: ${formatDateTR(f.date)}\nŞantiye: ${f.site}\nKDV Hariç: ${formatCurrency(invTax.netTotal)} | KDV (%${invTax.kdvRate}): ${formatCurrency(invTax.vatAmount)} | KDV Dahil: ${formatCurrency(invTax.grossTotal)}\nKalemler: ${f.title}`;
             navigator.clipboard?.writeText(msg);
             showToast('Muhasebe bilgi mesajı panoya kopyalandı!');
           }
@@ -7102,12 +7958,13 @@ KURALLAR:
         if (editZimmetBtn) {
           const z = appState.zimmetler.find(x => x.id === editZimmetBtn.getAttribute('data-edit-zimmet'));
           if (z) {
+            const tb = getRecordTaxBreakdown(z, 'cost');
             document.getElementById('zimmetEditId').value = z.id;
             document.getElementById('zimmetName').value = z.name;
             document.getElementById('zimmetCategory').value = z.category;
             document.getElementById('zimmetSerial').value = z.serial;
             document.getElementById('zimmetPerson').value = z.person;
-            document.getElementById('zimmetCost').value = z.cost;
+            document.getElementById('zimmetCost').value = Number(tb.active.toFixed(2));
             document.getElementById('zimmetInvoiceNo').value = z.invoiceNo || '';
             document.getElementById('zimmetDate').value = z.date || '';
             document.getElementById('zimmetSupplier').value = z.supplier || '';
@@ -7165,12 +8022,13 @@ KURALLAR:
         if (editMalzemeBtn) {
           const m = appState.malzemeler.find(x => x.id === editMalzemeBtn.getAttribute('data-edit-malzeme'));
           if (m) {
+            const tb = getMalzemeTaxBreakdown(m);
             document.getElementById('malzemeEditId').value = m.id;
             document.getElementById('malzemeName').value = m.name;
             document.getElementById('malzemeCategory').value = m.category;
             document.getElementById('malzemeQty').value = m.qty;
             document.getElementById('malzemeUnit').value = m.unit;
-            document.getElementById('malzemeUnitCost').value = m.unitCost;
+            document.getElementById('malzemeUnitCost').value = Number(tb.activeUnitCost.toFixed(2));
             document.getElementById('malzemeSite').value = m.site;
             document.getElementById('malzemeSupplier').value = m.supplier || '';
             document.getElementById('malzemeInvoiceNo').value = m.invoiceNo || '';
@@ -7359,6 +8217,18 @@ KURALLAR:
 
       // Şantiye Detay, Şantiye Adı Düzenleme & Araçlarım Eventleri
       document.addEventListener('click', (e) => {
+        if (e.target.closest('#btnGlobalTaxNet')) {
+          setGlobalTaxDisplayMode('NET');
+          return;
+        }
+        if (e.target.closest('#btnGlobalTaxGross')) {
+          setGlobalTaxDisplayMode('GROSS');
+          return;
+        }
+        if (e.target.closest('[data-toggle-tax-mode]')) {
+          setGlobalTaxDisplayMode(isGrossDisplayMode() ? 'NET' : 'GROSS');
+          return;
+        }
         const openSiteBtn = e.target.closest('[data-open-site-detail]');
         if (openSiteBtn) {
           openSiteDetailModal(openSiteBtn.getAttribute('data-open-site-detail'));
@@ -7522,6 +8392,7 @@ KURALLAR:
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
 
+      updateGlobalTaxToggleUi();
       updateAiStatusBadge();
       if (window.lucide) lucide.createIcons();
 
