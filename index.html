@@ -545,37 +545,69 @@
             <i data-lucide="wrench" class="w-4 h-4 text-amber-400"></i>
             <span>+ Bakım / Tamir Kaydı Ekle</span>
           </button>
+          <button id="btnPrintBakimReport" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 shadow-sm transition">
+            <i data-lucide="printer" class="w-4 h-4 text-slate-700"></i>
+            <span>Plaka Raporu Yazdır / PDF</span>
+          </button>
           <button id="btnExportBakimExcel" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
             <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
-            <span>Bakım Raporu Excel</span>
+            <span>Seçili Plaka / Bakım Excel İndir</span>
           </button>
         </div>
       </div>
 
       <!-- Bakım Filtreleri -->
-      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Plaka, Araç, Servis veya İşlem Ara</label>
-          <input id="bakimSearchInput" type="text" placeholder="Örn: 34 SGH 084, 34 FCV 671, Balata, Yağ Bakımı, Çekici..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+          <div class="lg:col-span-2">
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Plaka, Araç, Servis veya İşlem Ara</label>
+            <input id="bakimSearchInput" type="text" placeholder="Örn: 34 SGH 084, 34 FCV 671, Balata, Yağ..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Araç Plakası / Makine</label>
+            <select id="filterBakimVehicle" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white font-semibold focus:border-amber-500 outline-none">
+              <option value="ALL">Tüm Araç &amp; Makineler</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Şantiye</label>
+            <select id="filterBakimSite" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+              <option value="ALL">Tüm Şantiyeler</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Bakım / İşlem Türü</label>
+            <select id="filterBakimType" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+              <option value="ALL">Tüm İşlem Türleri</option>
+              <option value="Periyodik Bakım">Periyodik Bakım</option>
+              <option value="Arıza / Tamir / Onarım">Arıza / Tamir / Onarım</option>
+              <option value="Lastik / Akü / Yedek Parça">Lastik / Akü / Yedek Parça</option>
+              <option value="Çekici / Otopark / Kurtarma">Çekici / Otopark / Kurtarma</option>
+              <option value="Muayene / Sigorta / Kasko">Muayene / Sigorta / Kasko</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Başlangıç</label>
+              <input id="filterBakimStartDate" type="date" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Bitiş</label>
+              <input id="filterBakimEndDate" type="date" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Araç Plakası / Makine</label>
-          <select id="filterBakimVehicle" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
-            <option value="ALL">Tüm Araç &amp; Makineler</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Bakım / İşlem Türü</label>
-          <select id="filterBakimType" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
-            <option value="ALL">Tüm İşlem Türleri</option>
-            <option value="Periyodik Bakım">Periyodik Bakım</option>
-            <option value="Arıza / Tamir / Onarım">Arıza / Tamir / Onarım</option>
-            <option value="Lastik / Akü / Yedek Parça">Lastik / Akü / Yedek Parça</option>
-            <option value="Çekici / Otopark / Kurtarma">Çekici / Otopark / Kurtarma</option>
-            <option value="Muayene / Sigorta / Kasko">Muayene / Sigorta / Kasko</option>
-          </select>
+        <div class="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-100">
+          <p class="text-[11px] text-slate-500">Aşağıdan bir plaka seçip yalnızca o plakanın tüm bakım, parça ve fatura dökümünü Excel (.xlsx) veya PDF olarak indirebilirsiniz.</p>
+          <button id="btnResetBakimFilters" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Filtreyi Sıfırla</span>
+          </button>
         </div>
       </div>
+
+      <div id="bakimFilterSummaryStrip"></div>
+      <div id="vehicleSummaryCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
       <!-- Detaylı Bakım & Tamir Tablosu -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -608,7 +640,17 @@
           <p class="text-xs text-slate-500">Her aracınızı ayrı kartlarda görüntüleyin; toplam bakım/tamir giderini, son km bilgisini, sonraki bakım tarihini ve tüm işlem geçmişini tek tıkla inceleyin.</p>
         </div>
         <div class="flex items-center flex-wrap gap-2">
-          <input id="araclarimSearchInput" type="text" placeholder="Plaka, araç adı, şantiye ara..." class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none w-full sm:w-56" />
+          <input id="araclarimSearchInput" type="text" placeholder="Plaka, araç adı, şantiye ara..." class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none w-full sm:w-48" />
+          <select id="araclarimPlateFilter" class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white font-semibold focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Plakalar / Araçlar</option>
+          </select>
+          <select id="araclarimSiteFilter" class="px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Şantiyeler</option>
+          </select>
+          <button id="btnExportAraclarimExcel" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>Plaka Bazlı Maliyet Excel İndir</span>
+          </button>
           <button id="btnOpenNewVehicleBakim" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition">
             <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
             <span>Yeni Araç / Bakım Ekle</span>
@@ -1755,7 +1797,15 @@
             <p id="vehicleDetailSubtitle" class="text-[11px] text-slate-400">Araç bakım, tamir, masraf ve zimmet geçmişi</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center flex-wrap gap-2">
+          <button id="btnPrintVehicleDetail" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Yazdır / PDF</span>
+          </button>
+          <button id="btnVehicleDetailExcel" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Excel İndir</span>
+          </button>
           <button id="btnRenameCurrentVehicle" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition">
             <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
             <span>Plaka / Ad Düzenle</span>
@@ -4048,25 +4098,59 @@
       return Object.values(map).sort((a, b) => b.totalCost - a.totalCost);
     }
 
+    function populateSelectPreserveValue(selectEl, allLabel, items, emptyOverride = null) {
+      if (!selectEl) return 'ALL';
+      const cur = selectEl.value || 'ALL';
+      const cleanItems = [...new Set(items.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
+      const firstText = emptyOverride ? emptyOverride(cleanItems.length) : `${allLabel} (${cleanItems.length})`;
+      selectEl.innerHTML = `<option value="ALL">${escapeHtml(firstText)}</option>` +
+        cleanItems.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      if (cleanItems.includes(cur)) {
+        selectEl.value = cur;
+        return cur;
+      }
+      selectEl.value = 'ALL';
+      return 'ALL';
+    }
+
     function renderAraclarim() {
       const list = getAllVehiclesAggregated();
       const badge = document.getElementById('badgeAracCount');
       if (badge) badge.textContent = list.length;
 
+      const plateSelect = document.getElementById('araclarimPlateFilter');
+      const siteSelect = document.getElementById('araclarimSiteFilter');
+      const plateFilter = populateSelectPreserveValue(plateSelect, 'Tüm Plakalar / Araçlar', list.map(v => v.vehicle));
+      const siteFilter = populateSelectPreserveValue(siteSelect, 'Tüm Şantiyeler', list.map(v => v.site));
+
       const q = (document.getElementById('araclarimSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
       const filtered = list.filter(v => {
-        if (!q) return true;
-        return `${v.vehicle} ${v.site} ${v.person}`.toLocaleLowerCase('tr-TR').includes(q);
+        if (plateFilter !== 'ALL' && v.vehicle !== plateFilter) return false;
+        if (siteFilter !== 'ALL' && (v.site || '') !== siteFilter) return false;
+        if (q) {
+          return `${v.vehicle} ${v.site} ${v.person}`.toLocaleLowerCase('tr-TR').includes(q);
+        }
+        return true;
       });
+
+      const exportBtnSpan = document.querySelector('#btnExportAraclarimExcel span');
+      if (exportBtnSpan) {
+        exportBtnSpan.textContent = plateFilter !== 'ALL'
+          ? `${plateFilter} Maliyet Excel İndir`
+          : 'Plaka Bazlı Maliyet Excel İndir';
+      }
 
       const strip = document.getElementById('araclarimSummaryStrip');
       if (strip) {
-        const totalSpend = list.reduce((a, v) => a + v.totalCost, 0);
-        const totalNetSpend = list.reduce((a, v) => a + v.totalNetCost, 0);
-        const totalGrossSpend = list.reduce((a, v) => a + v.totalGrossCost, 0);
-        const totalOps = list.reduce((a, v) => a + v.count, 0);
+        const totalSpend = filtered.reduce((a, v) => a + v.totalCost, 0);
+        const totalNetSpend = filtered.reduce((a, v) => a + v.totalNetCost, 0);
+        const totalGrossSpend = filtered.reduce((a, v) => a + v.totalGrossCost, 0);
+        const totalOps = filtered.reduce((a, v) => a + v.count, 0);
+        const scopeLabel = plateFilter !== 'ALL'
+          ? `Seçili Plaka: ${escapeHtml(plateFilter)}`
+          : (filtered.length !== list.length ? `Filtrelenen (${filtered.length} / ${list.length})` : 'Kayıtlı Araç / Makine');
         strip.innerHTML = `
-          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Kayıtlı Araç / Makine</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${list.length}</div></div>
+          <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">${scopeLabel}</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${filtered.length}</div></div>
           <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam Bakım / Tamir</div><div class="text-2xl font-extrabold text-amber-700 mt-1 tabular-nums">${formatCurrency(totalSpend)}</div><div class="text-[11px] font-semibold text-slate-500 mt-0.5 tabular-nums">${getSecondaryTaxLabel(totalNetSpend, totalGrossSpend)}</div></div>
           <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"><div class="text-[11px] font-bold uppercase text-slate-400">Toplam İşlem Adedi</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${totalOps}</div></div>
         `;
@@ -4075,7 +4159,7 @@
       const grid = document.getElementById('araclarimGrid');
       if (!grid) return;
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-400">Aramanıza uygun araç veya makine bulunamadı.</div>`;
+        grid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-8 text-center text-xs text-slate-400">Aramanıza veya seçtiğiniz plaka/şantiye filtresine uygun araç bulunamadı.</div>`;
         return;
       }
 
@@ -4104,10 +4188,18 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <button type="button" data-open-vehicle-detail="${escapeHtml(v.vehicle)}" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition">
+          <div class="flex items-center flex-wrap gap-1.5 pt-1">
+            <button type="button" data-open-vehicle-detail="${escapeHtml(v.vehicle)}" class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition whitespace-nowrap">
               <i data-lucide="history" class="w-3.5 h-3.5 text-sky-400"></i>
-              <span>Detay &amp; Geçmiş (${v.count})</span>
+              <span>Detay (${v.count})</span>
+            </button>
+            <button type="button" data-export-vehicle-excel="${escapeHtml(v.vehicle)}" class="inline-flex items-center gap-1 py-2 px-2.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition whitespace-nowrap" title="Yalnızca bu plakanın maliyet &amp; bakım dökümünü Excel indir">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+              <span>Excel</span>
+            </button>
+            <button type="button" data-print-vehicle-report="${escapeHtml(v.vehicle)}" class="inline-flex items-center gap-1 py-2 px-2.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition whitespace-nowrap" title="Bu plakanın maliyet raporunu yazdır / PDF al">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+              <span>Yazdır</span>
             </button>
             <button type="button" data-rename-vehicle="${escapeHtml(v.vehicle)}" class="p-2 rounded-lg text-xs bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 transition" title="Plaka / Araç Adını Düzenle">
               <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
@@ -4607,42 +4699,184 @@
       }).join('');
     }
 
+    function getFilteredBakimRecords(explicitVehicle = null, customScope = null) {
+      const list = appState.aracBakimlar || [];
+      if (explicitVehicle && explicitVehicle !== 'ALL') {
+        return list.filter(b => ((b.vehicle || '').trim() || 'Belirtilmemiş Araç') === explicitVehicle);
+      }
+
+      const aracTabActive = !customScope?.useBakimTabOnly && !document.getElementById('tab-araclarim')?.classList.contains('hidden');
+      if (customScope?.fromAraclarim || (aracTabActive && explicitVehicle === null)) {
+        const pFilter = document.getElementById('araclarimPlateFilter')?.value || 'ALL';
+        const sFilter = document.getElementById('araclarimSiteFilter')?.value || 'ALL';
+        const q = (document.getElementById('araclarimSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+        return list.filter(b => {
+          const veh = (b.vehicle || '').trim() || 'Belirtilmemiş Araç';
+          if (pFilter !== 'ALL' && veh !== pFilter) return false;
+          if (sFilter !== 'ALL' && (b.site || '') !== sFilter) return false;
+          if (q) {
+            const hay = `${veh} ${b.type} ${b.description} ${b.supplier} ${b.invoiceNo} ${b.site}`.toLocaleLowerCase('tr-TR');
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      const q = (document.getElementById('bakimSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+      const vFilter = document.getElementById('filterBakimVehicle')?.value || 'ALL';
+      const sFilter = document.getElementById('filterBakimSite')?.value || 'ALL';
+      const tFilter = document.getElementById('filterBakimType')?.value || 'ALL';
+      const startDate = document.getElementById('filterBakimStartDate')?.value || '';
+      const endDate = document.getElementById('filterBakimEndDate')?.value || '';
+
+      return list.filter(b => {
+        const veh = (b.vehicle || '').trim() || 'Belirtilmemiş Araç';
+        if (vFilter !== 'ALL' && veh !== vFilter) return false;
+        if (sFilter !== 'ALL' && (b.site || '') !== sFilter) return false;
+        if (tFilter !== 'ALL' && b.type !== tFilter) return false;
+        if (startDate && (b.date || '') < startDate) return false;
+        if (endDate && (b.date || '') > endDate) return false;
+        if (q) {
+          const hay = `${veh} ${b.type} ${b.description} ${b.supplier} ${b.invoiceNo} ${b.site}`.toLocaleLowerCase('tr-TR');
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
+    function buildVehicleSummaryMap(records, explicitVehicle = null) {
+      const allAgg = getAllVehiclesAggregated();
+      const zimByVeh = {};
+      allAgg.forEach(a => { zimByVeh[a.vehicle] = a; });
+
+      const map = {};
+      const ensure = (vName) => {
+        const key = (vName || '').trim() || 'Belirtilmemiş Araç';
+        if (!map[key]) {
+          const agg = zimByVeh[key];
+          const zimTb = agg?.zimmet ? getRecordTaxBreakdown(agg.zimmet, 'cost') : { net: 0, gross: 0, active: 0 };
+          map[key] = {
+            vehicle: key,
+            site: agg?.site || '',
+            person: agg?.person || '',
+            count: 0,
+            netCost: 0,
+            grossCost: 0,
+            vatCost: 0,
+            activeCost: 0,
+            zimNet: zimTb.net,
+            zimGross: zimTb.gross,
+            lastDate: '',
+            lastKm: '',
+            nextDate: '',
+            records: []
+          };
+        }
+        return map[key];
+      };
+
+      const grossMode = isGrossDisplayMode();
+      records.forEach(b => {
+        const item = ensure(b.vehicle);
+        const tb = getRecordTaxBreakdown(b, 'cost');
+        item.records.push(b);
+        item.count += 1;
+        item.netCost += tb.net;
+        item.grossCost += tb.gross;
+        item.vatCost += tb.vat;
+        item.activeCost = grossMode ? item.grossCost : item.netCost;
+        if (!item.lastDate || (b.date || '') >= item.lastDate) {
+          item.lastDate = b.date || '';
+          if (b.km) item.lastKm = b.km;
+          if (b.nextDate) item.nextDate = b.nextDate;
+          if (b.site) item.site = b.site;
+        }
+      });
+
+      if (explicitVehicle && explicitVehicle !== 'ALL' && !map[explicitVehicle]) {
+        ensure(explicitVehicle);
+      }
+
+      const arr = Object.values(map).map(x => ({
+        ...x,
+        netCost: Number(x.netCost.toFixed(2)),
+        grossCost: Number(x.grossCost.toFixed(2)),
+        vatCost: Number((x.grossCost - x.netCost).toFixed(2)),
+        activeCost: Number((grossMode ? x.grossCost : x.netCost).toFixed(2))
+      })).sort((a, b) => b.activeCost - a.activeCost);
+
+      const totals = arr.reduce((acc, v) => {
+        acc.count += v.count;
+        acc.net += v.netCost;
+        acc.gross += v.grossCost;
+        acc.vat += v.vatCost;
+        acc.zimNet += v.zimNet;
+        acc.zimGross += v.zimGross;
+        return acc;
+      }, { count: 0, net: 0, gross: 0, vat: 0, zimNet: 0, zimGross: 0 });
+
+      totals.net = Number(totals.net.toFixed(2));
+      totals.gross = Number(totals.gross.toFixed(2));
+      totals.vat = Number((totals.gross - totals.net).toFixed(2));
+      totals.active = grossMode ? totals.gross : totals.net;
+
+      return { vehicles: arr, totals };
+    }
+
     function renderAracBakimlar() {
       const list = appState.aracBakimlar || [];
+      const allVehicles = getAllVehiclesAggregated();
       const vehSelect = document.getElementById('filterBakimVehicle');
-      if (vehSelect) {
-        const cur = vehSelect.value;
-        const vehicles = [...new Set(list.map(b => b.vehicle).filter(Boolean))];
-        vehSelect.innerHTML = `<option value="ALL">Tüm Araç & Makineler (${vehicles.length})</option>` +
-          vehicles.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-        if (vehicles.includes(cur)) vehSelect.value = cur;
+      const siteSelect = document.getElementById('filterBakimSite');
+      const vFilter = populateSelectPreserveValue(
+        vehSelect,
+        'Tüm Araç & Makineler',
+        [...list.map(b => b.vehicle), ...allVehicles.map(a => a.vehicle)]
+      );
+      populateSelectPreserveValue(
+        siteSelect,
+        'Tüm Şantiyeler',
+        [...list.map(b => b.site), ...allVehicles.map(a => a.site)]
+      );
+
+      const filtered = getFilteredBakimRecords(null, { useBakimTabOnly: true });
+      const { vehicles: filteredVehSummaries, totals: filteredTotals } = buildVehicleSummaryMap(filtered);
+
+      const exportBtnSpan = document.querySelector('#btnExportBakimExcel span');
+      if (exportBtnSpan) {
+        exportBtnSpan.textContent = vFilter !== 'ALL'
+          ? `${vFilter} Excel İndir`
+          : 'Seçili Plaka / Bakım Excel İndir';
       }
 
       const cardsGrid = document.getElementById('vehicleSummaryCardsGrid');
       if (cardsGrid) {
-        const byVehicle = {};
-        const grossMode = isGrossDisplayMode();
-        list.forEach(b => {
-          const v = b.vehicle || 'Belirtilmemiş Araç';
-          const tb = getRecordTaxBreakdown(b, 'cost');
-          if (!byVehicle[v]) byVehicle[v] = { vehicle: v, totalCost: 0, netCost: 0, grossCost: 0, count: 0, lastDate: '', lastKm: '', nextDate: '', site: b.site || '' };
-          byVehicle[v].netCost += tb.net;
-          byVehicle[v].grossCost += tb.gross;
-          byVehicle[v].totalCost = grossMode ? byVehicle[v].grossCost : byVehicle[v].netCost;
-          byVehicle[v].count += 1;
-          if (!byVehicle[v].lastDate || (b.date || '') >= byVehicle[v].lastDate) {
-            byVehicle[v].lastDate = b.date || '';
-            if (b.km) byVehicle[v].lastKm = b.km;
-            if (b.nextDate) byVehicle[v].nextDate = b.nextDate;
-            if (b.site) byVehicle[v].site = b.site;
+        const { vehicles: vArr } = buildVehicleSummaryMap(list);
+        allVehicles.forEach(a => {
+          if (!vArr.some(v => v.vehicle === a.vehicle)) {
+            vArr.push({
+              vehicle: a.vehicle,
+              site: a.site,
+              person: a.person,
+              count: 0,
+              netCost: 0,
+              grossCost: 0,
+              vatCost: 0,
+              activeCost: 0,
+              lastDate: '',
+              lastKm: '',
+              nextDate: ''
+            });
           }
         });
-        const vArr = Object.values(byVehicle).sort((a, b) => b.totalCost - a.totalCost);
+
         if (vArr.length === 0) {
           cardsGrid.innerHTML = `<div class="col-span-full bg-white rounded-xl border border-slate-200 p-6 text-center text-xs text-slate-400">Henüz araç veya makine bakım kaydı girilmedi.</div>`;
         } else {
-          cardsGrid.innerHTML = vArr.map(v => `
-            <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between gap-2.5">
+          cardsGrid.innerHTML = vArr.map(v => {
+            const isSelected = vFilter === v.vehicle;
+            return `
+            <div class="bg-white rounded-xl border ${isSelected ? 'border-amber-500 ring-2 ring-amber-300/70' : 'border-slate-200'} p-4 shadow-sm flex flex-col justify-between gap-2.5 transition">
               <div class="flex items-start justify-between gap-2">
                 <div>
                   <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 text-amber-400 font-mono text-[11px] font-bold">
@@ -4653,117 +4887,438 @@
                 </div>
                 <div class="text-right">
                   <span class="text-[10px] font-bold uppercase text-slate-400 block">Toplam Gider</span>
-                  <span class="text-base font-extrabold text-amber-700 tabular-nums">${formatCurrency(v.totalCost)}</span>
+                  <span class="text-base font-extrabold text-amber-700 tabular-nums">${formatCurrency(v.activeCost)}</span>
                   <span class="block text-[10px] font-semibold text-emerald-700 tabular-nums">${getSecondaryTaxLabel(v.netCost, v.grossCost)}</span>
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-100">
                 <div>
                   <span class="text-slate-400 block">Son İşlem:</span>
-                  <span class="font-bold text-slate-800">${formatDateTR(v.lastDate)} ${v.lastKm ? '(' + escapeHtml(v.lastKm) + ')' : ''}</span>
+                  <span class="font-bold text-slate-800">${v.lastDate ? formatDateTR(v.lastDate) : '-'} ${v.lastKm ? '(' + escapeHtml(v.lastKm) + ')' : ''}</span>
                 </div>
                 <div>
                   <span class="text-slate-400 block">Sonraki Bakım/Muayene:</span>
                   <span class="font-bold ${v.nextDate ? 'text-indigo-700' : 'text-slate-500'}">${v.nextDate ? formatDateTR(v.nextDate) : '-'}</span>
                 </div>
               </div>
-              <button type="button" data-filter-vehicle-card="${escapeHtml(v.vehicle)}" class="w-full py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition">
-                Bu Aracın Bakım Geçmişini Filtrele
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-filter-vehicle-card="${escapeHtml(v.vehicle)}" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'} transition">
+                  ${isSelected ? '✓ Seçili (Tümünü Göster)' : 'Geçmişi Filtrele'}
+                </button>
+                <button type="button" data-export-vehicle-excel="${escapeHtml(v.vehicle)}" class="inline-flex items-center gap-1 py-1.5 px-2.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition" title="Bu plakanın maliyetini Excel indir">
+                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+                  <span>Excel</span>
+                </button>
+                <button type="button" data-print-vehicle-report="${escapeHtml(v.vehicle)}" class="inline-flex items-center gap-1 py-1.5 px-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Bu plakanın raporunu yazdır / PDF al">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          `;
+          }).join('');
+        }
+      }
+
+      const summaryStrip = document.getElementById('bakimFilterSummaryStrip');
+      if (summaryStrip) {
+        const sFilter = document.getElementById('filterBakimSite')?.value || 'ALL';
+        const tFilter = document.getElementById('filterBakimType')?.value || 'ALL';
+        const startD = document.getElementById('filterBakimStartDate')?.value || '';
+        const endD = document.getElementById('filterBakimEndDate')?.value || '';
+        const qTxt = (document.getElementById('bakimSearchInput')?.value || '').trim();
+        const scopeBadge = vFilter !== 'ALL'
+          ? `Seçili Plaka: ${vFilter}`
+          : (sFilter !== 'ALL' || tFilter !== 'ALL' || startD || endD || qTxt)
+            ? `Filtrelenen Plakalar (${filteredVehSummaries.length})`
+            : `Tüm Araç / Plakalar (${filteredVehSummaries.length})`;
+        const exportArg = vFilter !== 'ALL' ? `data-export-vehicle-excel="${escapeHtml(vFilter)}"` : 'data-export-filtered-bakim="1"';
+        const printArg = vFilter !== 'ALL' ? `data-print-vehicle-report="${escapeHtml(vFilter)}"` : 'data-print-filtered-bakim="1"';
+        summaryStrip.innerHTML = `
+          <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl p-3.5 sm:p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center flex-wrap gap-3 text-xs sm:text-sm">
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-extrabold font-mono">${escapeHtml(scopeBadge)}</span>
+              <span class="text-slate-300">İşlem: <strong class="text-white">${filtered.length} Adet</strong></span>
+              <span class="text-slate-300">KDV Hariç: <strong class="text-white tabular-nums">${formatCurrency(filteredTotals.net)}</strong></span>
+              <span class="text-slate-300">KDV: <strong class="text-amber-300 tabular-nums">${formatCurrency(filteredTotals.vat)}</strong></span>
+              <span class="text-slate-300">KDV Dahil: <strong class="text-emerald-300 tabular-nums">${formatCurrency(filteredTotals.gross)}</strong></span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" ${printArg} class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-white transition">
+                <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Yazdır / PDF</span>
+              </button>
+              <button type="button" ${exportArg} class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>${vFilter !== 'ALL' ? escapeHtml(vFilter) + ' Excel İndir' : 'Filtrelenen Excel İndir'}</span>
               </button>
             </div>
-          `).join('');
-        }
+          </div>
+        `;
       }
-
-      const q = (document.getElementById('bakimSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
-      const vFilter = vehSelect?.value || 'ALL';
-      const tFilter = document.getElementById('filterBakimType')?.value || 'ALL';
-
-      const filtered = list.filter(b => {
-        if (vFilter !== 'ALL' && b.vehicle !== vFilter) return false;
-        if (tFilter !== 'ALL' && b.type !== tFilter) return false;
-        if (q) {
-          const hay = `${b.vehicle} ${b.type} ${b.description} ${b.supplier} ${b.invoiceNo} ${b.site}`.toLocaleLowerCase('tr-TR');
-          if (!hay.includes(q)) return false;
-        }
-        return true;
-      });
 
       const tbody = document.getElementById('bakimTableBody');
-      if (!tbody) return;
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Eşleşen araç bakım / tamir faturası bulunamadı.</td></tr>`;
-        return;
+      if (tbody) {
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Eşleşen araç bakım / tamir faturası bulunamadı.</td></tr>`;
+        } else {
+          tbody.innerHTML = filtered.map(b => {
+            const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
+            const tb = getRecordTaxBreakdown(b, 'cost');
+            return `
+            <tr class="hover:bg-slate-50 align-top">
+              <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${formatDateTR(b.date)}</td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded bg-slate-900 text-amber-300 font-mono text-xs font-bold">${escapeHtml(b.vehicle)}</span>
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">${escapeHtml(b.type || 'Bakım')}</span>
+                ${b.km ? `<div class="text-[11px] font-semibold text-slate-600 mt-1">${escapeHtml(b.km)}</div>` : ''}
+              </td>
+              <td class="py-3 px-4 min-w-[280px]">${renderInvoiceItemsMiniTable(linkedFatura, b.description)}</td>
+              <td class="py-3 px-4">
+                <div class="font-semibold text-slate-800">${escapeHtml(b.supplier || '-')}</div>
+                ${b.site ? `<span class="inline-block mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 whitespace-nowrap">${escapeHtml(b.site)}</span>` : ''}
+              </td>
+              <td class="py-3 px-4 whitespace-nowrap">
+                ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-mono text-xs font-bold whitespace-nowrap transition" title="Fatura kalemlerini ve fiyatları gör">${escapeHtml(b.invoiceNo)}</button>` : '<span class="text-slate-400">-</span>'}
+              </td>
+              <td class="py-3 px-4 text-xs whitespace-nowrap">
+                ${b.nextDate ? `<span class="font-semibold text-indigo-700">${formatDateTR(b.nextDate)}</span>` : '<span class="text-slate-400">-</span>'}
+              </td>
+              <td class="py-3 px-4 text-right whitespace-nowrap tabular-nums">
+                <div class="font-extrabold text-slate-900">${formatCurrency(tb.active)}</div>
+                <div class="text-[10px] font-semibold text-emerald-700">${getSecondaryTaxLabel(tb.net, tb.gross)}</div>
+              </td>
+              <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Düzenle</button>
+                <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
+              </td>
+            </tr>
+          `;}).join('');
+        }
       }
-
-      tbody.innerHTML = filtered.map(b => {
-        const linkedFatura = findFaturaByIdOrNo(b.invoiceNo);
-        const tb = getRecordTaxBreakdown(b, 'cost');
-        return `
-        <tr class="hover:bg-slate-50 align-top">
-          <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${formatDateTR(b.date)}</td>
-          <td class="py-3 px-4 whitespace-nowrap">
-            <span class="inline-block whitespace-nowrap px-2.5 py-1 rounded bg-slate-900 text-amber-300 font-mono text-xs font-bold">${escapeHtml(b.vehicle)}</span>
-          </td>
-          <td class="py-3 px-4 whitespace-nowrap">
-            <span class="inline-block whitespace-nowrap px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">${escapeHtml(b.type || 'Bakım')}</span>
-            ${b.km ? `<div class="text-[11px] font-semibold text-slate-600 mt-1">${escapeHtml(b.km)}</div>` : ''}
-          </td>
-          <td class="py-3 px-4 min-w-[280px]">${renderInvoiceItemsMiniTable(linkedFatura, b.description)}</td>
-          <td class="py-3 px-4">
-            <div class="font-semibold text-slate-800">${escapeHtml(b.supplier || '-')}</div>
-            ${b.site ? `<span class="inline-block mt-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-800 whitespace-nowrap">${escapeHtml(b.site)}</span>` : ''}
-          </td>
-          <td class="py-3 px-4 whitespace-nowrap">
-            ${b.invoiceNo ? `<button type="button" data-view-fatura="${escapeHtml(b.invoiceNo)}" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-mono text-xs font-bold whitespace-nowrap transition" title="Fatura kalemlerini ve fiyatları gör">${escapeHtml(b.invoiceNo)}</button>` : '<span class="text-slate-400">-</span>'}
-          </td>
-          <td class="py-3 px-4 text-xs whitespace-nowrap">
-            ${b.nextDate ? `<span class="font-semibold text-indigo-700">${formatDateTR(b.nextDate)}</span>` : '<span class="text-slate-400">-</span>'}
-          </td>
-          <td class="py-3 px-4 text-right whitespace-nowrap tabular-nums">
-            <div class="font-extrabold text-slate-900">${formatCurrency(tb.active)}</div>
-            <div class="text-[10px] font-semibold text-emerald-700">${getSecondaryTaxLabel(tb.net, tb.gross)}</div>
-          </td>
-          <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
-            <button type="button" data-edit-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700">Düzenle</button>
-            <button type="button" data-delete-bakim="${escapeHtml(b.id)}" class="px-2 py-1 rounded text-xs font-medium text-rose-600 hover:bg-rose-50">Sil</button>
-          </td>
-        </tr>
-      `;}).join('');
+      if (window.lucide?.createIcons) window.lucide.createIcons();
     }
 
-    function exportBakimToExcel() {
-      const list = appState.aracBakimlar || [];
+    function sanitizeExcelSheetName(name, usedNames) {
+      let base = String(name || 'Plaka')
+        .replace(/[\[\]\*\?\/\\:']/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/^_+|_+$/g, '') || 'Plaka';
+      base = base.slice(0, 31);
+      let candidate = base;
+      let counter = 2;
+      while (usedNames.has(candidate)) {
+        const suffix = `_${counter++}`;
+        candidate = base.slice(0, 31 - suffix.length) + suffix;
+      }
+      usedNames.add(candidate);
+      return candidate;
+    }
+
+    function sanitizeFileSlug(str) {
+      return String(str || 'Tum_Plakalar')
+        .replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g').replace(/[ıİ]/g, 'i')
+        .replace(/[öÖ]/g, 'o').replace(/[şŞ]/g, 's').replace(/[üÜ]/g, 'u')
+        .replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'Arac_Plaka';
+    }
+
+    function collectBakimInvoiceItemRows(records) {
+      const detailRows = [];
+      records.forEach(b => {
+        const veh = (b.vehicle || '').trim() || 'Belirtilmemiş Araç';
+        const linked = findFaturaByIdOrNo(b.invoiceNo);
+        const recTb = getRecordTaxBreakdown(b, 'cost');
+        if (linked && Array.isArray(linked.items) && linked.items.length > 0 && !b.manualCostOverride) {
+          linked.items.forEach(it => {
+            const itemInput = (linked.taxIncluded !== undefined && it.taxIncluded === undefined)
+              ? { ...it, taxIncluded: linked.taxIncluded }
+              : it;
+            const tb = getItemTaxBreakdown(itemInput, it.kdvRate ?? linked.kdvRate ?? 20);
+            detailRows.push({
+              date: b.date || linked.date || '',
+              vehicle: veh,
+              invoiceNo: b.invoiceNo || linked.invoiceNo || '',
+              supplier: b.supplier || linked.supplier || '',
+              site: b.site || linked.site || '',
+              itemName: it.name || '',
+              qty: tb.qty,
+              unit: it.unit || 'Adet',
+              kdvRate: tb.kdvRate,
+              netUnit: Number(tb.netUnitCost.toFixed(2)),
+              grossUnit: Number(tb.grossUnitCost.toFixed(2)),
+              netLine: Number(tb.netLineTotal.toFixed(2)),
+              grossLine: Number(tb.grossLineTotal.toFixed(2))
+            });
+          });
+        } else {
+          detailRows.push({
+            date: b.date || '',
+            vehicle: veh,
+            invoiceNo: b.invoiceNo || '-',
+            supplier: b.supplier || '-',
+            site: b.site || '',
+            itemName: b.description || b.type || 'Bakım / Onarım Hizmeti',
+            qty: 1,
+            unit: 'İşlem',
+            kdvRate: recTb.kdvRate,
+            netUnit: Number(recTb.net.toFixed(2)),
+            grossUnit: Number(recTb.gross.toFixed(2)),
+            netLine: Number(recTb.net.toFixed(2)),
+            grossLine: Number(recTb.gross.toFixed(2))
+          });
+        }
+      });
+      return detailRows;
+    }
+
+    function exportBakimToExcel(explicitVehicle = null) {
+      const targetVeh = (explicitVehicle && explicitVehicle !== 'ALL') ? explicitVehicle : null;
+      const list = getFilteredBakimRecords(targetVeh, explicitVehicle === null ? null : { useBakimTabOnly: true });
+      const { vehicles: vSummaries, totals } = buildVehicleSummaryMap(list, targetVeh);
+      const itemRows = collectBakimInvoiceItemRows(list);
+      const dateStr = new Date().toISOString().slice(0, 10);
+
+      const activePlate = targetVeh || (vSummaries.length === 1 ? vSummaries[0].vehicle : null);
+      const fileSlug = activePlate ? sanitizeFileSlug(activePlate) : 'Tum_Plakalar';
+      const fileBase = activePlate ? `Plaka_Maliyet_Raporu_${fileSlug}_${dateStr}` : `Arac_Plaka_Bazli_Maliyet_Raporu_${dateStr}`;
+
       if (!window.XLSX) {
-        showToast('Excel kütüphanesi yüklenemedi.', 'error');
+        const csvRows = [
+          ['Plaka / Araç', 'Tarih', 'Bakım Türü', 'Yapılan İşlemler', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'Sonraki Bakım', 'KDV Hariç (TL)', 'KDV (TL)', 'KDV Dahil (TL)'],
+          ...list.map(b => {
+            const tb = getRecordTaxBreakdown(b, 'cost');
+            return [b.vehicle, formatDateTR(b.date), b.type, b.description, b.supplier || '', b.invoiceNo || '', b.site || '', b.km || '', b.nextDate ? formatDateTR(b.nextDate) : '', tb.net.toFixed(2), tb.vat.toFixed(2), tb.gross.toFixed(2)];
+          }),
+          ['GENEL TOPLAM', '', '', `${list.length} İşlem`, '', '', '', '', '', totals.net.toFixed(2), totals.vat.toFixed(2), totals.gross.toFixed(2)]
+        ];
+        const csvContent = '\uFEFF' + csvRows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${fileBase}.csv`;
+        a.click();
+        showToast(`${activePlate || 'Plaka Bazlı'} bakım maliyeti CSV olarak indirildi!`);
         return;
       }
-      const rows = [
-        ['Tarih', 'Araç Plaka / Makine', 'Bakım / İşlem Türü', 'Yapılan İşlem & Değişen Parçalar', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'Sonraki Bakım Tarihi', 'Tutar KDV Hariç (TL)', 'KDV (TL)', 'Tutar KDV Dahil (TL)'],
+
+      const wb = window.XLSX.utils.book_new();
+      const usedNames = new Set();
+
+      // Sayfa 1: Plaka Maliyet Özeti
+      const ozetAoa = [
+        ['Plaka / Araç / Makine', 'Şantiye', 'Zimmetli Personel', 'Bakım / İşlem Adedi', 'Son İşlem Tarihi', 'Son KM / Saat', 'Sonraki Bakım Tarihi', 'Bakım Toplam KDV Hariç (TL)', 'Toplam KDV (TL)', 'Bakım Toplam KDV Dahil (TL)', 'Zimmet Değeri KDV Hariç (TL)', 'Zimmet Değeri KDV Dahil (TL)'],
+        ...vSummaries.map(v => [
+          v.vehicle,
+          v.site || '-',
+          v.person || '-',
+          v.count,
+          v.lastDate ? formatDateTR(v.lastDate) : '-',
+          v.lastKm || '-',
+          v.nextDate ? formatDateTR(v.nextDate) : '-',
+          Number(v.netCost.toFixed(2)),
+          Number(v.vatCost.toFixed(2)),
+          Number(v.grossCost.toFixed(2)),
+          Number(v.zimNet.toFixed(2)),
+          Number(v.zimGross.toFixed(2))
+        ]),
+        ['GENEL TOPLAM', '', '', totals.count, '', '', '', Number(totals.net.toFixed(2)), Number(totals.vat.toFixed(2)), Number(totals.gross.toFixed(2)), Number(totals.zimNet.toFixed(2)), Number(totals.zimGross.toFixed(2))]
+      ];
+      const wsOzet = window.XLSX.utils.aoa_to_sheet(ozetAoa);
+      wsOzet['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 22 }, { wch: 16 }, { wch: 15 }, { wch: 14 }, { wch: 17 }, { wch: 22 }, { wch: 16 }, { wch: 22 }, { wch: 22 }, { wch: 22 }];
+      window.XLSX.utils.book_append_sheet(wb, wsOzet, sanitizeExcelSheetName('Plaka_Maliyet_Ozeti', usedNames));
+
+      // Sayfa 2: Bakım & Tamir Geçmişi
+      const bakimAoa = [
+        ['Tarih', 'Plaka / Araç / Makine', 'Bakım / İşlem Türü', 'Yapılan İşlem & Değişen Parçalar', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'Sonraki Bakım Tarihi', 'Tutar KDV Hariç (TL)', 'KDV (%)', 'KDV (TL)', 'Tutar KDV Dahil (TL)'],
         ...list.map(b => {
           const tb = getRecordTaxBreakdown(b, 'cost');
           return [
             formatDateTR(b.date),
-            b.vehicle,
-            b.type,
-            b.description,
+            b.vehicle || '-',
+            b.type || '-',
+            b.description || '-',
             b.supplier || '',
             b.invoiceNo || '',
             b.site || '',
             b.km || '',
             b.nextDate ? formatDateTR(b.nextDate) : '',
             Number(tb.net.toFixed(2)),
+            tb.kdvRate,
             Number(tb.vat.toFixed(2)),
             Number(tb.gross.toFixed(2))
           ];
-        })
+        }),
+        ['TOPLAM', '', '', `${list.length} İşlem`, '', '', '', '', '', Number(totals.net.toFixed(2)), '', Number(totals.vat.toFixed(2)), Number(totals.gross.toFixed(2))]
       ];
-      const wb = window.XLSX.utils.book_new();
-      const ws = window.XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{ wch: 14 }, { wch: 26 }, { wch: 20 }, { wch: 42 }, { wch: 28 }, { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 18 }];
-      window.XLSX.utils.book_append_sheet(wb, ws, 'Arac_Bakim_Giderleri');
-      window.XLSX.writeFile(wb, `Arac_Makine_Bakim_Raporu_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      showToast('Araç & makine bakım raporu (KDV Hariç & Dahil) Excel (.xlsx) olarak indirildi!');
+      const wsBakim = window.XLSX.utils.aoa_to_sheet(bakimAoa);
+      wsBakim['!cols'] = [{ wch: 13 }, { wch: 26 }, { wch: 20 }, { wch: 42 }, { wch: 26 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 18 }];
+      window.XLSX.utils.book_append_sheet(wb, wsBakim, sanitizeExcelSheetName('Bakim_Tamir_Gecmisi', usedNames));
+
+      // Sayfa 3: Fatura Kalem Detayları
+      const kalemTotals = itemRows.reduce((a, r) => {
+        a.net += r.netLine;
+        a.gross += r.grossLine;
+        return a;
+      }, { net: 0, gross: 0 });
+      const kalemAoa = [
+        ['Tarih', 'Plaka / Araç', 'Fatura No', 'Servis / Tedarikçi', 'Şantiye', 'Parça / Malzeme / İşçilik Kalemi', 'Miktar', 'Birim', 'KDV (%)', 'Birim KDV Hariç (TL)', 'Birim KDV Dahil (TL)', 'Satır KDV Hariç (TL)', 'Satır KDV Dahil (TL)'],
+        ...itemRows.map(r => [
+          formatDateTR(r.date),
+          r.vehicle,
+          r.invoiceNo,
+          r.supplier,
+          r.site,
+          r.itemName,
+          r.qty,
+          r.unit,
+          r.kdvRate,
+          r.netUnit,
+          r.grossUnit,
+          r.netLine,
+          r.grossLine
+        ]),
+        ['TOPLAM', '', '', '', '', `${itemRows.length} Kalem`, '', '', '', '', '', Number(kalemTotals.net.toFixed(2)), Number(kalemTotals.gross.toFixed(2))]
+      ];
+      const wsKalem = window.XLSX.utils.aoa_to_sheet(kalemAoa);
+      wsKalem['!cols'] = [{ wch: 13 }, { wch: 24 }, { wch: 18 }, { wch: 24 }, { wch: 18 }, { wch: 38 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+      window.XLSX.utils.book_append_sheet(wb, wsKalem, sanitizeExcelSheetName('Fatura_Kalem_Detaylari', usedNames));
+
+      // Çoklu plaka varsa her plaka için ayrı çalışma sayfası (en fazla 20 plaka)
+      if (vSummaries.length > 1) {
+        vSummaries.slice(0, 20).forEach(v => {
+          const vRecords = list.filter(b => ((b.vehicle || '').trim() || 'Belirtilmemiş Araç') === v.vehicle);
+          const sheetName = sanitizeExcelSheetName(v.vehicle, usedNames);
+          const pAoa = [
+            ['PLAKA / ARAÇ', v.vehicle, 'ŞANTİYE', v.site || '-', 'ZİMMETLİ', v.person || '-'],
+            ['İŞLEM ADEDİ', v.count, 'KDV HARİÇ TOPLAM (TL)', Number(v.netCost.toFixed(2)), 'KDV DAHİL TOPLAM (TL)', Number(v.grossCost.toFixed(2))],
+            [],
+            ['Tarih', 'Bakım Türü', 'Yapılan İşlem / Parça', 'Servis / Tedarikçi', 'Fatura No', 'Şantiye', 'KM / Saat', 'KDV Hariç (TL)', 'KDV (TL)', 'KDV Dahil (TL)'],
+            ...vRecords.map(b => {
+              const tb = getRecordTaxBreakdown(b, 'cost');
+              return [
+                formatDateTR(b.date),
+                b.type || '-',
+                b.description || '-',
+                b.supplier || '',
+                b.invoiceNo || '',
+                b.site || '',
+                b.km || '',
+                Number(tb.net.toFixed(2)),
+                Number(tb.vat.toFixed(2)),
+                Number(tb.gross.toFixed(2))
+              ];
+            }),
+            ['PLAKA TOPLAMI', '', `${vRecords.length} İşlem`, '', '', '', '', Number(v.netCost.toFixed(2)), Number(v.vatCost.toFixed(2)), Number(v.grossCost.toFixed(2))]
+          ];
+          const wsPlate = window.XLSX.utils.aoa_to_sheet(pAoa);
+          wsPlate['!cols'] = [{ wch: 14 }, { wch: 22 }, { wch: 38 }, { wch: 24 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 18 }];
+          window.XLSX.utils.book_append_sheet(wb, wsPlate, sheetName);
+        });
+      }
+
+      window.XLSX.writeFile(wb, `${fileBase}.xlsx`);
+      showToast(`${activePlate ? activePlate + ' plaka' : 'Plaka bazlı araç'} maliyet raporu (KDV Hariç & Dahil) Excel (.xlsx) olarak indirildi!`);
+    }
+
+    function printVehicleCostReport(explicitVehicle = null) {
+      const targetVeh = (explicitVehicle && explicitVehicle !== 'ALL') ? explicitVehicle : null;
+      const list = getFilteredBakimRecords(targetVeh, explicitVehicle === null ? null : { useBakimTabOnly: true });
+      const { vehicles: vSummaries, totals } = buildVehicleSummaryMap(list, targetVeh);
+      const activePlate = targetVeh || (vSummaries.length === 1 ? vSummaries[0].vehicle : null);
+
+      const win = window.open('', '_blank', 'width=960,height=920');
+      if (!win) {
+        showToast('Yazdırma penceresi için açılır pencere izni verin.', 'error');
+        return;
+      }
+
+      const summaryRowsHtml = vSummaries.map((v, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td style="font-family:monospace;font-weight:bold;">${escapeHtml(v.vehicle)}</td>
+          <td>${escapeHtml(v.site || '-')}</td>
+          <td>${escapeHtml(v.person || '-')}</td>
+          <td style="text-align:center;">${v.count}</td>
+          <td>${v.lastDate ? formatDateTR(v.lastDate) : '-'} ${v.lastKm ? '(' + escapeHtml(v.lastKm) + ')' : ''}</td>
+          <td style="text-align:right;">${formatCurrency(v.netCost)}</td>
+          <td style="text-align:right;">${formatCurrency(v.vatCost)}</td>
+          <td style="text-align:right;font-weight:bold;">${formatCurrency(v.grossCost)}</td>
+        </tr>
+      `).join('');
+
+      const detailRowsHtml = list.map((b, i) => {
+        const tb = getRecordTaxBreakdown(b, 'cost');
+        const linked = findFaturaByIdOrNo(b.invoiceNo);
+        const itemText = (linked && Array.isArray(linked.items) && linked.items.length > 0 && !b.manualCostOverride)
+          ? linked.items.map(it => `${escapeHtml(it.name)} (${Number(it.qty) || 1} ${escapeHtml(it.unit || 'Adet')})`).join(', ')
+          : escapeHtml(b.description || '-');
+        return `
+          <tr>
+            <td style="text-align:center;">${i + 1}</td>
+            <td style="white-space:nowrap;">${formatDateTR(b.date)}</td>
+            <td style="font-family:monospace;font-weight:bold;white-space:nowrap;">${escapeHtml(b.vehicle || '-')}</td>
+            <td>${escapeHtml(b.type || '-')} ${b.km ? '<br/><span style="font-size:10px;color:#475569;">' + escapeHtml(b.km) + '</span>' : ''}</td>
+            <td>${itemText}</td>
+            <td>${escapeHtml(b.supplier || '-')}<br/><span style="font-size:10px;color:#64748b;">${escapeHtml(b.invoiceNo || '-')} • ${escapeHtml(b.site || '-')}</span></td>
+            <td style="text-align:right;">${formatCurrency(tb.net)}</td>
+            <td style="text-align:right;">${formatCurrency(tb.vat)}</td>
+            <td style="text-align:right;font-weight:bold;">${formatCurrency(tb.gross)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      win.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"/><title>Araç Plaka Maliyet Raporu</title>
+      <style>
+        body { font-family: Arial, sans-serif; color: #0f172a; margin: 24px; }
+        .box { border: 2px solid #0f172a; border-radius: 10px; padding: 20px; }
+        h1 { font-size: 18px; margin: 0; }
+        h2 { font-size: 14px; margin: 18px 0 8px 0; border-left: 4px solid #f59e0b; padding-left: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        th, td { border: 1px solid #cbd5e1; padding: 7px 8px; font-size: 11.5px; vertical-align: top; text-align: left; }
+        th { background: #f1f5f9; font-weight: bold; }
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+        .kpi { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; }
+        .kpi-lbl { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: bold; }
+        .kpi-val { font-size: 15px; font-weight: bold; margin-top: 3px; }
+        .btn { background: #0f172a; color: #fff; border: 0; padding: 9px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 12px; }
+        @media print { .no-print { display: none; } body { margin: 0; } }
+      </style></head><body>
+      <div class="no-print"><button class="btn" onclick="window.print()">🖨️ Yazdır veya PDF Olarak Kaydet</button></div>
+      <div class="box">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f172a;padding-bottom:10px;">
+          <div>
+            <h1>${activePlate ? 'ARAÇ PLAKA MALİYET VE BAKIM RAPORU: ' + escapeHtml(activePlate) : 'ARAÇ PLAKA BAZLI MALİYET VE BAKIM RAPORU'}</h1>
+            <div style="font-size:12px;color:#475569;margin-top:4px;">Şantiye Stok, Demirbaş &amp; Araç Filo Maliyet Takip Sistemi</div>
+          </div>
+          <div style="text-align:right;font-size:11.5px;">
+            <div><strong>Rapor Tarihi:</strong> ${formatDateTR(new Date().toISOString().slice(0, 10))}</div>
+            <div><strong>Kapsam:</strong> ${vSummaries.length} Araç / ${list.length} İşlem</div>
+          </div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-lbl">Plaka / Araç Sayısı</div><div class="kpi-val">${vSummaries.length} Araç (${list.length} İşlem)</div></div>
+          <div class="kpi"><div class="kpi-lbl">KDV Hariç Toplam</div><div class="kpi-val">${formatCurrency(totals.net)}</div></div>
+          <div class="kpi"><div class="kpi-lbl">Toplam KDV</div><div class="kpi-val">${formatCurrency(totals.vat)}</div></div>
+          <div class="kpi" style="background:#fef3c7;"><div class="kpi-lbl">KDV Dahil Genel Toplam</div><div class="kpi-val">${formatCurrency(totals.gross)}</div></div>
+        </div>
+        <h2>Plaka Bazlı Maliyet Özeti</h2>
+        <table>
+          <thead><tr><th style="width:30px;text-align:center;">#</th><th>Plaka / Araç</th><th>Şantiye</th><th>Zimmetli</th><th style="text-align:center;">İşlem</th><th>Son İşlem / KM</th><th style="text-align:right;">KDV Hariç</th><th style="text-align:right;">KDV</th><th style="text-align:right;">KDV Dahil</th></tr></thead>
+          <tbody>
+            ${summaryRowsHtml}
+            <tr><td colspan="6" style="text-align:right;font-weight:bold;background:#f8fafc;">GENEL TOPLAM</td><td style="text-align:right;font-weight:bold;background:#f8fafc;">${formatCurrency(totals.net)}</td><td style="text-align:right;font-weight:bold;background:#f8fafc;">${formatCurrency(totals.vat)}</td><td style="text-align:right;font-weight:bold;background:#fef3c7;">${formatCurrency(totals.gross)}</td></tr>
+          </tbody>
+        </table>
+        <h2>Bakım, Onarım &amp; Fatura İşlem Dökümü</h2>
+        <table>
+          <thead><tr><th style="width:30px;text-align:center;">#</th><th>Tarih</th><th>Plaka</th><th>Tür / KM</th><th>Yapılan İşlemler &amp; Parçalar</th><th>Servis / Fatura / Şantiye</th><th style="text-align:right;">KDV Hariç</th><th style="text-align:right;">KDV</th><th style="text-align:right;">KDV Dahil</th></tr></thead>
+          <tbody>
+            ${detailRowsHtml || '<tr><td colspan="9" style="text-align:center;">Kayıt bulunamadı.</td></tr>'}
+          </tbody>
+        </table>
+      </div></body></html>`);
+      win.document.close();
     }
 
     function renderTransferler() {
@@ -6261,7 +6816,27 @@ KURALLAR:
       document.getElementById('filterFaturaStartDate')?.addEventListener('change', renderFaturalar);
       document.getElementById('bakimSearchInput')?.addEventListener('input', renderAracBakimlar);
       document.getElementById('filterBakimVehicle')?.addEventListener('change', renderAracBakimlar);
+      document.getElementById('filterBakimSite')?.addEventListener('change', renderAracBakimlar);
       document.getElementById('filterBakimType')?.addEventListener('change', renderAracBakimlar);
+      document.getElementById('filterBakimStartDate')?.addEventListener('change', renderAracBakimlar);
+      document.getElementById('filterBakimEndDate')?.addEventListener('change', renderAracBakimlar);
+      document.getElementById('btnResetBakimFilters')?.addEventListener('click', () => {
+        const s = document.getElementById('bakimSearchInput');
+        const v = document.getElementById('filterBakimVehicle');
+        const st = document.getElementById('filterBakimSite');
+        const t = document.getElementById('filterBakimType');
+        const sd = document.getElementById('filterBakimStartDate');
+        const ed = document.getElementById('filterBakimEndDate');
+        if (s) s.value = '';
+        if (v) v.value = 'ALL';
+        if (st) st.value = 'ALL';
+        if (t) t.value = 'ALL';
+        if (sd) sd.value = '';
+        if (ed) ed.value = '';
+        renderAracBakimlar();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+        showToast('Araç bakım filtreleri sıfırlandı.');
+      });
       document.getElementById('faturaTargetType')?.addEventListener('change', toggleFaturaVehicleBox);
 
       // Tek Tıkla Şantiye Excel İndirme Butonları
@@ -6278,7 +6853,12 @@ KURALLAR:
         exportSiteToExcel(site);
       });
       document.getElementById('btnExportBakimExcel')?.addEventListener('click', () => {
-        exportBakimToExcel();
+        const veh = document.getElementById('filterBakimVehicle')?.value || 'ALL';
+        exportBakimToExcel(veh !== 'ALL' ? veh : 'ALL');
+      });
+      document.getElementById('btnPrintBakimReport')?.addEventListener('click', () => {
+        const veh = document.getElementById('filterBakimVehicle')?.value || 'ALL';
+        printVehicleCostReport(veh !== 'ALL' ? veh : 'ALL');
       });
 
       // Kişi Bazlı Toplu Zimmet Tutanağı Yazdırma
@@ -7803,14 +8383,48 @@ KURALLAR:
           return;
         }
 
+        const expVehBtn = e.target.closest('[data-export-vehicle-excel]');
+        if (expVehBtn) {
+          const v = expVehBtn.getAttribute('data-export-vehicle-excel');
+          exportBakimToExcel(v && v !== 'ALL' ? v : 'ALL');
+          return;
+        }
+
+        const expFilteredBtn = e.target.closest('[data-export-filtered-bakim]');
+        if (expFilteredBtn) {
+          exportBakimToExcel('ALL');
+          return;
+        }
+
+        const prtVehBtn = e.target.closest('[data-print-vehicle-report]');
+        if (prtVehBtn) {
+          const v = prtVehBtn.getAttribute('data-print-vehicle-report');
+          printVehicleCostReport(v && v !== 'ALL' ? v : 'ALL');
+          return;
+        }
+
+        const prtFilteredBtn = e.target.closest('[data-print-filtered-bakim]');
+        if (prtFilteredBtn) {
+          printVehicleCostReport('ALL');
+          return;
+        }
+
         const filterVehBtn = e.target.closest('[data-filter-vehicle-card]');
         if (filterVehBtn) {
           const v = filterVehBtn.getAttribute('data-filter-vehicle-card');
           const sel = document.getElementById('filterBakimVehicle');
           if (sel) {
-            sel.value = v;
-            renderAracBakimlar();
-            showToast(`${v} bakım geçmişi filtrelendi.`);
+            if (sel.value === v) {
+              sel.value = 'ALL';
+              renderAracBakimlar();
+              if (window.lucide?.createIcons) window.lucide.createIcons();
+              showToast('Tüm araçların bakım geçmişi gösteriliyor.');
+            } else {
+              sel.value = v;
+              renderAracBakimlar();
+              if (window.lucide?.createIcons) window.lucide.createIcons();
+              showToast(`${v} bakım geçmişi filtrelendi.`);
+            }
           }
           return;
         }
@@ -8276,12 +8890,33 @@ KURALLAR:
       document.getElementById('btnSiteDetailExcel')?.addEventListener('click', () => {
         if (currentDetailSiteName) exportSiteToExcel(currentDetailSiteName);
       });
-      document.getElementById('araclarimSearchInput')?.addEventListener('input', renderAraclarim);
+      document.getElementById('araclarimSearchInput')?.addEventListener('input', () => {
+        renderAraclarim();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('araclarimPlateFilter')?.addEventListener('change', () => {
+        renderAraclarim();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('araclarimSiteFilter')?.addEventListener('change', () => {
+        renderAraclarim();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('btnExportAraclarimExcel')?.addEventListener('click', () => {
+        const plate = document.getElementById('araclarimPlateFilter')?.value || 'ALL';
+        exportBakimToExcel(plate !== 'ALL' ? plate : null);
+      });
       document.getElementById('btnOpenNewVehicleBakim')?.addEventListener('click', () => {
         document.getElementById('formAracBakim')?.reset();
         const editId = document.getElementById('bakimEditId');
         if (editId) editId.value = '';
         openModal('modalAracBakim');
+      });
+      document.getElementById('btnVehicleDetailExcel')?.addEventListener('click', () => {
+        if (currentDetailVehicleName) exportBakimToExcel(currentDetailVehicleName);
+      });
+      document.getElementById('btnPrintVehicleDetail')?.addEventListener('click', () => {
+        if (currentDetailVehicleName) printVehicleCostReport(currentDetailVehicleName);
       });
       document.getElementById('btnRenameCurrentVehicle')?.addEventListener('click', () => {
         if (currentDetailVehicleName) promptRenameVehicle(currentDetailVehicleName);
