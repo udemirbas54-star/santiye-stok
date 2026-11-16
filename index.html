@@ -718,6 +718,10 @@
             <span>Toplu Fatura Yükle (Çoklu PDF / Foto)</span>
             <input id="tabBulkInvoiceUpload" type="file" accept="image/*,application/pdf,.pdf" multiple class="hidden" />
           </label>
+          <button id="btnDeduplicateInvoices" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 transition" title="Aynı fatura numarasına sahip mükerrer fatura ve stok kayıtlarını birleştir">
+            <i data-lucide="git-merge" class="w-4 h-4"></i>
+            <span>Mükerrer Faturaları Birleştir</span>
+          </button>
           <button id="btnOpenFaturaModal" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs sm:text-sm font-medium bg-slate-900 hover:bg-slate-800 text-white transition">
             <i data-lucide="file-plus" class="w-4 h-4"></i>
             <span>Elle Fatura İçeriği Gir</span>
@@ -1475,7 +1479,7 @@
             <p class="text-[11px] text-slate-300">PDF.js ve Tesseract OCR ile tarayıcınızda 100% ücretsiz &amp; sınırsız çalışır. Yapay zeka kotası harcamaz.</p>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center flex-wrap gap-2">
           <div class="inline-flex items-center rounded-xl bg-slate-800 p-1 border border-slate-700">
             <button id="btnFreeScannerEngineFree" type="button" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-600 text-white transition shadow-xs">
               🟢 Ücretsiz (0 TL)
@@ -1484,6 +1488,10 @@
               ✨ Yapay Zeka
             </button>
           </div>
+          <button id="btnFreeReScanAllAi" type="button" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 transition shadow-xs inline-flex items-center gap-1.5" title="Listedeki tüm faturaları Gemini Yapay Zeka ile yeniden oku (iskonto ve kalem hatalarını düzeltir)">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Tümünü Yapay Zeka ile Tara</span>
+          </button>
           <button type="button" data-close-modal="modalFreeScanner" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
@@ -5536,6 +5544,303 @@
       }).join('');
     }
 
+    function normalizeInvoiceNo(invNo) {
+      const s = String(invNo || '').trim().toUpperCase();
+      return (!s || s === '-') ? '' : s;
+    }
+
+    function findExistingInvoiceByNo(invNo, excludeId = null) {
+      const norm = normalizeInvoiceNo(invNo);
+      if (!norm) return null;
+      return (appState.faturalar || []).find(f => normalizeInvoiceNo(f.invoiceNo) === norm && f.id !== excludeId) || null;
+    }
+
+    function upsertInvoiceAndLinkedRecords(payload) {
+      const {
+        editId = '',
+        invoiceNo = '',
+        supplier = '',
+        date = '',
+        site = 'Kadıköy Şantiyesi',
+        targetType = 'MALZEME',
+        vehiclePlate = '',
+        maintType = 'Periyodik Bakım',
+        vehicleKm = '',
+        nextMaintDate = '',
+        isGross = false,
+        invKdvRate = 20,
+        rawItems = []
+      } = payload || {};
+
+      const normNo = normalizeInvoiceNo(invoiceNo);
+      const byId = editId ? (appState.faturalar || []).find(f => f.id === editId) : null;
+      const oldNormNo = byId ? normalizeInvoiceNo(byId.invoiceNo) : '';
+      const matchNormNos = new Set([normNo, oldNormNo].filter(Boolean));
+
+      const existingFaturas = (appState.faturalar || []).filter(f =>
+        (editId && f.id === editId) || (matchNormNos.size > 0 && matchNormNos.has(normalizeInvoiceNo(f.invoiceNo)))
+      );
+      const oldBakims = matchNormNos.size > 0
+        ? (appState.aracBakimlar || []).filter(b => matchNormNos.has(normalizeInvoiceNo(b.invoiceNo)))
+        : [];
+      const oldZimmets = matchNormNos.size > 0
+        ? (appState.zimmetler || []).filter(z => matchNormNos.has(normalizeInvoiceNo(z.invoiceNo)))
+        : [];
+      const oldMalzemeler = matchNormNos.size > 0
+        ? (appState.malzemeler || []).filter(m => matchNormNos.has(normalizeInvoiceNo(m.invoiceNo)))
+        : [];
+      const isUpdate = existingFaturas.length > 0 || oldBakims.length > 0 || oldZimmets.length > 0 || oldMalzemeler.length > 0;
+      const oldFatura = existingFaturas[0] || byId || null;
+
+      const finalSite = (site || oldFatura?.site || 'Kadıköy Şantiyesi').trim();
+      const finalSupplier = (supplier || oldFatura?.supplier || 'Tedarikçi Firma').trim();
+      const finalDate = date || oldFatura?.date || new Date().toISOString().slice(0, 10);
+      const finalPlate = (vehiclePlate || oldBakims[0]?.vehicle || oldFatura?.vehicle || '').trim();
+      const finalMaintType = maintType || oldBakims[0]?.type || 'Periyodik Bakım';
+      const finalKm = (vehicleKm || oldBakims[0]?.km || '').trim();
+      const finalNextDate = nextMaintDate || oldBakims[0]?.nextDate || '';
+
+      const srcItems = (rawItems && rawItems.length)
+        ? rawItems
+        : [{ name: finalSupplier || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: 0, kdvRate: invKdvRate, taxIncluded: isGross }];
+
+      const items = srcItems.map(it => {
+        const tb = getItemTaxBreakdown(it, it.kdvRate ?? invKdvRate);
+        return {
+          name: String(it.name || '').trim() || 'Fatura Kalemi',
+          qty: tb.qty,
+          unit: it.unit || 'Adet',
+          unitCost: Number((isGross ? tb.grossUnitCost : tb.netUnitCost).toFixed(2)),
+          netUnitCost: Number(tb.netUnitCost.toFixed(2)),
+          grossUnitCost: Number(tb.grossUnitCost.toFixed(2)),
+          kdvRate: tb.kdvRate,
+          taxIncluded: Boolean(isGross)
+        };
+      });
+
+      const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
+      const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
+      const total = isGross ? grossTotal : netTotal;
+      const finalKdvRate = items[0]?.kdvRate ?? invKdvRate;
+      const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
+      const targetLabel =
+        targetType === 'ARAC_BAKIM'
+          ? `Araç Bakım / Tamir (${finalPlate || 'Genel Araç'})`
+          : targetType === 'ZIMMET'
+            ? 'Zimmet Faturası'
+            : `Çoklu Şantiye Malzemesi (${items.length} Kalem)`;
+
+      const faturaId = oldFatura?.id || editId || ('FAT-' + Math.floor(1000 + Math.random() * 9000));
+      const finalInvNo = (invoiceNo || oldFatura?.invoiceNo || faturaId).trim();
+      const faturaObj = {
+        ...(oldFatura || {}),
+        id: faturaId,
+        invoiceNo: finalInvNo,
+        supplier: finalSupplier,
+        date: finalDate,
+        site: finalSite,
+        targetType: targetLabel,
+        vehicle: finalPlate,
+        title,
+        total,
+        netTotal,
+        grossTotal,
+        kdvRate: finalKdvRate,
+        taxIncluded: Boolean(isGross),
+        items
+      };
+
+      if (existingFaturas.length > 0) {
+        let replaced = false;
+        appState.faturalar = (appState.faturalar || []).reduce((acc, f) => {
+          const isMatch = (editId && f.id === editId) || (matchNormNos.size > 0 && matchNormNos.has(normalizeInvoiceNo(f.invoiceNo)));
+          if (isMatch) {
+            if (!replaced) {
+              acc.push(faturaObj);
+              replaced = true;
+            }
+          } else {
+            acc.push(f);
+          }
+          return acc;
+        }, []);
+      } else {
+        appState.faturalar.unshift(faturaObj);
+      }
+
+      if (matchNormNos.size > 0) {
+        appState.aracBakimlar = (appState.aracBakimlar || []).filter(b => !matchNormNos.has(normalizeInvoiceNo(b.invoiceNo)));
+        appState.zimmetler = (appState.zimmetler || []).filter(z => !matchNormNos.has(normalizeInvoiceNo(z.invoiceNo)));
+        appState.malzemeler = (appState.malzemeler || []).filter(m => !matchNormNos.has(normalizeInvoiceNo(m.invoiceNo)));
+      }
+
+      if (targetType === 'ARAC_BAKIM') {
+        if (!Array.isArray(appState.aracBakimlar)) appState.aracBakimlar = [];
+        const oldBakim = oldBakims[0] || null;
+        const bakimRec = {
+          ...(oldBakim || {}),
+          id: oldBakim?.id || ('BKM-' + Math.floor(1000 + Math.random() * 9000)),
+          vehicle: finalPlate || 'Şantiye Aracı',
+          type: finalMaintType,
+          description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
+          cost: total,
+          netCost: netTotal,
+          grossCost: grossTotal,
+          kdvRate: finalKdvRate,
+          taxIncluded: Boolean(isGross),
+          date: finalDate,
+          invoiceNo: finalInvNo,
+          supplier: finalSupplier,
+          site: finalSite,
+          km: finalKm,
+          nextDate: finalNextDate
+        };
+        delete bakimRec.manualCostOverride;
+        appState.aracBakimlar.unshift(bakimRec);
+      } else if (targetType === 'ZIMMET') {
+        if (!Array.isArray(appState.zimmetler)) appState.zimmetler = [];
+        const usedZimIds = new Set();
+        for (let idx = items.length - 1; idx >= 0; idx--) {
+          const it = items[idx];
+          const matchedOld = oldZimmets.find(z => !usedZimIds.has(z.id) && String(z.name || '').trim().toLowerCase() === it.name.toLowerCase())
+            || oldZimmets.find((z, zi) => zi === idx && !usedZimIds.has(z.id));
+          if (matchedOld) usedZimIds.add(matchedOld.id);
+          appState.zimmetler.unshift({
+            ...(matchedOld || {}),
+            id: matchedOld?.id || ('ZIM-' + Math.floor(1000 + Math.random() * 9000) + idx),
+            name: it.name,
+            category: matchedOld?.category || 'El Aleti / Makine',
+            serial: matchedOld?.serial || `SN-${Math.floor(10000 + Math.random() * 89999)}`,
+            person: matchedOld?.person || 'Kendim (Uğur Demirbaş)',
+            site: finalSite,
+            supplier: finalSupplier,
+            date: finalDate,
+            invoiceNo: finalInvNo,
+            cost: Number((it.qty * it.unitCost).toFixed(2)),
+            netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
+            grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
+            kdvRate: it.kdvRate,
+            taxIncluded: Boolean(isGross),
+            photo: matchedOld?.photo || '',
+            photos: Array.isArray(matchedOld?.photos) ? matchedOld.photos : []
+          });
+        }
+      } else {
+        if (!Array.isArray(appState.malzemeler)) appState.malzemeler = [];
+        const usedMlzIds = new Set();
+        const relatedSarfs = matchNormNos.size > 0
+          ? (appState.sarfiyatlar || []).filter(s => matchNormNos.has(normalizeInvoiceNo(s.invoiceNo)))
+          : [];
+        const consumedSarfIds = new Set();
+
+        for (let idx = items.length - 1; idx >= 0; idx--) {
+          const it = items[idx];
+          const matchedOld = oldMalzemeler.find(m => !usedMlzIds.has(m.id) && String(m.name || '').trim().toLowerCase() === it.name.toLowerCase())
+            || oldMalzemeler.find((m, mi) => mi === idx && !usedMlzIds.has(m.id));
+          if (matchedOld) usedMlzIds.add(matchedOld.id);
+
+          let consumedQty = 0;
+          relatedSarfs.forEach(s => {
+            if (consumedSarfIds.has(s.id)) return;
+            const sName = String(s.materialName || s.name || '').trim().toLowerCase();
+            if ((matchedOld && s.materialId === matchedOld.id) || sName === it.name.toLowerCase()) {
+              consumedSarfIds.add(s.id);
+              const sq = Number(s.qty) || 0;
+              consumedQty += sq;
+              s.unitCost = it.unitCost;
+              s.netUnitCost = it.netUnitCost;
+              s.grossUnitCost = it.grossUnitCost;
+              s.totalCost = Number((sq * it.unitCost).toFixed(2));
+              s.netTotalCost = Number((sq * it.netUnitCost).toFixed(2));
+              s.grossTotalCost = Number((sq * it.grossUnitCost).toFixed(2));
+              s.kdvRate = it.kdvRate;
+              s.taxIncluded = Boolean(isGross);
+            }
+          });
+
+          const finalQty = Math.max(0, Number((it.qty - consumedQty).toFixed(2)));
+          appState.malzemeler.unshift({
+            ...(matchedOld || {}),
+            id: matchedOld?.id || ('MLZ-' + Math.floor(1000 + Math.random() * 9000) + idx),
+            name: it.name,
+            category: matchedOld?.category || 'Fatura Kalemi',
+            site: finalSite,
+            qty: finalQty,
+            unit: it.unit,
+            unitCost: it.unitCost,
+            netUnitCost: it.netUnitCost,
+            grossUnitCost: it.grossUnitCost,
+            kdvRate: it.kdvRate,
+            taxIncluded: Boolean(isGross),
+            supplier: finalSupplier,
+            date: finalDate,
+            invoiceNo: finalInvNo,
+            note: `${finalInvNo} nolu faturanın ${idx + 1}. kalemi.`
+          });
+        }
+      }
+
+      return { isUpdate, faturaId, invoiceNo: finalInvNo, itemCount: items.length, targetType };
+    }
+
+    function deduplicateInvoicesAndStock(silent = false) {
+      const faturas = appState.faturalar || [];
+      const grouped = new Map();
+      let extraDupInvoices = 0;
+
+      faturas.forEach(f => {
+        const norm = normalizeInvoiceNo(f.invoiceNo);
+        if (!norm) return;
+        if (!grouped.has(norm)) {
+          grouped.set(norm, f);
+        } else {
+          extraDupInvoices += 1;
+        }
+      });
+
+      let cleanedLinked = 0;
+      grouped.forEach((f, norm) => {
+        const dupBakims = (appState.aracBakimlar || []).filter(b => normalizeInvoiceNo(b.invoiceNo) === norm);
+        const dupMlz = (appState.malzemeler || []).filter(m => normalizeInvoiceNo(m.invoiceNo) === norm);
+        const dupZim = (appState.zimmetler || []).filter(z => normalizeInvoiceNo(z.invoiceNo) === norm);
+        const targetType = (f.targetType || '').includes('Bakım') ? 'ARAC_BAKIM' : ((f.targetType || '').includes('Zimmet') ? 'ZIMMET' : 'MALZEME');
+        const expectedLen = (f.items || []).length || 1;
+        const hasDupLinked =
+          (targetType === 'ARAC_BAKIM' && dupBakims.length > 1) ||
+          (targetType === 'MALZEME' && dupMlz.length > expectedLen) ||
+          (targetType === 'ZIMMET' && dupZim.length > expectedLen) ||
+          (appState.faturalar.filter(x => normalizeInvoiceNo(x.invoiceNo) === norm).length > 1);
+
+        if (hasDupLinked) {
+          cleanedLinked += 1;
+          upsertInvoiceAndLinkedRecords({
+            editId: f.id,
+            invoiceNo: f.invoiceNo,
+            supplier: f.supplier,
+            date: f.date,
+            site: f.site,
+            targetType,
+            vehiclePlate: f.vehicle || dupBakims[0]?.vehicle || '',
+            maintType: dupBakims[0]?.type || 'Periyodik Bakım',
+            vehicleKm: dupBakims[0]?.km || '',
+            nextMaintDate: dupBakims[0]?.nextDate || '',
+            isGross: f.taxIncluded === true,
+            invKdvRate: f.kdvRate ?? 20,
+            rawItems: f.items || []
+          });
+        }
+      });
+
+      const totalFixed = extraDupInvoices || cleanedLinked;
+      if (totalFixed > 0) {
+        saveState();
+        if (!silent) showToast(`✓ ${Math.max(extraDupInvoices, cleanedLinked)} adet mükerrer fatura ve fazla stok/bakım kaydı birleştirildi!`, 'success');
+      } else if (!silent) {
+        showToast('Sistemde mükerrer fatura numarası bulunamadı.', 'info');
+      }
+      return totalFixed;
+    }
+
     // =========================================================================
     // MODAL & FORM İŞLEMLERİ
     // =========================================================================
@@ -5735,14 +6040,16 @@
     }
 
     function openFaturaModalForCreate(prefill = null) {
-      document.getElementById('faturaEditId').value = '';
+      const existing = prefill?.invoiceNo ? findExistingInvoiceByNo(prefill.invoiceNo) : null;
+      document.getElementById('faturaEditId').value = existing ? existing.id : '';
       document.getElementById('faturaNoInput').value = prefill?.invoiceNo || `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
-      document.getElementById('faturaSupplierInput').value = prefill?.supplier || '';
-      document.getElementById('faturaDateInput').value = prefill?.date || new Date().toISOString().slice(0, 10);
-      document.getElementById('faturaSiteInput').value = prefill?.site || 'Kadıköy Şantiyesi';
-      document.getElementById('faturaTargetType').value = prefill?.targetType || (prefill?.isMaintenance ? 'ARAC_BAKIM' : 'MALZEME');
+      document.getElementById('faturaSupplierInput').value = prefill?.supplier || existing?.supplier || '';
+      document.getElementById('faturaDateInput').value = prefill?.date || existing?.date || new Date().toISOString().slice(0, 10);
+      document.getElementById('faturaSiteInput').value = prefill?.site || existing?.site || 'Kadıköy Şantiyesi';
+      const fallbackExistingType = existing ? ((existing.targetType || '').includes('Bakım') ? 'ARAC_BAKIM' : ((existing.targetType || '').includes('Zimmet') ? 'ZIMMET' : 'MALZEME')) : 'MALZEME';
+      document.getElementById('faturaTargetType').value = prefill?.targetType || (prefill?.isMaintenance ? 'ARAC_BAKIM' : fallbackExistingType);
       if (document.getElementById('faturaVehiclePlate')) {
-        document.getElementById('faturaVehiclePlate').value = prefill?.detectedPlate || '';
+        document.getElementById('faturaVehiclePlate').value = prefill?.detectedPlate || existing?.vehicle || '';
       }
       if (document.getElementById('faturaMaintType') && prefill?.maintType) {
         document.getElementById('faturaMaintType').value = prefill.maintType;
@@ -5816,6 +6123,7 @@
       if (str === undefined || str === null) return 0;
       let s = String(str).replace(/\u00a0/g, ' ').replace(/[^\d.,-]/g, '').trim();
       if (!s) return 0;
+      if (/^[.,]\d+$/.test(s)) s = '0' + s;
       if (s.includes('.') && s.includes(',')) {
         if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
           s = s.replace(/\./g, '').replace(',', '.');
@@ -6037,7 +6345,7 @@
 
       const unitPattern = '(?:Adet|ADET|Ad\\.?|Kg|KG|Ton|TON|Metre|METRE|Mt|MT|m2|M2|m²|m3|M3|m³|Lt|LT|Litre|Paket|PK|Kutu|KT|Takım|TK|Torba|Set|SET|Rulo|Çuval|Saat|Gün|Ay)';
       const rowRegex = new RegExp(
-        `(?:^|\\s)(\\d{1,3})\\s+([\\s\\S]+?)\\s+(\\d+(?:[.,]\\d+)?)\\s*(${unitPattern})\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?(?:\\s+([\\s\\S]{0,65}?))?\\s+%?\\s*(0|1|8|10|18|20)(?:[.,]0+)?\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?`,
+        `(?:^|\\s)(\\d{1,3})\\s+([\\s\\S]+?)\\s+((?:\\d+[.,]\\d+|\\d+|[.,]\\d+))\\s*(${unitPattern})\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?(?:\\s+([\\s\\S]{0,65}?))?\\s+%?\\s*(0|1|8|10|18|20)(?:[.,]0+)?\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)?`,
         'gi'
       );
 
@@ -6082,7 +6390,7 @@
       // Yedek kalem yakalayıcı (standart dışı tablo veya tek kalemli faturalar için)
       if (items.length === 0) {
         const simpleRegex = new RegExp(
-          `([A-ZÇĞİÖŞÜ0-9][A-ZÇĞİÖŞÜa-zçğıöşü0-9\\s./(),-]{3,90}?)\\s+(\\d+(?:[.,]\\d+)?)\\s*(${unitPattern})\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)`,
+          `([A-ZÇĞİÖŞÜ0-9][A-ZÇĞİÖŞÜa-zçğıöşü0-9\\s./(),-]{3,90}?)\\s+((?:\\d+[.,]\\d+|\\d+|[.,]\\d+))\\s*(${unitPattern})\\s+([\\d.,]+)\\s*(?:TL|TRY|₺)`,
           'gi'
         );
         let sm;
@@ -6123,11 +6431,17 @@
         });
       }
 
-      // 6) ARAÇ PLAKASI VE BAKIM / SERVİS FATURASI TESPİTİ
+      // 6) ARAÇ PLAKASI, KM VE BAKIM / SERVİS FATURASI TESPİTİ
       let detectedPlate = '';
-      const plateMatch = text.match(/\b(0[1-9]|[1-7]\d|8[01])\s*([A-Z]{1,3})\s*(\d{2,4})\b/);
+      const labeledPlateMatch = text.match(/Plaka\s*[:.]?\s*(0[1-9]|[1-7]\d|8[01])\s*([A-Z]{1,3})\s*(\d{2,4})\b/i);
+      const plateMatch = labeledPlateMatch || text.match(/\b(0[1-9]|[1-7]\d|8[01])\s*([A-Z]{1,3})\s*(\d{2,4})\b/);
       if (plateMatch && !/^(202\d)$/.test(plateMatch[3])) {
-        detectedPlate = `${plateMatch[1]} ${plateMatch[2]} ${plateMatch[3]}`;
+        detectedPlate = `${plateMatch[1]} ${plateMatch[2].toUpperCase()} ${plateMatch[3]}`;
+      }
+      let vehicleKm = '';
+      const kmMatch = text.match(/(?:KM|KİLOMETRE)\s*[:.]?\s*(\d{1,3}(?:[.,]\d{3})*|\d{4,7})\b/i);
+      if (kmMatch) {
+        vehicleKm = `${kmMatch[1]} KM`;
       }
       const isMaintenance = Boolean(
         detectedPlate ||
@@ -6141,6 +6455,7 @@
         payableTotal,
         kdvRate: items[0]?.kdvRate ?? detectedKdvRate,
         detectedPlate,
+        vehicleKm,
         isMaintenance,
         items
       };
@@ -6198,8 +6513,9 @@
 
 KURALLAR:
 - supplier: Faturayı KESEN satıcı firma. "SAYIN" / "ALICI" bölümündeki firma (bizim firmamız, örn. IŞIK PEYZAJ, GREENMALL) DEĞİLDİR.
-- items: Mal/hizmet tablosundaki HER satırı ayrı kalem olarak yaz. Toplam, ara toplam, KDV, iskonto satırlarını kalem olarak YAZMA.
-- unitCost: İskonto düşülmüş KDV HARİÇ birim fiyat (satır net tutarı / miktar). Sayıları nokta ondalıklı number olarak ver (1.250,50 TL → 1250.5).
+- items: Mal/hizmet tablosundaki HER satırı ayrı kalem olarak yaz. Toplam, ara toplam, KDV, tek başına iskonto özet satırlarını kalem olarak YAZMA.
+- unitCost (ÇOK ÖNEMLİ - İSKONTO KURALI): Eğer satırda "İskonto" veya "İndirim" varsa, iskonto öncesi ilk "Birim Fiyat" sütununu DEĞİL, satırın en sağındaki iskonto düşülmüş KDV hariç "Mal Hizmet Tutarı" sütununu miktara (qty) bölerek gerçek iskonto düşülmüş birim fiyatı hesapla (unitCost = iskonto_dusulmus_net_satir_tutari / qty). Böylece (qty * unitCost) toplamı faturadaki KDV hariç ara toplama (Mal Hizmet Toplam Tutarı - Toplam İskonto) eşit olsun.
+- qty: Ondalıklı miktarları eksiksiz oku (",7 Adet" veya ".7 Adet" ifadesini 0.7 olarak ver).
 - kdvRate: Satırın KDV oranı.
 - payableTotal: "Ödenecek Tutar" / "Vergiler Dahil Toplam".
 - date: YYYY-MM-DD.
@@ -6207,7 +6523,8 @@ KURALLAR:
   * ARAC_BAKIM → oto servis, araç/iş makinesi bakım-tamir, yedek parça, lastik, akü, yağ, filtre, çekici, otopark, muayene, kasko veya faturada araç plakası varsa.
   * ZIMMET → kişiye verilecek demirbaş: el aleti, elektrikli alet (matkap, spiral, kırıcı), lazer metre, telefon, bilgisayar, tablet, iş makinesi/ekipman alımı.
   * MALZEME → şantiyede tüketilen inşaat malzemesi (çimento, demir, kum, boya, kablo, boru, vida, fayans, sarf malzemesi vb.).
-- vehiclePlate: Plaka varsa "34 ABC 123" biçiminde.
+- vehiclePlate: Fatura gövdesi veya "Genel Açıklamalar" içindeki plakayı bul ("Plaka :34KV8909" → "34 KV 8909" gibi standart boşluklu biçimde yaz).
+- vehicleKm: Faturada veya "Genel Açıklamalar" bölümünde "KM :458940" gibi kilometre/saat bilgisi varsa çıkar.
 - site: Bilinen şantiyeler: ${sites.length ? sites.join(', ') : '(yok)'}. Faturada teslimat adresi/proje bunlardan biriyle eşleşiyorsa onu yaz, emin değilsen boş bırak.
 - Bilinen araçlar: ${vehicles.length ? vehicles.join(', ') : '(yok)'}. Plaka bunlardan biriyle eşleşiyorsa aynı yazımı kullan.
 - Okunamayan alanı uydurma, boş bırak.`;
@@ -6364,6 +6681,7 @@ KURALLAR:
         if (parsed.payableTotal) extracted.payableTotal = parsed.payableTotal;
         extracted.kdvRate = parsed.kdvRate || 20;
         if (parsed.detectedPlate) extracted.detectedPlate = parsed.detectedPlate;
+        if (parsed.vehicleKm) extracted.vehicleKm = parsed.vehicleKm;
         if (parsed.items?.length) extracted.items = parsed.items;
         if (!forceTargetType && parsed.isMaintenance) {
           extracted.targetType = 'ARAC_BAKIM';
@@ -6490,15 +6808,20 @@ KURALLAR:
           entry.readBy === 'AI' ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">✓ Yapay Zeka</span>` :
           `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">Yedek Okuyucu</span>`;
 
+        const existingInv = entry.status === 'DONE' && entry.invoiceNo ? findExistingInvoiceByNo(entry.invoiceNo) : null;
+        const dupBadge = existingInv
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800" title="Aynı fatura no kayıtlı — kaydettiğinizde mevcut fatura ve stok güncellenir">🔄 Kayıtlı (Güncellenecek)</span>`
+          : '';
         const itemsPreview = items.slice(0, 3).map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ') + (items.length > 3 ? ` +${items.length - 3} kalem` : '');
 
         return `
           <div class="bg-white rounded-xl border ${entry.selected ? 'border-emerald-300 shadow-xs' : 'border-slate-200 opacity-70'} p-3.5 space-y-2.5">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <label class="flex items-center gap-2 cursor-pointer">
+              <label class="flex items-center gap-2 cursor-pointer flex-wrap">
                 <input type="checkbox" data-bulk-chk="${idx}" ${entry.selected ? 'checked' : ''} ${entry.status !== 'DONE' ? 'disabled' : ''} class="rounded border-slate-300 text-emerald-600" />
                 <span class="text-xs font-bold text-slate-800 truncate max-w-[260px]">${escapeHtml(entry.fileName)}</span>
                 ${statusBadge}
+                ${dupBadge}
               </label>
               <div class="flex items-center gap-2">
                 <div class="text-right">
@@ -6547,6 +6870,10 @@ KURALLAR:
       const files = [...(fileList || [])];
       if (!files.length) return;
       const defaultSite = document.getElementById('bulkDefaultSiteInput')?.value.trim() || 'Kadıköy Şantiyesi';
+      const engSelect = document.getElementById('bulkEngineSelect');
+      if (engSelect && appConfig.geminiKey && engSelect.value === 'FREE') {
+        engSelect.value = 'AI';
+      }
 
       bulkInvoiceQueue = files.map(f => ({
         file: f,
@@ -6584,9 +6911,10 @@ KURALLAR:
           const enginePref = document.getElementById('bulkEngineSelect')?.value || 'FREE';
           const res = await readInvoiceFile(entry.file, null, () => {}, enginePref);
           entry.invoiceNo = res.invoiceNo || `GIB2026000${Math.floor(100000 + Math.random() * 899999)}`;
-          entry.supplier = res.supplier || 'Tedarikçi Firma';
-          entry.date = res.date || new Date().toISOString().slice(0, 10);
-          entry.site = res.site || defaultSite;
+          const existingInv = findExistingInvoiceByNo(entry.invoiceNo);
+          entry.supplier = res.supplier || existingInv?.supplier || 'Tedarikçi Firma';
+          entry.date = res.date || existingInv?.date || new Date().toISOString().slice(0, 10);
+          entry.site = res.site || existingInv?.site || defaultSite;
           entry.targetType = res.targetType || (res.isMaintenance ? 'ARAC_BAKIM' : 'MALZEME');
           entry.detectedPlate = res.detectedPlate || '';
           entry.maintType = res.maintType || 'Periyodik Bakım';
@@ -6621,120 +6949,32 @@ KURALLAR:
       }
       const taxMode = document.getElementById('bulkTaxModeSelect')?.value || 'NET';
       const isGross = taxMode === 'GROSS';
-      let malCount = 0, zimCount = 0, bakCount = 0;
+      let malCount = 0, zimCount = 0, bakCount = 0, addedCount = 0, updatedCount = 0;
 
       chosen.forEach(entry => {
-        const site = (entry.site || 'Kadıköy Şantiyesi').trim();
-        const invKdvRate = Number(entry.kdvRate ?? 20) || 20;
-        const items = (entry.items || []).map(it => {
-          const tb = getItemTaxBreakdown(it, it.kdvRate ?? invKdvRate);
-          return {
-            name: it.name,
-            qty: tb.qty,
-            unit: it.unit || 'Adet',
-            unitCost: isGross ? tb.grossUnitCost : tb.netUnitCost,
-            netUnitCost: tb.netUnitCost,
-            grossUnitCost: tb.grossUnitCost,
-            kdvRate: tb.kdvRate,
-            taxIncluded: isGross
-          };
-        });
-        const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
-        const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
-        const total = isGross ? grossTotal : netTotal;
-        const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
-        const targetLabel =
-          entry.targetType === 'ARAC_BAKIM' ? `Araç Bakım / Tamir (${entry.detectedPlate || 'Genel Araç'})` :
-          entry.targetType === 'ZIMMET' ? 'Zimmet Faturası' :
-          `Çoklu Şantiye Malzemesi (${items.length} Kalem)`;
-
-        appState.faturalar.unshift({
-          id: 'FAT-' + Math.floor(1000 + Math.random() * 9000),
+        const res = upsertInvoiceAndLinkedRecords({
           invoiceNo: entry.invoiceNo,
           supplier: entry.supplier,
           date: entry.date,
-          site,
-          targetType: targetLabel,
-          vehicle: entry.detectedPlate || '',
-          title,
-          total,
-          netTotal,
-          grossTotal,
-          kdvRate: invKdvRate,
-          taxIncluded: isGross,
-          items
+          site: (entry.site || 'Kadıköy Şantiyesi').trim(),
+          targetType: entry.targetType || 'MALZEME',
+          vehiclePlate: entry.detectedPlate || '',
+          maintType: entry.maintType || 'Periyodik Bakım',
+          vehicleKm: entry.vehicleKm || '',
+          isGross,
+          invKdvRate: Number(entry.kdvRate ?? 20) || 20,
+          rawItems: entry.items || []
         });
-
-        if (entry.targetType === 'ARAC_BAKIM') {
-          if (!Array.isArray(appState.aracBakimlar)) appState.aracBakimlar = [];
-          appState.aracBakimlar.unshift({
-            id: 'BKM-' + Math.floor(1000 + Math.random() * 9000),
-            vehicle: entry.detectedPlate || 'Şantiye Aracı',
-            type: entry.maintType || 'Periyodik Bakım',
-            description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
-            cost: total,
-            netCost: netTotal,
-            grossCost: grossTotal,
-            kdvRate: invKdvRate,
-            taxIncluded: isGross,
-            date: entry.date,
-            invoiceNo: entry.invoiceNo,
-            supplier: entry.supplier,
-            site,
-            km: entry.vehicleKm || '',
-            nextDate: ''
-          });
-          bakCount++;
-        } else if (entry.targetType === 'ZIMMET') {
-          items.forEach((it, idx) => {
-            appState.zimmetler.unshift({
-              id: 'ZIM-' + Math.floor(1000 + Math.random() * 9000) + idx,
-              name: it.name,
-              category: 'El Aleti / Makine',
-              serial: `SN-${Math.floor(10000 + Math.random() * 89999)}`,
-              person: 'Kendim (Uğur Demirbaş)',
-              site,
-              supplier: entry.supplier,
-              date: entry.date,
-              invoiceNo: entry.invoiceNo,
-              cost: Number((it.qty * it.unitCost).toFixed(2)),
-              netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
-              grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
-              kdvRate: it.kdvRate,
-              taxIncluded: isGross,
-              photo: '',
-              photos: []
-            });
-          });
-          zimCount++;
-        } else {
-          items.forEach((it, idx) => {
-            appState.malzemeler.unshift({
-              id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000) + idx,
-              name: it.name,
-              category: 'Fatura Kalemi',
-              site,
-              qty: it.qty,
-              unit: it.unit,
-              unitCost: it.unitCost,
-              netUnitCost: it.netUnitCost,
-              grossUnitCost: it.grossUnitCost,
-              kdvRate: it.kdvRate,
-              taxIncluded: isGross,
-              supplier: entry.supplier,
-              date: entry.date,
-              invoiceNo: entry.invoiceNo,
-              note: `${entry.invoiceNo} nolu faturanın ${idx + 1}. kalemi.`
-            });
-          });
-          malCount++;
-        }
+        if (res.isUpdate) updatedCount++; else addedCount++;
+        if (res.targetType === 'ARAC_BAKIM') bakCount++;
+        else if (res.targetType === 'ZIMMET') zimCount++;
+        else malCount++;
       });
 
       closeModal('modalBulkInvoices');
       bulkInvoiceQueue = [];
       saveState();
-      showToast(`✓ ${chosen.length} fatura işlendi! (${malCount} Malzeme, ${zimCount} Zimmet, ${bakCount} Araç Bakım)`);
+      showToast(`✓ ${chosen.length} fatura işlendi! (${addedCount} yeni, ${updatedCount} mevcut güncellendi • Malzeme: ${malCount}, Zimmet: ${zimCount}, Bakım: ${bakCount})`);
     }
 
     // =========================================================================
@@ -6860,6 +7100,9 @@ KURALLAR:
         const veh = document.getElementById('filterBakimVehicle')?.value || 'ALL';
         printVehicleCostReport(veh !== 'ALL' ? veh : 'ALL');
       });
+      document.getElementById('btnDeduplicateInvoices')?.addEventListener('click', () => {
+        deduplicateInvoicesAndStock(false);
+      });
 
       // Kişi Bazlı Toplu Zimmet Tutanağı Yazdırma
       document.getElementById('btnPrintPersonZimmet')?.addEventListener('click', () => {
@@ -6919,6 +7162,70 @@ KURALLAR:
       }
     }
 
+    function applyExtractedToFreeEntry(entry, extracted, fallbackSite = 'Kadıköy Şantiyesi') {
+      if (!entry || !extracted) return;
+      const existingInv = extracted.invoiceNo ? findExistingInvoiceByNo(extracted.invoiceNo) : null;
+      entry.status = 'DONE';
+      entry.saved = false;
+      entry.extracted = extracted;
+      entry.previewUrl = extracted.previewUrl || entry.previewUrl || '';
+      entry.site = extracted.site || (entry.site && entry.site !== 'Kadıköy Şantiyesi' ? entry.site : '') || existingInv?.site || entry.site || fallbackSite;
+      if (extracted.targetType) entry.targetType = extracted.targetType;
+      else if (existingInv?.targetType) {
+        entry.targetType = existingInv.targetType.includes('Bakım') ? 'ARAC_BAKIM' : (existingInv.targetType.includes('Zimmet') ? 'ZIMMET' : 'MALZEME');
+      }
+      if (extracted.detectedPlate) entry.vehiclePlate = extracted.detectedPlate;
+      else if (existingInv?.vehicle && !entry.vehiclePlate) entry.vehiclePlate = existingInv.vehicle;
+      if (extracted.maintType) entry.maintType = extracted.maintType;
+      if (extracted.vehicleKm) entry.vehicleKm = extracted.vehicleKm;
+    }
+
+    async function reScanAllFreeScannerWithAi() {
+      if (!freeScannerQueue.length) {
+        showToast('Önce yeniden taramak için fatura PDF veya fotoğraflarını yükleyin.', 'info');
+        return;
+      }
+      if (!appConfig.geminiKey) {
+        showToast('Yapay zeka için Gemini API anahtarı gerekiyor. ⚙ Ayarlar > Yapay Zeka sekmesinden girebilirsiniz.', 'info');
+        return;
+      }
+      const progBox = document.getElementById('freeScannerProgressBox');
+      const progText = document.getElementById('freeScannerProgressText');
+      const progBar = document.getElementById('freeScannerProgressBar');
+      const defaultSite = document.getElementById('freeSite')?.value.trim() || 'Kadıköy Şantiyesi';
+
+      progBox?.classList.remove('hidden');
+      let okCount = 0;
+      for (let i = 0; i < freeScannerQueue.length; i++) {
+        const entry = freeScannerQueue[i];
+        entry.status = 'SCANNING';
+        renderFreeScannerQueueBar();
+        if (progText) progText.textContent = `✨ Yapay Zeka okuyor (${i + 1}/${freeScannerQueue.length}): ${entry.fileName}...`;
+        if (progBar) progBar.style.width = `${Math.round(((i + 0.3) / freeScannerQueue.length) * 100)}%`;
+
+        try {
+          const extracted = await readInvoiceFile(entry.file, null, (msg) => {
+            if (progText) progText.textContent = `✨ ${entry.fileName}: ${msg}`;
+          }, 'AI');
+          applyExtractedToFreeEntry(entry, extracted, defaultSite);
+          if (extracted.readBy === 'AI') okCount++;
+        } catch (err) {
+          console.error('AI toplu yeniden tarama hatası:', err);
+          entry.status = 'DONE';
+        }
+        if (progBar) progBar.style.width = `${Math.round(((i + 1) / freeScannerQueue.length) * 100)}%`;
+        renderFreeScannerQueueBar();
+        if (i === freeScannerActiveIndex) renderFreeScannerActiveEntry();
+        if (i < freeScannerQueue.length - 1) await new Promise(r => setTimeout(r, 200));
+      }
+
+      progBox?.classList.add('hidden');
+      renderFreeScannerQueueBar();
+      renderFreeScannerActiveEntry();
+      updateFreeScannerFooter();
+      showToast(`✨ ${okCount}/${freeScannerQueue.length} fatura Yapay Zeka ile yeniden okundu! Değişiklikleri kontrol edip mevcut faturaları güncelleyebilirsiniz.`, 'success');
+    }
+
     async function handleFreeScannerFiles(fileList) {
       const files = Array.from(fileList || []);
       if (!files.length) return;
@@ -6968,14 +7275,7 @@ KURALLAR:
             if (progText) progText.textContent = `${entry.fileName}: ${msg}`;
           }, freeScannerEngine);
 
-          entry.status = 'DONE';
-          entry.extracted = extracted;
-          entry.previewUrl = extracted.previewUrl || '';
-          entry.site = extracted.site || entry.site || defaultSite;
-          if (extracted.targetType) entry.targetType = extracted.targetType;
-          if (extracted.detectedPlate) entry.vehiclePlate = extracted.detectedPlate;
-          if (extracted.maintType) entry.maintType = extracted.maintType;
-          if (extracted.vehicleKm) entry.vehicleKm = extracted.vehicleKm;
+          applyExtractedToFreeEntry(entry, extracted, defaultSite);
         } catch (err) {
           console.error('Ücretsiz fatura okuma hatası:', err);
           entry.status = 'ERROR';
@@ -7011,16 +7311,19 @@ KURALLAR:
       bar.classList.remove('hidden');
       bar.innerHTML = freeScannerQueue.map((entry, idx) => {
         const isActive = idx === freeScannerActiveIndex;
+        const isExisting = Boolean(entry.extracted?.invoiceNo && findExistingInvoiceByNo(entry.extracted.invoiceNo));
         const statusIcon =
           entry.status === 'PENDING' ? '⏳' :
           entry.status === 'SCANNING' ? '⚙️' :
           entry.status === 'ERROR' ? '✕' :
-          entry.saved ? '✓ (Kayıtlı)' : '✓';
+          entry.saved ? '✓ (Kayıtlı)' : (isExisting ? '🔄 Güncelle' : '✓');
         const activeClass = isActive
           ? 'bg-emerald-600 text-white font-bold border-emerald-700 shadow-xs'
           : entry.saved
             ? 'bg-slate-100 text-slate-500 border-slate-200'
-            : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200';
+            : isExisting
+              ? 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border-indigo-300 font-semibold'
+              : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200';
 
         return `
           <button type="button" class="shrink-0 px-2.5 py-1 rounded-lg text-xs border transition flex items-center gap-1.5 ${activeClass}" data-free-queue-idx="${idx}">
@@ -7208,17 +7511,23 @@ KURALLAR:
 
       const current = freeScannerQueue[freeScannerActiveIndex];
       const unsavedCount = freeScannerQueue.filter(x => x.status === 'DONE' && !x.saved).length;
+      const updateReadyCount = freeScannerQueue.filter(x => x.status === 'DONE' && !x.saved && x.extracted?.invoiceNo && findExistingInvoiceByNo(x.extracted.invoiceNo)).length;
       const totalAmt = freeScannerQueue.filter(x => x.status === 'DONE').reduce((s, x) => s + (x.calculatedTotal || 0), 0);
 
       if (summaryEl) {
-        summaryEl.textContent = `Toplam ${freeScannerQueue.length} fatura (${unsavedCount} hazır) • Genel Tutar: ${formatCurrency(totalAmt)}`;
+        const updTxt = updateReadyCount > 0 ? ` • ${updateReadyCount} mevcut fatura güncellenecek` : '';
+        summaryEl.textContent = `Toplam ${freeScannerQueue.length} fatura (${unsavedCount} hazır${updTxt}) • Genel Tutar: ${formatCurrency(totalAmt)}`;
       }
 
       if (current && current.status === 'DONE') {
         btnCurrent?.classList.remove('hidden');
+        const currentExists = Boolean(current.extracted?.invoiceNo && findExistingInvoiceByNo(current.extracted.invoiceNo));
         if (current.saved) {
           btnCurrent.innerHTML = '<i data-lucide="check-check" class="w-4 h-4 text-emerald-300"></i><span>Bu Fatura Kaydedildi</span>';
           btnCurrent.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-slate-200 text-slate-500 cursor-default flex items-center gap-1.5';
+        } else if (currentExists) {
+          btnCurrent.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4"></i><span>Mevcut Faturayı &amp; Stoğu Güncelle</span>';
+          btnCurrent.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition flex items-center gap-1.5';
         } else {
           btnCurrent.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i><span>Bu Faturayı Stoğa / Listeye Kaydet</span>';
           btnCurrent.className = 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1.5';
@@ -7229,7 +7538,11 @@ KURALLAR:
 
       if (freeScannerQueue.length > 1 && unsavedCount > 0) {
         btnAll?.classList.remove('hidden');
-        if (btnAllText) btnAllText.textContent = `Tüm Faturaları Stoğa Kaydet (${unsavedCount})`;
+        if (btnAllText) {
+          btnAllText.textContent = updateReadyCount > 0
+            ? `Tümünü İşle (${unsavedCount} Fatura • ${updateReadyCount} Güncelleme)`
+            : `Tüm Faturaları Stoğa Kaydet (${unsavedCount})`;
+        }
       } else {
         btnAll?.classList.add('hidden');
       }
@@ -7295,10 +7608,10 @@ KURALLAR:
       }
     }
 
-    function commitFreeScannerEntry(idx) {
+    function commitFreeScannerEntry(idx, silentToast = false) {
       syncFreeScannerCurrentInputs();
       const entry = freeScannerQueue[idx];
-      if (!entry || entry.status !== 'DONE' || !entry.extracted) return;
+      if (!entry || entry.status !== 'DONE' || !entry.extracted) return null;
 
       const invoiceNo = entry.extracted.invoiceNo || `GIB2026${Math.floor(10000000 + Math.random() * 89999999)}`;
       const supplier = entry.extracted.supplier || 'Tedarikçi Firma';
@@ -7315,114 +7628,33 @@ KURALLAR:
         ? entry.extracted.items
         : [{ name: entry.fileName.replace(/\.[^.]+$/, '') || 'Fatura Kalemi', qty: 1, unit: 'Adet', unitCost: entry.calculatedTotal || 0, taxIncluded: isGross, kdvRate: invKdvRate }];
 
-      const items = rawItems.map(it => {
-        const tb = getItemTaxBreakdown(it, it.kdvRate ?? invKdvRate);
-        return {
-          name: it.name,
-          qty: tb.qty,
-          unit: it.unit || 'Adet',
-          unitCost: isGross ? tb.grossUnitCost : tb.netUnitCost,
-          netUnitCost: tb.netUnitCost,
-          grossUnitCost: tb.grossUnitCost,
-          kdvRate: tb.kdvRate,
-          taxIncluded: isGross
-        };
-      });
-
-      const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
-      const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
-      const total = isGross ? grossTotal : netTotal;
-      const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
-      const targetLabel =
-        targetType === 'ARAC_BAKIM'
-          ? `Araç Bakım / Tamir (${vehiclePlate || 'Genel Araç'})`
-          : targetType === 'ZIMMET'
-            ? 'Zimmet Faturası'
-            : `Çoklu Şantiye Malzemesi (${items.length} Kalem)`;
-
-      const newId = 'FAT-' + Math.floor(1000 + Math.random() * 9000);
-      appState.faturalar.unshift({
-        id: newId,
+      const res = upsertInvoiceAndLinkedRecords({
         invoiceNo,
         supplier,
         date,
         site,
-        targetType: targetLabel,
-        vehicle: vehiclePlate,
-        title,
-        total,
-        netTotal,
-        grossTotal,
-        kdvRate: invKdvRate,
-        taxIncluded: isGross,
-        items
+        targetType,
+        vehiclePlate,
+        maintType,
+        vehicleKm,
+        isGross,
+        invKdvRate,
+        rawItems
       });
-
-      if (targetType === 'ARAC_BAKIM') {
-        if (!Array.isArray(appState.aracBakimlar)) appState.aracBakimlar = [];
-        appState.aracBakimlar.unshift({
-          id: 'BKM-' + Math.floor(1000 + Math.random() * 9000),
-          vehicle: vehiclePlate || '34 FCV 671 (Renault Megane)',
-          type: maintType,
-          description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
-          cost: total,
-          netCost: netTotal,
-          grossCost: grossTotal,
-          kdvRate: invKdvRate,
-          taxIncluded: isGross,
-          date,
-          invoiceNo,
-          supplier,
-          site,
-          km: vehicleKm
-        });
-      } else if (targetType === 'ZIMMET') {
-        items.forEach((it, i) => {
-          appState.zimmetler.unshift({
-            id: 'ZIM-' + Math.floor(1000 + Math.random() * 9000) + i,
-            name: it.name,
-            category: 'El Aleti / Makine',
-            serial: `SN-${Math.floor(10000 + Math.random() * 89999)}`,
-            person: 'Kendim (Uğur Demirbaş)',
-            site,
-            supplier,
-            date,
-            invoiceNo,
-            cost: Number((it.qty * it.unitCost).toFixed(2)),
-            netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
-            grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
-            kdvRate: it.kdvRate,
-            taxIncluded: isGross,
-            photos: []
-          });
-        });
-      } else {
-        items.forEach((it, i) => {
-          appState.malzemeler.unshift({
-            id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000) + i,
-            name: it.name,
-            category: 'Fatura Kalemi',
-            site,
-            qty: it.qty,
-            unit: it.unit,
-            unitCost: it.unitCost,
-            netUnitCost: it.netUnitCost,
-            grossUnitCost: it.grossUnitCost,
-            kdvRate: it.kdvRate,
-            taxIncluded: isGross,
-            supplier,
-            date,
-            invoiceNo,
-            note: `${invoiceNo} nolu faturanın ${i + 1}. kalemi.`
-          });
-        });
-      }
 
       entry.saved = true;
       saveState();
       renderFreeScannerQueueBar();
       updateFreeScannerFooter();
-      showToast(`✓ Fatura (${invoiceNo}) ve ${items.length} kalem stoğa kaydedildi!`, 'success');
+      if (!silentToast) {
+        showToast(
+          res.isUpdate
+            ? `🔄 Mevcut fatura (${res.invoiceNo}) ve bağlı kayıtları güncellendi (stoğa çift eklenmedi)!`
+            : `✓ Fatura (${res.invoiceNo}) ve ${res.itemCount} kalem stoğa kaydedildi!`,
+          'success'
+        );
+      }
+      return res;
     }
 
     function commitFreeScannerAll() {
@@ -7434,14 +7666,17 @@ KURALLAR:
         }
       });
       if (!unsavedIndices.length) {
-        showToast('Kaydedilecek yeni fatura bulunmuyor.', 'info');
+        showToast('Kaydedilecek veya güncellenecek fatura bulunmuyor.', 'info');
         return;
       }
+      let addedCount = 0, updatedCount = 0;
       unsavedIndices.forEach(idx => {
-        commitFreeScannerEntry(idx);
+        const r = commitFreeScannerEntry(idx, true);
+        if (r?.isUpdate) updatedCount++;
+        else if (r) addedCount++;
       });
       closeModal('modalFreeScanner');
-      showToast(`✓ Toplam ${unsavedIndices.length} fatura başarıyla stoğa işlendi!`, 'success');
+      showToast(`✓ ${unsavedIndices.length} fatura işlendi (${addedCount} yeni, ${updatedCount} mevcut fatura düzeltildi)!`, 'success');
     }
 
 
@@ -7539,7 +7774,16 @@ KURALLAR:
 
       // Motor Butonları
       document.getElementById('btnFreeScannerEngineFree')?.addEventListener('click', () => setFreeScannerEngine('FREE'));
-      document.getElementById('btnFreeScannerEngineAi')?.addEventListener('click', () => setFreeScannerEngine('AI'));
+      document.getElementById('btnFreeScannerEngineAi')?.addEventListener('click', () => {
+        setFreeScannerEngine('AI');
+        if (freeScannerQueue.some(x => x.file && x.extracted?.readBy !== 'AI')) {
+          reScanAllFreeScannerWithAi();
+        }
+      });
+      document.getElementById('btnFreeReScanAllAi')?.addEventListener('click', () => {
+        setFreeScannerEngine('AI');
+        reScanAllFreeScannerWithAi();
+      });
 
       // Yakınlaştırma (Zoom)
       document.getElementById('btnFreeZoomIn')?.addEventListener('click', () => {
@@ -7582,8 +7826,10 @@ KURALLAR:
         const entry = freeScannerQueue[freeScannerActiveIndex];
         if (entry) {
           entry.taxMode = 'NET';
+          entry.saved = false;
           updateFreeScannerTaxModeButtons('NET');
           renderFreeScannerItems();
+          renderFreeScannerQueueBar();
           updateFreeScannerFooter();
         }
       });
@@ -7592,8 +7838,10 @@ KURALLAR:
         const entry = freeScannerQueue[freeScannerActiveIndex];
         if (entry) {
           entry.taxMode = 'GROSS';
+          entry.saved = false;
           updateFreeScannerTaxModeButtons('GROSS');
           renderFreeScannerItems();
+          renderFreeScannerQueueBar();
           updateFreeScannerFooter();
         }
       });
@@ -7605,7 +7853,9 @@ KURALLAR:
         if (!entry.extracted) entry.extracted = { items: [] };
         if (!Array.isArray(entry.extracted.items)) entry.extracted.items = [];
         entry.extracted.items.push({ name: 'Yeni Kalem', qty: 1, unit: 'Adet', unitCost: 0, netUnitCost: 0, grossUnitCost: 0, kdvRate: entry.extracted?.kdvRate ?? 20 });
+        entry.saved = false;
         renderFreeScannerItems();
+        renderFreeScannerQueueBar();
         updateFreeScannerFooter();
       });
 
@@ -7617,7 +7867,9 @@ KURALLAR:
           const entry = freeScannerQueue[freeScannerActiveIndex];
           if (entry && entry.extracted?.items && idx >= 0) {
             entry.extracted.items.splice(idx, 1);
+            entry.saved = false;
             renderFreeScannerItems();
+            renderFreeScannerQueueBar();
             updateFreeScannerFooter();
           }
         }
@@ -7638,14 +7890,31 @@ KURALLAR:
           if (e.target.classList.contains('item-cost')) {
             applyFreeItemCostValue(it, Number(e.target.value) || 0, taxMode, defaultRate);
           }
+          entry.saved = false;
           const tb = getItemTaxBreakdown(it, it.kdvRate ?? defaultRate);
           const lineTot = taxMode === 'GROSS' ? tb.grossLineTotal : tb.netLineTotal;
           const totEl = row.querySelector('.col-span-2 span');
           if (totEl) totEl.textContent = formatCurrency(lineTot);
 
           updateFreeScannerTotalsSummary(entry);
+          renderFreeScannerQueueBar();
           updateFreeScannerFooter();
         }
+      });
+
+      // Form Alanları Değişince Kaydedildi Durumunu Sıfırla (Güncellemeye Hazır)
+      ['freeInvoiceNo', 'freeSupplier', 'freeDate', 'freeSite', 'freeVehiclePlate', 'freeMaintType', 'freeVehicleKm'].forEach(fid => {
+        document.getElementById(fid)?.addEventListener('input', () => {
+          const entry = freeScannerQueue[freeScannerActiveIndex];
+          if (entry) {
+            if (fid === 'freeInvoiceNo' && entry.extracted) {
+              entry.extracted.invoiceNo = document.getElementById(fid).value.trim();
+            }
+            entry.saved = false;
+            renderFreeScannerQueueBar();
+            updateFreeScannerFooter();
+          }
+        });
       });
 
       // Kayıt Türü Değişimi
@@ -7657,7 +7926,12 @@ KURALLAR:
           vehicleBox?.classList.add('hidden');
         }
         const entry = freeScannerQueue[freeScannerActiveIndex];
-        if (entry) entry.targetType = e.target.value;
+        if (entry) {
+          entry.targetType = e.target.value;
+          entry.saved = false;
+          renderFreeScannerQueueBar();
+          updateFreeScannerFooter();
+        }
       });
 
       // Yapay Zeka ile Yeniden Tara Butonu
@@ -7670,14 +7944,21 @@ KURALLAR:
         }
         showToast('Fatura yapay zeka ile yeniden taranıyor...', 'info');
         try {
-          const extracted = await readInvoiceFile(entry.file, entry.targetType, (msg) => {
+          const defaultSite = document.getElementById('freeSite')?.value.trim() || 'Kadıköy Şantiyesi';
+          const extracted = await readInvoiceFile(entry.file, null, (msg) => {
             showToast(msg, 'info');
           }, 'AI');
           if (extracted) {
-            entry.extracted = extracted;
-          entry.previewUrl = extracted.previewUrl || '';
+            applyExtractedToFreeEntry(entry, extracted, defaultSite);
+            renderFreeScannerQueueBar();
             renderFreeScannerActiveEntry();
-            showToast('✓ Yapay zeka ile başarıyla yeniden okundu!', 'success');
+            updateFreeScannerFooter();
+            showToast(
+              extracted.readBy === 'AI'
+                ? '✓ Yapay zeka ile yeniden okundu! Şimdi "Mevcut Faturayı & Stoğu Güncelle"ye basabilirsiniz.'
+                : 'Yapay zeka yanıt vermedi, yedek okuyucu kullanıldı.',
+              extracted.readBy === 'AI' ? 'success' : 'info'
+            );
           }
         } catch (err) {
           showToast('Yapay zeka ile tarama başarısız oldu.', 'error');
@@ -7805,122 +8086,28 @@ KURALLAR:
           }
         });
 
-        const netTotal = Number(items.reduce((s, i) => s + i.qty * i.netUnitCost, 0).toFixed(2));
-        const grossTotal = Number(items.reduce((s, i) => s + i.qty * i.grossUnitCost, 0).toFixed(2));
-        const total = currentModalTaxIncluded ? grossTotal : netTotal;
         const invKdvRate = items[0]?.kdvRate ?? 20;
-        const title = `${items.length} Kalem: ` + items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', ');
-        const targetLabel =
-          targetType === 'ARAC_BAKIM'
-            ? `Araç Bakım / Tamir (${vehiclePlate || 'Genel Araç'})`
-            : targetType === 'ZIMMET'
-              ? 'Zimmet Faturası'
-              : `Çoklu Şantiye Malzemesi (${items.length} Kalem)`;
+        const res = upsertInvoiceAndLinkedRecords({
+          editId,
+          invoiceNo,
+          supplier,
+          date,
+          site,
+          targetType,
+          vehiclePlate,
+          maintType,
+          vehicleKm,
+          nextMaintDate,
+          isGross: currentModalTaxIncluded,
+          invKdvRate,
+          rawItems: items
+        });
 
-        if (editId) {
-          const idx = appState.faturalar.findIndex(f => f.id === editId);
-          if (idx > -1) {
-            appState.faturalar[idx] = {
-              ...appState.faturalar[idx],
-              id: editId,
-              invoiceNo,
-              supplier,
-              date,
-              site,
-              targetType: targetLabel,
-              vehicle: vehiclePlate,
-              title,
-              total,
-              netTotal,
-              grossTotal,
-              kdvRate: invKdvRate,
-              taxIncluded: currentModalTaxIncluded,
-              items
-            };
-          }
-          showToast('Fatura içeriği ve kalemleri güncellendi.');
-        } else {
-          const newId = 'FAT-' + Math.floor(1000 + Math.random() * 9000);
-          appState.faturalar.unshift({
-            id: newId,
-            invoiceNo,
-            supplier,
-            date,
-            site,
-            targetType: targetLabel,
-            vehicle: vehiclePlate,
-            title,
-            total,
-            netTotal,
-            grossTotal,
-            kdvRate: invKdvRate,
-            taxIncluded: currentModalTaxIncluded,
-            items
-          });
-
-          if (targetType === 'ARAC_BAKIM') {
-            if (!Array.isArray(appState.aracBakimlar)) appState.aracBakimlar = [];
-            appState.aracBakimlar.unshift({
-              id: 'BKM-' + Math.floor(1000 + Math.random() * 9000),
-              vehicle: vehiclePlate || '34 FCV 671 (Renault Megane)',
-              type: maintType,
-              description: items.map(i => `${i.name} (${i.qty} ${i.unit})`).join(', '),
-              cost: total,
-              netCost: netTotal,
-              grossCost: grossTotal,
-              kdvRate: invKdvRate,
-              taxIncluded: currentModalTaxIncluded,
-              date,
-              invoiceNo,
-              supplier,
-              site,
-              km: vehicleKm,
-              nextDate: nextMaintDate
-            });
-            showToast(`Araç bakım faturası (${invoiceNo}) ve bakım kaydı eklendi!`);
-          } else {
-            items.forEach((it, idx) => {
-              if (targetType === 'ZIMMET') {
-                appState.zimmetler.unshift({
-                  id: 'ZIM-' + Math.floor(1000 + Math.random() * 9000) + idx,
-                  name: it.name,
-                  category: 'El Aleti / Makine',
-                  serial: `SN-${Math.floor(10000 + Math.random() * 89999)}`,
-                  person: 'Kendim (Uğur Demirbaş)',
-                  site,
-                  supplier,
-                  date,
-                  invoiceNo,
-                  cost: Number((it.qty * it.unitCost).toFixed(2)),
-                  netCost: Number((it.qty * it.netUnitCost).toFixed(2)),
-                  grossCost: Number((it.qty * it.grossUnitCost).toFixed(2)),
-                  kdvRate: it.kdvRate,
-                  taxIncluded: currentModalTaxIncluded,
-                  photo: ''
-                });
-              } else {
-                appState.malzemeler.unshift({
-                  id: 'MLZ-' + Math.floor(1000 + Math.random() * 9000) + idx,
-                  name: it.name,
-                  category: 'Fatura Kalemi',
-                  site,
-                  qty: it.qty,
-                  unit: it.unit,
-                  unitCost: it.unitCost,
-                  netUnitCost: it.netUnitCost,
-                  grossUnitCost: it.grossUnitCost,
-                  kdvRate: it.kdvRate,
-                  taxIncluded: currentModalTaxIncluded,
-                  supplier,
-                  date,
-                  invoiceNo,
-                  note: `${invoiceNo} nolu faturanın ${idx + 1}. kalemi.`
-                });
-              }
-            });
-            showToast(`Fatura içeriği (${invoiceNo}) ve ${items.length} kalemi stoğa kaydedildi!`);
-          }
-        }
+        showToast(
+          res.isUpdate
+            ? `🔄 Fatura (${res.invoiceNo}) ve bağlı stok/bakım/zimmet kayıtları güncellendi!`
+            : `Fatura içeriği (${res.invoiceNo}) ve ${res.itemCount} kalemi stoğa kaydedildi!`
+        );
 
         closeModal('modalFatura');
         saveState();
