@@ -3077,11 +3077,22 @@
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
           const msg = errData?.error?.message || `HTTP ${res.status}`;
-          setSyncBadge('error', 'Eşitleme İzni Bekleniyor');
-          if (res.status === 401 || res.status === 403) {
-            showAuthOverlay('Oturum süresi doldu veya yetkiniz yok. Lütfen tekrar giriş yapın.');
-          } else if (!silent) {
-            showToast(`Firestore bağlantı uyarısı: ${msg}`, 'error');
+          const isBillingErr = /billing/i.test(msg);
+          if (res.status === 401) {
+            setSyncBadge('error', 'Oturum Süresi Doldu');
+            saveAuthSession(null);
+            showAuthOverlay('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
+          } else if (res.status === 403 && isBillingErr) {
+            setSyncBadge('error', 'Bulut Kapalı (Yerel Mod)');
+            if (!silent) {
+              showToast('Firebase Spark planında bulut eşitleme için faturalandırma kapalı. Kayıtlarınız bu cihazda yerel olarak güvende.', 'info');
+            }
+          } else if (res.status === 403) {
+            setSyncBadge('error', 'Firestore İzni Yok (Yerel)');
+            if (!silent) showToast(`Firestore yazma izni yok: ${msg}`, 'error');
+          } else {
+            setSyncBadge('error', 'Eşitleme Hatası (Yerel)');
+            if (!silent) showToast(`Firestore bağlantı uyarısı: ${msg}`, 'error');
           }
           return false;
         }
@@ -3113,12 +3124,25 @@
           return;
         }
         if (!res.ok) {
-          setSyncBadge('error', 'Firestore Yetki Hatası');
-          if (res.status === 401 || res.status === 403) {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData?.error?.message || `HTTP ${res.status}`;
+          const isBillingErr = /billing/i.test(msg);
+          if (res.status === 401) {
+            setSyncBadge('error', 'Oturum Süresi Doldu');
             saveAuthSession(null);
             showAuthOverlay('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
-          } else if (!silent) {
-            showToast('Firestore okuma izni hatası.', 'error');
+          } else if (res.status === 403 && isBillingErr) {
+            setSyncBadge('error', 'Bulut Kapalı (Yerel Mod)');
+            if (!window.__billingNoticeShown) {
+              window.__billingNoticeShown = true;
+              showToast('Firebase Spark planında bulut senkronizasyonu kapalı (faturalandırma gerekli). Uygulama yerel cihaz verileriyle açıldı.', 'info');
+            }
+          } else if (res.status === 403) {
+            setSyncBadge('error', 'Firestore İzni Yok (Yerel)');
+            if (!silent) showToast(`Firestore okuma izni hatası: ${msg}`, 'error');
+          } else {
+            setSyncBadge('error', 'Bulut Bağlantı Hatası');
+            if (!silent) showToast(`Firestore okuma hatası: ${msg}`, 'error');
           }
           return;
         }
