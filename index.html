@@ -3047,7 +3047,7 @@
     function getFirestoreUrl() {
       const pid = (appConfig.projectId || DEFAULT_FB_CONFIG.projectId).trim();
       const key = (appConfig.apiKey || DEFAULT_FB_CONFIG.apiKey).trim();
-      return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(pid)}/databases/(default)/documents/${DEFAULT_FB_CONFIG.collection}/${DEFAULT_FB_CONFIG.docId}?key=${encodeURIComponent(key)}`;
+      return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(pid)}/databases/default/documents/${DEFAULT_FB_CONFIG.collection}/${DEFAULT_FB_CONFIG.docId}?key=${encodeURIComponent(key)}`;
     }
 
     async function pushToFirestore(silent = false) {
