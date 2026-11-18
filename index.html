@@ -2491,6 +2491,7 @@ function doPost(e) {
     let currentZimmetDocPdfDataUrl = '';
     let currentZimmetDocType = '';
     let currentZimmetDocName = '';
+    let currentZimmetDocDriveUrl = '';
     let quickUploadTargetZimmetId = '';
     let deferredPwaPrompt = null;
 
@@ -2632,7 +2633,7 @@ function doPost(e) {
       if (counter) counter.textContent = `${lightboxGalleryIndex + 1} / ${lightboxGallery.length}`;
     }
 
-    function openLightboxModal({ title, imgSrc, pdfData, fileName, gallery = null, startIndex = 0 }) {
+    function openLightboxModal({ title, imgSrc, pdfData, driveUrl = '', fileName, gallery = null, startIndex = 0 }) {
       document.getElementById('lightboxTitle').textContent = title || 'Belge Önizleme';
       const pdfFrame = document.getElementById('lightboxPdfFrame');
       const imgEl = document.getElementById('lightboxImg');
@@ -2663,8 +2664,14 @@ function doPost(e) {
         pdfFrame.classList.add('hidden');
         imgEl.src = imgSrc || '';
         imgEl.classList.remove('hidden');
-        dlBtn.href = imgSrc || '#';
-        dlBtn.download = fileName || 'belge.jpg';
+        dlBtn.href = driveUrl || imgSrc || '#';
+        if (driveUrl) {
+          dlBtn.target = '_blank';
+          dlBtn.removeAttribute('download');
+        } else {
+          dlBtn.removeAttribute('target');
+          dlBtn.download = fileName || 'belge.jpg';
+        }
       }
       openModal('modalLightbox');
     }
@@ -3478,6 +3485,9 @@ function doPost(e) {
             renderAll();
             setSyncBadge('ok', `${appConfig.projectId} Eşitlendi`);
             if (!silent) showToast('Firebase Firestore bulut verileri başarıyla yüklendi!');
+            if (typeof window.migrateZimmetBlobsToDrive === 'function') {
+              window.migrateZimmetBlobsToDrive(true);
+            }
           }
         }
       } catch (err) {
@@ -4854,11 +4864,12 @@ function doPost(e) {
       }
 
       grid.innerHTML = filtered.map(z => {
-        const hasCustomDoc = Boolean(z.docPreview || z.docPdf);
+        const hasCustomDoc = Boolean(z.docDriveUrl || z.docPreview || z.docPdf);
+        const driveTag = z.docDriveUrl ? " • Drive'da" : '';
         const docBadgeLabel = z.docType === 'PDF'
-          ? `PDF Zimmet Evrakı (${z.docName || 'Tutanak.pdf'})`
+          ? `PDF Zimmet Evrakı (${z.docName || 'Tutanak.pdf'})${driveTag}`
           : hasCustomDoc
-          ? `İmzalı Zimmet Evrakı (${z.docName || 'Görsel'})`
+          ? `İmzalı Zimmet Evrakı (${z.docName || 'Görsel'})${driveTag}`
           : 'Dijital Zimmet Tutanağı Hazır';
         const docBadgeClass = hasCustomDoc
           ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
@@ -8643,6 +8654,7 @@ KURALLAR:
         currentZimmetDocPdfDataUrl = '';
         currentZimmetDocType = '';
         currentZimmetDocName = '';
+        currentZimmetDocDriveUrl = '';
         document.getElementById('zimmetDocPreviewBadge')?.classList.add('hidden');
         renderZimmetModalPhotos();
         openModal('modalZimmet');
@@ -8653,14 +8665,32 @@ KURALLAR:
       document.getElementById('zimmetPhotoInput')?.addEventListener('change', async e => {
         const files = [...(e.target.files || [])];
         if (!files.length) return;
+        let driveCnt = 0;
+        const meta = {
+          kind: 'Zimmet_Foto',
+          name: document.getElementById('zimmetName')?.value || '',
+          serial: document.getElementById('zimmetSerial')?.value || '',
+          person: document.getElementById('zimmetPerson')?.value || ''
+        };
         for (const file of files) {
           const dataUrl = await fileToDataUrl(file);
-          const compressed = await compressImageDataUrl(dataUrl, 720, 0.65);
-          currentZimmetPhotos.push(compressed);
+          const compressed = await compressImageDataUrl(dataUrl, 1200, 0.78);
+          const up = typeof window.uploadZimmetAssetToDrive === 'function'
+            ? await window.uploadZimmetAssetToDrive(file.name, 'image/jpeg', compressed, meta)
+            : { ok: false };
+          if (up.ok && up.thumbUrl) {
+            currentZimmetPhotos.push(up.thumbUrl);
+            driveCnt++;
+          } else {
+            const compact = await compressImageDataUrl(dataUrl, 360, 0.52);
+            currentZimmetPhotos.push(compact);
+          }
         }
         renderZimmetModalPhotos();
         e.target.value = '';
-        showToast(`${files.length} fotoğraf eklendi (Toplam: ${currentZimmetPhotos.length}).`);
+        showToast(driveCnt > 0
+          ? `${files.length} fotoğraf Google Drive'a yüklendi (Toplam: ${currentZimmetPhotos.length}).`
+          : `${files.length} fotoğraf eklendi (Toplam: ${currentZimmetPhotos.length}).`);
       });
 
       document.getElementById('zimmetPhotosPreviewGrid')?.addEventListener('click', e => {
@@ -8671,23 +8701,36 @@ KURALLAR:
         renderZimmetModalPhotos();
       });
 
-      // Kart Üzerinden Tek Tıkla Çoklu Zimmet Fotoğrafı Ekleme
+      // Kart Üzerinden Tek Tıkla Çoklu Zimmet Fotoğrafı Ekleme (Otomatik Drive Yükleme)
       document.getElementById('quickCardZimmetPhotosInput')?.addEventListener('change', async e => {
         const files = [...(e.target.files || [])];
         if (!files.length || !quickUploadTargetZimmetPhotosId) return;
         const z = appState.zimmetler.find(x => x.id === quickUploadTargetZimmetPhotosId);
         if (!z) return;
+        showToast(`${files.length} fotoğraf Drive'a yükleniyor...`, 'info');
         const existing = getZimmetPhotos(z);
+        let driveCnt = 0;
         for (const file of files) {
           const dataUrl = await fileToDataUrl(file);
-          const compressed = await compressImageDataUrl(dataUrl, 720, 0.65);
-          existing.push(compressed);
+          const compressed = await compressImageDataUrl(dataUrl, 1200, 0.78);
+          const up = typeof window.uploadZimmetAssetToDrive === 'function'
+            ? await window.uploadZimmetAssetToDrive(file.name, 'image/jpeg', compressed, { kind: 'Zimmet_Foto', name: z.name, serial: z.serial, person: z.person })
+            : { ok: false };
+          if (up.ok && up.thumbUrl) {
+            existing.push(up.thumbUrl);
+            driveCnt++;
+          } else {
+            const compact = await compressImageDataUrl(dataUrl, 360, 0.52);
+            existing.push(compact);
+          }
         }
         z.photos = existing;
         z.photo = existing[0] || '';
         saveState();
         e.target.value = '';
-        showToast(`${z.name} için ${files.length} fotoğraf eklendi (Toplam: ${existing.length}).`);
+        showToast(driveCnt > 0
+          ? `✓ ${z.name} için ${driveCnt} fotoğraf Google Drive'a yüklendi!`
+          : `${z.name} için ${files.length} fotoğraf eklendi (Toplam: ${existing.length}).`);
       });
 
       document.getElementById('zimmetDocInput')?.addEventListener('change', async e => {
@@ -8696,57 +8739,96 @@ KURALLAR:
         const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
         const badge = document.getElementById('zimmetDocPreviewBadge');
         const badgeTxt = document.getElementById('zimmetDocPreviewName');
+        const meta = {
+          kind: 'Zimmet_Tutanak',
+          name: document.getElementById('zimmetName')?.value || '',
+          serial: document.getElementById('zimmetSerial')?.value || '',
+          person: document.getElementById('zimmetPerson')?.value || ''
+        };
 
         if (isPdf) {
           const pdfInfo = await processPdfFile(file);
-          currentZimmetDocPreviewUrl = pdfInfo.previewDataUrl;
-          currentZimmetDocPdfDataUrl = pdfInfo.pdfDataUrl;
+          const up = (typeof window.uploadZimmetAssetToDrive === 'function' && pdfInfo.rawPdfDataUrl)
+            ? await window.uploadZimmetAssetToDrive(file.name, 'application/pdf', pdfInfo.rawPdfDataUrl, meta)
+            : { ok: false };
+          if (up.ok) {
+            currentZimmetDocDriveUrl = up.viewUrl;
+            currentZimmetDocPreviewUrl = up.thumbUrl;
+            currentZimmetDocPdfDataUrl = '';
+          } else {
+            currentZimmetDocDriveUrl = '';
+            currentZimmetDocPreviewUrl = pdfInfo.previewDataUrl;
+            currentZimmetDocPdfDataUrl = pdfInfo.pdfDataUrl;
+          }
           currentZimmetDocType = 'PDF';
           currentZimmetDocName = file.name;
           badge?.classList.remove('hidden');
-          if (badgeTxt) badgeTxt.textContent = `PDF Zimmet Evrakı: ${file.name}`;
-          showToast(`Zimmet PDF evrakı (${file.name}) hazır.`);
+          if (badgeTxt) badgeTxt.textContent = up.ok ? `✓ Drive PDF: ${file.name}` : `PDF Zimmet Evrakı: ${file.name}`;
+          showToast(up.ok ? `✓ Zimmet PDF (${file.name}) Drive'a yüklendi.` : `Zimmet PDF evrakı (${file.name}) hazır.`);
         } else {
-          const r = new FileReader();
-          r.onload = async ev => {
-            currentZimmetDocPreviewUrl = await compressImageDataUrl(ev.target.result, 1000, 0.78);
-            currentZimmetDocPdfDataUrl = '';
-            currentZimmetDocType = 'Görsel';
-            currentZimmetDocName = file.name;
-            badge?.classList.remove('hidden');
-            if (badgeTxt) badgeTxt.textContent = `Zimmet Evrak Görseli: ${file.name}`;
-            showToast(`Zimmet evrak fotoğrafı (${file.name}) hazır.`);
-          };
-          r.readAsDataURL(file);
+          const rawUrl = await fileToDataUrl(file);
+          const compressed = await compressImageDataUrl(rawUrl, 1200, 0.8);
+          const up = typeof window.uploadZimmetAssetToDrive === 'function'
+            ? await window.uploadZimmetAssetToDrive(file.name, 'image/jpeg', compressed, meta)
+            : { ok: false };
+          if (up.ok) {
+            currentZimmetDocDriveUrl = up.viewUrl;
+            currentZimmetDocPreviewUrl = up.thumbUrl;
+          } else {
+            currentZimmetDocDriveUrl = '';
+            currentZimmetDocPreviewUrl = await compressImageDataUrl(rawUrl, 500, 0.65);
+          }
+          currentZimmetDocPdfDataUrl = '';
+          currentZimmetDocType = 'Görsel';
+          currentZimmetDocName = file.name;
+          badge?.classList.remove('hidden');
+          if (badgeTxt) badgeTxt.textContent = up.ok ? `✓ Drive Evrak: ${file.name}` : `Zimmet Evrak Görseli: ${file.name}`;
+          showToast(up.ok ? `✓ Zimmet evrakı (${file.name}) Drive'a yüklendi.` : `Zimmet evrak fotoğrafı (${file.name}) hazır.`);
         }
       });
 
-      // Kart Üzerinden Tek Tıkla Zimmet Evrakı (PDF / Fotoğraf) Yükleme
+      // Kart Üzerinden Tek Tıkla Zimmet Evrakı (PDF / Fotoğraf) Yükleme (Otomatik Drive)
       document.getElementById('quickCardZimmetDocInput')?.addEventListener('change', async e => {
         const file = e.target.files?.[0];
         if (!file || !quickUploadTargetZimmetId) return;
         const z = appState.zimmetler.find(x => x.id === quickUploadTargetZimmetId);
         if (!z) return;
         const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const meta = { kind: 'Zimmet_Tutanak', name: z.name, serial: z.serial, person: z.person };
         if (isPdf) {
           const pdfInfo = await processPdfFile(file);
-          z.docPreview = pdfInfo.previewDataUrl || makeZimmetDocSvgDataUri(z);
-          z.docPdf = pdfInfo.pdfDataUrl;
+          const up = (typeof window.uploadZimmetAssetToDrive === 'function' && pdfInfo.rawPdfDataUrl)
+            ? await window.uploadZimmetAssetToDrive(file.name, 'application/pdf', pdfInfo.rawPdfDataUrl, meta)
+            : { ok: false };
+          if (up.ok) {
+            z.docDriveUrl = up.viewUrl;
+            z.docPreview = up.thumbUrl;
+            z.docPdf = '';
+          } else {
+            z.docPreview = pdfInfo.previewDataUrl || makeZimmetDocSvgDataUri(z);
+            z.docPdf = pdfInfo.pdfDataUrl;
+          }
           z.docType = 'PDF';
           z.docName = file.name;
           saveState();
-          showToast(`${z.name} için PDF zimmet evrakı (${file.name}) kaydedildi!`);
+          showToast(up.ok ? `✓ ${z.name} PDF evrakı Drive'a yüklendi!` : `${z.name} için PDF zimmet evrakı (${file.name}) kaydedildi!`);
         } else {
-          const r = new FileReader();
-          r.onload = async ev => {
-            z.docPreview = await compressImageDataUrl(ev.target.result, 1000, 0.78);
-            z.docPdf = '';
-            z.docType = 'Görsel';
-            z.docName = file.name;
-            saveState();
-            showToast(`${z.name} için zimmet evrakı fotoğrafı kaydedildi!`);
-          };
-          r.readAsDataURL(file);
+          const rawUrl = await fileToDataUrl(file);
+          const compressed = await compressImageDataUrl(rawUrl, 1200, 0.8);
+          const up = typeof window.uploadZimmetAssetToDrive === 'function'
+            ? await window.uploadZimmetAssetToDrive(file.name, 'image/jpeg', compressed, meta)
+            : { ok: false };
+          if (up.ok) {
+            z.docDriveUrl = up.viewUrl;
+            z.docPreview = up.thumbUrl;
+          } else {
+            z.docPreview = await compressImageDataUrl(rawUrl, 500, 0.65);
+          }
+          z.docPdf = '';
+          z.docType = 'Görsel';
+          z.docName = file.name;
+          saveState();
+          showToast(up.ok ? `✓ ${z.name} evrak görseli Drive'a yüklendi!` : `${z.name} için zimmet evrakı fotoğrafı kaydedildi!`);
         }
         e.target.value = '';
       });
@@ -8772,7 +8854,8 @@ KURALLAR:
           docPreview: currentZimmetDocPreviewUrl,
           docPdf: currentZimmetDocPdfDataUrl,
           docType: currentZimmetDocType,
-          docName: currentZimmetDocName
+          docName: currentZimmetDocName,
+          docDriveUrl: currentZimmetDocDriveUrl
         };
         if (editId) {
           const idx = appState.zimmetler.findIndex(z => z.id === editId);
@@ -9057,11 +9140,16 @@ KURALLAR:
           const id = viewZimmetDocBtn.getAttribute('data-view-zimmet-doc');
           const z = appState.zimmetler.find(x => x.id === id);
           if (z) {
+            if (z.docDriveUrl && (z.docType === 'PDF' || !z.docPreview)) {
+              window.open(z.docDriveUrl, '_blank', 'noopener,noreferrer');
+              return;
+            }
             const previewImg = z.docPreview || makeZimmetDocSvgDataUri(z);
             openLightboxModal({
               title: `Zimmet Evrakı: ${z.name} (${z.serial}) — ${z.person}`,
               imgSrc: previewImg,
               pdfData: z.docPdf || '',
+              driveUrl: z.docDriveUrl || '',
               fileName: z.docName || `Zimmet_Evraki_${z.id}.${z.docPdf ? 'pdf' : 'svg'}`
             });
           }
@@ -9142,12 +9230,13 @@ KURALLAR:
             currentZimmetDocPdfDataUrl = z.docPdf || '';
             currentZimmetDocType = z.docType || '';
             currentZimmetDocName = z.docName || '';
+            currentZimmetDocDriveUrl = z.docDriveUrl || '';
 
             const badge = document.getElementById('zimmetDocPreviewBadge');
             const badgeTxt = document.getElementById('zimmetDocPreviewName');
-            if (currentZimmetDocPreviewUrl || currentZimmetDocPdfDataUrl) {
+            if (currentZimmetDocDriveUrl || currentZimmetDocPreviewUrl || currentZimmetDocPdfDataUrl) {
               badge?.classList.remove('hidden');
-              if (badgeTxt) badgeTxt.textContent = `${currentZimmetDocType || 'Evrak'} Kayıtlı: ${currentZimmetDocName || 'Zimmet Tutanağı'}`;
+              if (badgeTxt) badgeTxt.textContent = `${currentZimmetDocType || 'Evrak'} Kayıtlı: ${currentZimmetDocName || 'Zimmet Tutanağı'}${currentZimmetDocDriveUrl ? " (Drive'da)" : ''}`;
             } else {
               badge?.classList.add('hidden');
             }
@@ -10068,6 +10157,103 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
         } catch (err) {
           return { ok: false, error: `Drive yükleme bağlantı hatası (${err?.message || 'CORS'}). "Erişimi olanlar: Herkes" seçili olduğundan emin olun.` };
         }
+      };
+
+      window.uploadZimmetAssetToDrive = async function uploadZimmetAssetToDrive(fileName, mimeType, dataUrl, labelMeta = {}) {
+        const res = await uploadFileToGoogleDrive(fileName, mimeType, dataUrl, {
+          type: labelMeta.kind || 'Zimmet',
+          vehicleOrSite: labelMeta.serial || labelMeta.name || 'Ekipman',
+          policyNo: labelMeta.person || 'Personel'
+        });
+        if (res && res.ok && res.fileId) {
+          return {
+            ok: true,
+            fileId: res.fileId,
+            viewUrl: res.viewUrl || (`https://drive.google.com/file/d/${res.fileId}/view`),
+            thumbUrl: `https://drive.google.com/thumbnail?id=${res.fileId}&sz=w1200`
+          };
+        }
+        return { ok: false, error: res?.error || 'Drive yükleme başarısız' };
+      };
+
+      window.migrateZimmetBlobsToDrive = async function migrateZimmetBlobsToDrive(silent = true) {
+        if (window.__zimmetMigrating) return 0;
+        const list = Array.isArray(appState.zimmetler) ? appState.zimmetler : [];
+        const isBigDataUri = v => typeof v === 'string' && /^data:(?:image\/[a-zA-Z0-9.+-]+|application\/pdf);base64,/i.test(v) && v.length > 500;
+        let migratedCount = 0;
+        window.__zimmetMigrating = true;
+        try {
+          for (const z of list) {
+            let changed = false;
+            const photos = getZimmetPhotos(z);
+            if (photos.some(isBigDataUri)) {
+              const nextPhotos = [];
+              for (let i = 0; i < photos.length; i++) {
+                const src = photos[i];
+                if (isBigDataUri(src)) {
+                  const mimeM = src.match(/^data:([^;]+);/i);
+                  const mime = mimeM ? mimeM[1] : 'image/jpeg';
+                  const ext = mime.includes('png') ? 'png' : 'jpg';
+                  const up = await uploadZimmetAssetToDrive(`Zimmet_Foto_${i + 1}.${ext}`, mime, src, {
+                    kind: 'Zimmet_Foto',
+                    name: z.name,
+                    serial: z.serial,
+                    person: z.person
+                  });
+                  if (up.ok && up.thumbUrl) {
+                    nextPhotos.push(up.thumbUrl);
+                    changed = true;
+                  } else {
+                    nextPhotos.push(src);
+                  }
+                } else {
+                  nextPhotos.push(src);
+                }
+              }
+              z.photos = nextPhotos;
+              z.photo = nextPhotos[0] || '';
+            }
+            if (isBigDataUri(z.docPdf)) {
+              const upPdf = await uploadZimmetAssetToDrive(z.docName || `Zimmet_Tutanak_${z.id}.pdf`, 'application/pdf', z.docPdf, {
+                kind: 'Zimmet_Tutanak',
+                name: z.name,
+                serial: z.serial,
+                person: z.person
+              });
+              if (upPdf.ok && upPdf.viewUrl) {
+                z.docDriveUrl = upPdf.viewUrl;
+                z.docPreview = upPdf.thumbUrl;
+                z.docPdf = '';
+                changed = true;
+              }
+            }
+            if (isBigDataUri(z.docPreview)) {
+              const mimeM = z.docPreview.match(/^data:([^;]+);/i);
+              const mime = mimeM ? mimeM[1] : 'image/jpeg';
+              const ext = mime.includes('png') ? 'png' : 'jpg';
+              const upPrev = await uploadZimmetAssetToDrive(z.docName || `Zimmet_Evrak_${z.id}.${ext}`, mime, z.docPreview, {
+                kind: 'Zimmet_Tutanak',
+                name: z.name,
+                serial: z.serial,
+                person: z.person
+              });
+              if (upPrev.ok && upPrev.thumbUrl) {
+                if (!z.docDriveUrl) z.docDriveUrl = upPrev.viewUrl;
+                z.docPreview = upPrev.thumbUrl;
+                changed = true;
+              }
+            }
+            if (changed) migratedCount++;
+          }
+          if (migratedCount > 0) {
+            saveState();
+            renderAll();
+            if (!silent) showToast(`✓ ${migratedCount} zimmet kaydındaki medya Drive'a taşındı ve veritabanı hafifletildi!`);
+          }
+        } finally {
+          window.__zimmetMigrating = false;
+        }
+        return migratedCount;
       };
 
       window.upsertSigortaPolicy = function upsertSigortaPolicy(payload) {
