@@ -804,6 +804,7 @@
           <div class="flex flex-wrap items-center gap-2 flex-1 lg:max-w-2xl">
             <input id="driveScriptUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec (Otomatik PDF Yükleme Köprüsü)" class="flex-1 min-w-[220px] px-3 py-1.5 text-xs rounded-lg border border-sky-300 bg-white focus:border-sky-500 outline-none font-mono" />
             <button id="btnSaveDriveScriptUrl" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition">Köprüyü Kaydet</button>
+            <button id="btnTestDriveScriptUrl" type="button" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition">Test Et</button>
             <button id="btnOpenDriveSetupModal" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span>1 Dk Kurulum Kodu</span>
@@ -815,6 +816,7 @@
       <!-- Yapay Zeka ile Poliçe PDF Yükle & Otomatik Drive'a Kaydet -->
       <div id="sigortaAiDropzone" class="bg-white rounded-xl border-2 border-dashed border-sky-300 hover:border-sky-500 p-4 sm:p-5 transition cursor-pointer shadow-xs">
         <input id="sigortaAiFileInput" type="file" accept=".pdf,image/*" multiple class="hidden" />
+        <input id="sigortaCardDriveFileInput" type="file" accept=".pdf,image/*" class="hidden" />
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
             <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
@@ -1968,8 +1970,8 @@
         </div>
         <ol class="list-decimal pl-5 space-y-1.5 font-medium">
           <li><a href="https://script.google.com" target="_blank" rel="noopener noreferrer" class="text-sky-700 font-bold underline">script.google.com</a> adresine gidip <b>Yeni Proje</b> oluşturun.</li>
-          <li>Aşağıdaki kodu kopyalayıp editördeki tüm metnin yerine yapıştırın ve kaydedin.</li>
-          <li>Sağ üstten <b>Dağıt (Deploy) → Yeni Dağıtım → Tür: Web Uygulaması</b> seçin. <i>Yürütücü: Ben</i>, <i>Erişimi olanlar: Herkes (Anyone)</i> yapıp <b>Dağıt</b> deyin ve verilen <code>https://script.google.com/macros/s/.../exec</code> adresini uygulamaya yapıştırın.</li>
+          <li>Aşağıdaki kodu kopyalayıp editördeki tüm metnin yerine yapıştırın ve kaydedin (<b>Ctrl+S</b>).</li>
+          <li class="bg-rose-50 border border-rose-200 rounded-lg p-2 text-rose-900"><b class="text-rose-700">ÇOK ÖNEMLİ:</b> Sağ üstten <b>Dağıt (Deploy) → Yeni Dağıtım → Tür: Web Uygulaması</b> seçin. <b>Yürütücü (Execute as): Ben</b> ve <b>Erişimi olanlar (Who has access): Herkes (Anyone)</b> seçili olmalıdır! Ardından <b>Dağıt</b> deyip Google Drive izin onayında <i>"Gelişmiş → ... (güvenli değil) sayfasına git → İzin Ver"</i> adımlarını onaylayın. Aksi halde tarayıcı <code>Failed to fetch (403)</code> hatası verir.</li>
         </ol>
         <div class="relative">
           <div class="flex items-center justify-between mb-1.5">
@@ -1979,7 +1981,12 @@
               <span>Apps Script Kodunu Kopyala</span>
             </button>
           </div>
-          <pre id="appsScriptCodeBlock" class="bg-slate-900 text-emerald-300 p-3.5 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed select-all">function doPost(e) {
+          <pre id="appsScriptCodeBlock" class="bg-slate-900 text-emerald-300 p-3.5 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed select-all">function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, status: 'ready' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var targetFolder = null;
@@ -2572,7 +2579,7 @@
           await page1.render({ canvasContext: ctx, viewport }).promise;
           pagePreviewDataUrl = canvas.toDataURL('image/jpeg', 0.82);
 
-          for (let i = 1; i <= Math.min(numPages, 5); i++) {
+          for (let i = 1; i <= Math.min(numPages, 15); i++) {
             const p = await pdf.getPage(i);
             const tc = await p.getTextContent();
             let lastY = null;
@@ -9688,7 +9695,7 @@ KURALLAR:
                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                     <span>Drive Poliçe PDF</span>
                   </a>
-                ` : `<span class="text-[11px] text-slate-400 italic">Drive PDF linki eklenmemiş</span>`}
+                ` : `<button type="button" data-upload-drive-sigorta="${escapeHtml(s.id)}" class="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 text-xs font-bold transition"><i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i><span>PDF'i Drive'a Yükle</span></button>`}
               </div>
             </div>
           `;
@@ -9853,12 +9860,12 @@ KURALLAR:
 
         // 2. Plaka veya Şantiye/Birim tespiti
         let vehicleOrSite = '';
-        const badMid = new Set(['TL', 'EUR', 'USD', 'KDV', 'NO', 'OCA', 'SUB', 'MAR', 'NIS', 'MAY', 'HAZ', 'TEM', 'AGU', 'EYL', 'EKI', 'KAS', 'ARA', 'SA', 'KM', 'AD', 'KG']);
-        const explicitPlate = text.match(/(?:Plaka\s*(?:No|Numarası)?|Araç\s*Plaka)\s*[:#\-]?\s*(0[1-9]|[1-7]\d|8[01])\s*([A-ZÇĞİÖŞÜ]{1,3})\s*(\d{2,5})/i);
+        const badMid = new Set(['TL', 'EUR', 'USD', 'KDV', 'NO', 'OCA', 'SUB', 'MAR', 'NIS', 'MAY', 'HAZ', 'TEM', 'AGU', 'EYL', 'EKI', 'KAS', 'ARA', 'SA', 'KM', 'AD', 'KG', 'TC', 'TR', 'VK']);
+        const explicitPlate = text.match(/(?:Plaka\s*(?:No|Numarası|Numarasi)?|Araç\s*Plaka|Riziko\s*Plaka)\s*[:.#\-]?\s*(0[1-9]|[1-7]\d|8[01])\s*([A-ZÇĞİÖŞÜ]{1,3})\s*(\d{2,5})/i);
         if (explicitPlate) {
           vehicleOrSite = `${explicitPlate[1]} ${explicitPlate[2].toUpperCase()} ${explicitPlate[3]}`;
         } else {
-          const plateMatches = [...text.toUpperCase().matchAll(/\b(0[1-9]|[1-7]\d|8[01])\s*([A-PR-VY-Z]{1,3})\s*(\d{2,4})\b/g)];
+          const plateMatches = [...text.toUpperCase().matchAll(/\b(0[1-9]|[1-7]\d|8[01])\s*([A-PR-VY-Z]{1,3})\s*(\d{2,5})\b/g)];
           for (const pm of plateMatches) {
             if (!badMid.has(pm[2])) {
               vehicleOrSite = `${pm[1]} ${pm[2]} ${pm[3]}`;
@@ -9954,7 +9961,7 @@ KURALLAR:
 
 KURALLAR:
 - type: Poliçenin türünü belirle: "Kasko", "Trafik Sigortası", "Ticari Paket", "Şantiye All-Risk", "İMM / Ek Teminat", "DASK / İşyeri" veya "Diğer".
-- vehicleOrSite: Araç sigortası ise standart boşluklu plaka yaz (ör. "34 KV 8909"). Şantiye veya işyeri poliçesi ise bilinen şantiyelerden (${sites.length ? sites.join(', ') : 'yok'}) eşleşeni veya "Merkez Ofis" / adresi yaz.
+- vehicleOrSite: ÇOK ÖNEMLİ: Plaka bazen 2., 3. veya 4. sayfada "Sigortalı Araç / Plaka No / Riziko Adresi" satırında yazar (ör. "34KV8909" veya "06 ABC 123"). Tüm metni tara; araç sigortası ise standart boşluklu plaka yaz. Plaka yoksa şasi/motor no veya bilinen şantiyelerden (${sites.length ? sites.join(', ') : 'yok'}) / "Merkez Ofis" / işyeri adını yaz. Kesinlikle "Belirtilmemiş" veya "Yok" yazma.
 - Bilinen araç plakaları: ${vehicles.length ? vehicles.join(', ') : 'yok'}.
 - title: Kısa anlaşılır başlık oluştur (ör. "34 KV 8909 Genişletilmiş Kasko" veya "Merkez Ofis Ticari Paket").
 - company: Sigorta şirketi (Allianz, Anadolu Sigorta, Axa, Türkiye Sigorta, HDI, Sompo vb.).
@@ -9964,7 +9971,7 @@ KURALLAR:
 - emergencyPhone: Poliçedeki 7/24 hasar ihbar / çekici telefonu.
 - coverageNotes: Teminat özeti (İMM limiti, ikame araç, muafiyet, kaza anında önemli detaylar).
 
-${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : ''}`;
+${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : ''}`;
       }
 
       async function callGeminiPolicyParser(extractedText, previewDataUrl = '') {
@@ -10032,6 +10039,7 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : '
         try {
           const resp = await fetch(scriptUrl, {
             method: 'POST',
+            redirect: 'follow',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               fileName: cleanName,
@@ -10041,17 +10049,22 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : '
               meta
             })
           });
-          if (!resp.ok) return { ok: false, error: `HTTP ${resp.status}` };
+          if (!resp.ok) {
+            if (resp.status === 401 || resp.status === 403) {
+              return { ok: false, error: 'Apps Script erişim izni kapalı ("Erişimi olanlar: Herkes" seçilmeli). "1 Dk Kurulum Kodu" butonuna bakın.' };
+            }
+            return { ok: false, error: `HTTP ${resp.status}` };
+          }
           const data = await resp.json().catch(() => null);
           if (!data || !data.ok) {
-            return { ok: false, error: data?.error || 'Apps Script geçerli yanıt vermedi.' };
+            return { ok: false, error: data?.error || 'Apps Script geçerli yanıt vermedi (Dağıtım "Web Uygulaması" + "Herkes" olmalı).' };
           }
           if (data.folderUrl && !appState.driveArchiveUrl) {
             appState.driveArchiveUrl = data.folderUrl;
           }
           return data;
         } catch (err) {
-          return { ok: false, error: err?.message || 'Drive yükleme bağlantı hatası' };
+          return { ok: false, error: 'Apps Script erişim izni kapalı ("Erişimi olanlar: Herkes" seçilmeli). "1 Dk Kurulum Kodu" butonuna bakın.' };
         }
       };
 
@@ -10113,18 +10126,27 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : '
           aiParsed = await callGeminiPolicyParser(extractedText, previewDataUrl);
         }
 
+        const isPlaceholderVal = v => /^(belirtilmemi[sş]|bilinmiyor|yok|bulunamad[ıi]|none|null|undefined|n\/a|-|\?)$/i.test(String(v || '').trim());
+        const pickVal = (aiV, fbV, def = '') => {
+          const a = String(aiV || '').trim();
+          const b = String(fbV || '').trim();
+          if (a && !isPlaceholderVal(a)) return a;
+          if (b && !isPlaceholderVal(b)) return b;
+          return def;
+        };
+
         const merged = {
-          type: aiParsed?.type || fallbackParsed.type || 'Diğer',
-          vehicleOrSite: (aiParsed?.vehicleOrSite || fallbackParsed.vehicleOrSite || '').trim(),
-          title: (aiParsed?.title || fallbackParsed.title || file.name).trim(),
-          company: (aiParsed?.company || fallbackParsed.company || '').trim(),
-          policyNo: (aiParsed?.policyNo || fallbackParsed.policyNo || '').trim(),
+          type: (!isPlaceholderVal(aiParsed?.type) && aiParsed?.type) ? aiParsed.type : (fallbackParsed.type || 'Diğer'),
+          vehicleOrSite: pickVal(aiParsed?.vehicleOrSite, fallbackParsed.vehicleOrSite, ''),
+          title: pickVal(aiParsed?.title, fallbackParsed.title, file.name),
+          company: pickVal(aiParsed?.company, fallbackParsed.company, ''),
+          policyNo: pickVal(aiParsed?.policyNo, fallbackParsed.policyNo, ''),
           startDate: aiParsed?.startDate || fallbackParsed.startDate || '',
           endDate: aiParsed?.endDate || fallbackParsed.endDate || '',
           premium: Number(aiParsed?.premium || fallbackParsed.premium || 0),
-          emergencyPhone: (aiParsed?.emergencyPhone || fallbackParsed.emergencyPhone || '').trim(),
-          agentName: (aiParsed?.agentName || fallbackParsed.agentName || '').trim(),
-          coverageNotes: (aiParsed?.coverageNotes || fallbackParsed.coverageNotes || '').trim()
+          emergencyPhone: pickVal(aiParsed?.emergencyPhone, fallbackParsed.emergencyPhone, ''),
+          agentName: pickVal(aiParsed?.agentName, fallbackParsed.agentName, ''),
+          coverageNotes: pickVal(aiParsed?.coverageNotes, fallbackParsed.coverageNotes, '')
         };
         if (!merged.emergencyPhone && merged.company) {
           const ins = INSURER_EMERGENCY_PHONES.find(x => normalizeTrFold(merged.company).includes(x.key));
@@ -10213,6 +10235,32 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : '
         saveState();
         renderSigortalar();
         showToast(url ? 'Otomatik Drive yükleme köprüsü kaydedildi ve tüm cihazlara eşitlendi!' : 'Drive yükleme köprüsü temizlendi.');
+      });
+      document.getElementById('btnTestDriveScriptUrl')?.addEventListener('click', async () => {
+        const url = (document.getElementById('driveScriptUrlInput')?.value || appState.driveScriptUrl || '').trim();
+        if (!url) { showToast('Önce Google Apps Script URL adresini yapıştırın.', 'error'); return; }
+        appState.driveScriptUrl = url;
+        saveState();
+        const btn = document.getElementById('btnTestDriveScriptUrl');
+        if (btn) { btn.disabled = true; btn.textContent = 'Test ediliyor...'; }
+        try {
+          const resp = await fetch(url, { method: 'GET', redirect: 'follow' });
+          if (!resp.ok) {
+            showToast(`Köprü erişim hatası (HTTP ${resp.status}). Apps Script'te "Erişimi olanlar: Herkes" seçili olmalıdır!`, 'error');
+          } else {
+            const data = await resp.json().catch(() => null);
+            if (data && data.ok) {
+              showToast('✓ Google Drive köprüsü sorunsuz çalışıyor!');
+            } else {
+              showToast('Köprü erişildi (HTTP 200) ancak JSON yanıtı doğrulanamadı — kodun güncel olduğundan emin olun.', 'info');
+            }
+          }
+        } catch (err) {
+          showToast('Köprü engellendi (403/CORS): Apps Script Dağıtım ayarında "Erişimi olanlar: Herkes (Anyone)" seçip izin onayını tamamlayın.', 'error');
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = 'Test Et'; }
+          renderSigortalar();
+        }
       });
       document.getElementById('btnOpenDriveSetupModal')?.addEventListener('click', () => {
         openModal('modalDriveScriptSetup');
@@ -10333,7 +10381,42 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 16000)}` : '
         closeModal('modalSigorta');
         showToast(editId ? 'Sigorta poliçesi güncellendi.' : 'Yeni sigorta poliçesi kaydedildi.');
       });
+      let pendingCardDriveUploadId = '';
+      document.getElementById('sigortaCardDriveFileInput')?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        const targetId = pendingCardDriveUploadId;
+        pendingCardDriveUploadId = '';
+        e.target.value = '';
+        if (!file || !targetId) return;
+        const item = (appState.sigortalar || []).find(x => x.id === targetId);
+        if (!item) return;
+        showToast(`${file.name} Google Drive'a yükleniyor...`, 'info');
+        try {
+          const rawUrl = await fileToDataUrl(file);
+          const mime = file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'image/jpeg');
+          const res = await uploadFileToGoogleDrive(file.name, mime, rawUrl, item);
+          if (res.ok && res.viewUrl) {
+            item.driveUrl = res.viewUrl;
+            item.updatedAt = new Date().toISOString();
+            saveState();
+            renderAll();
+            showToast('✓ Poliçe PDF dosyası Google Drive\'a yüklendi ve karta bağlandı!');
+          } else {
+            showToast(res.skipped
+              ? 'Önce üstteki Google Drive yükleme köprüsünü (Apps Script URL) kaydedin.'
+              : `Drive Yükleme Hatası: ${res.error || 'Bilinmeyen hata'}`, 'error');
+          }
+        } catch (err) {
+          showToast(`Dosya yüklenemedi: ${err?.message || err}`, 'error');
+        }
+      });
       document.getElementById('sigortaCardsGrid')?.addEventListener('click', (e) => {
+        const upDriveBtn = e.target.closest('[data-upload-drive-sigorta]');
+        if (upDriveBtn) {
+          pendingCardDriveUploadId = upDriveBtn.getAttribute('data-upload-drive-sigorta') || '';
+          document.getElementById('sigortaCardDriveFileInput')?.click();
+          return;
+        }
         const editBtn = e.target.closest('[data-edit-sigorta]');
         if (editBtn) {
           openSigortaModal(editBtn.getAttribute('data-edit-sigorta'));
