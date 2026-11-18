@@ -2459,11 +2459,11 @@ function doPost(e) {
       if (!Array.isArray(st.sigortalar)) {
         st.sigortalar = [];
       }
-      if (typeof st.driveArchiveUrl !== 'string') {
-        st.driveArchiveUrl = '';
+      if (typeof st.driveArchiveUrl !== 'string' || !st.driveArchiveUrl.trim()) {
+        st.driveArchiveUrl = 'https://drive.google.com/drive/folders/1a1N5YbYShxwqbI1PLLRwY8Tlq2Mj7uu4';
       }
-      if (typeof st.driveScriptUrl !== 'string') {
-        st.driveScriptUrl = '';
+      if (typeof st.driveScriptUrl !== 'string' || !st.driveScriptUrl.trim()) {
+        st.driveScriptUrl = 'https://script.google.com/macros/s/AKfycbz9Px3j9ftK4ZOJ0Jm8MeM-VTGCA4IDhYUEd8R9yy6drbvCifRxWQDbNwzCQs-YQuECtQ/exec';
       }
       // Faturaların sistemde dosya olarak yer kaplamaması için sadece metin içeriklerini tut
       st.faturalar = st.faturalar.map(f => {
@@ -10039,6 +10039,8 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
         try {
           const resp = await fetch(scriptUrl, {
             method: 'POST',
+            mode: 'cors',
+            credentials: 'omit',
             redirect: 'follow',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -10064,7 +10066,7 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
           }
           return data;
         } catch (err) {
-          return { ok: false, error: 'Apps Script erişim izni kapalı ("Erişimi olanlar: Herkes" seçilmeli). "1 Dk Kurulum Kodu" butonuna bakın.' };
+          return { ok: false, error: `Drive yükleme bağlantı hatası (${err?.message || 'CORS'}). "Erişimi olanlar: Herkes" seçili olduğundan emin olun.` };
         }
       };
 
@@ -10244,19 +10246,22 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
         const btn = document.getElementById('btnTestDriveScriptUrl');
         if (btn) { btn.disabled = true; btn.textContent = 'Test ediliyor...'; }
         try {
-          const resp = await fetch(url, { method: 'GET', redirect: 'follow' });
-          if (!resp.ok) {
-            showToast(`Köprü erişim hatası (HTTP ${resp.status}). Apps Script'te "Erişimi olanlar: Herkes" seçili olmalıdır!`, 'error');
+          const testDataUrl = 'data:text/plain;base64,' + btoa('Santiye Stok Drive Baglanti Testi OK');
+          const res = await uploadFileToGoogleDrive(
+            'Drive_Baglanti_Testi.txt',
+            'text/plain',
+            testDataUrl,
+            { type: 'Test', vehicleOrSite: 'Baglanti', policyNo: 'OK' }
+          );
+          if (res && res.ok) {
+            if (res.folderUrl) appState.driveArchiveUrl = res.folderUrl;
+            saveState();
+            showToast('✓ Google Drive bağlantısı doğrulandı! Test dosyası Drive klasörünüze yüklendi.');
           } else {
-            const data = await resp.json().catch(() => null);
-            if (data && data.ok) {
-              showToast('✓ Google Drive köprüsü sorunsuz çalışıyor!');
-            } else {
-              showToast('Köprü erişildi (HTTP 200) ancak JSON yanıtı doğrulanamadı — kodun güncel olduğundan emin olun.', 'info');
-            }
+            showToast(res?.error || 'Google Drive testi başarısız oldu.', 'error');
           }
         } catch (err) {
-          showToast('Köprü engellendi (403/CORS): Apps Script Dağıtım ayarında "Erişimi olanlar: Herkes (Anyone)" seçip izin onayını tamamlayın.', 'error');
+          showToast(`Köprü test hatası: ${err?.message || err}`, 'error');
         } finally {
           if (btn) { btn.disabled = false; btn.textContent = 'Test Et'; }
           renderSigortalar();
