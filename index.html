@@ -181,6 +181,11 @@
           <span>Faturalar</span>
           <span id="badgeFaturaCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-slate-200">0</span>
         </button>
+        <button type="button" data-tab="sigortalar" class="nav-tab-btn inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition text-slate-300 hover:text-white hover:bg-slate-800">
+          <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-400"></i>
+          <span>Sigortalar &amp; Poliçeler</span>
+          <span id="badgeSigortaCount" class="px-1.5 py-0.2 text-[10px] rounded-full bg-slate-800 text-slate-200">0</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -746,6 +751,105 @@
       </div>
 
       <div id="faturaCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- 9. SEKME: SİGORTALAR, POLİÇELER & GOOGLE DRIVE ARŞİVİ -->
+    <section id="tab-sigortalar" class="tab-panel hidden space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-rose-600"></i>
+            <span>Sigortalar, Poliçeler &amp; Acil Durum Erişimi</span>
+          </h2>
+          <p class="text-xs text-slate-500">Araç Kasko/Trafik, Ticari Paket ve Şantiye poliçeleri. PDF dosyaları Drive arşivinizde tutulur; sistem şişmez.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnExportSigortalarExcel" type="button" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Excel İndir</span>
+          </button>
+          <button id="btnOpenSigortaModal" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition">
+            <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i>
+            <span>Yeni Poliçe Ekle</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Google Drive Ana Arşiv Klasörü Çubuğu -->
+      <div class="bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200 rounded-xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-start gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="hard-drive" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-slate-900">Google Drive Ana Arşiv Klasörünüz (4 TB Alan)</p>
+            <p class="text-[11px] text-slate-600">Poliçe, ruhsat, sözleşme ve büyük belgelerinizi Drive klasörünüze yükleyip buraya kök klasör linkini kaydedebilirsiniz.</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 flex-1 lg:max-w-xl">
+          <input id="driveArchiveUrlInput" type="url" placeholder="https://drive.google.com/drive/folders/..." class="flex-1 min-w-[220px] px-3 py-2 text-xs rounded-lg border border-sky-300 bg-white focus:border-sky-500 outline-none" />
+          <button id="btnSaveDriveArchiveUrl" type="button" class="px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold transition">Kaydet</button>
+          <a id="btnOpenDriveArchive" href="https://drive.google.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white hover:bg-sky-100 text-sky-800 border border-sky-300 text-xs font-bold transition">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <span>Drive'ı Aç</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- KPI Özeti -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Toplam Poliçe</p>
+          <p id="sigStatTotal" class="text-xl font-extrabold text-slate-900 mt-1">0 Adet</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+          <p class="text-[11px] font-bold text-emerald-700 uppercase">Aktif Poliçeler</p>
+          <p id="sigStatActive" class="text-xl font-extrabold text-emerald-700 mt-1">0 Adet</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+          <p class="text-[11px] font-bold text-rose-700 uppercase">Yaklaşan / Süresi Dolmuş</p>
+          <p id="sigStatAlert" class="text-xl font-extrabold text-rose-600 mt-1">0 Adet</p>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Toplam Yıllık Prim</p>
+          <p id="sigStatPremium" class="text-xl font-extrabold text-slate-900 mt-1 tabular-nums">₺0,00</p>
+        </div>
+      </div>
+
+      <!-- Filtre Çubuğu -->
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2">
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Plaka, Şantiye, Poliçe No veya Şirket Ara</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="sigortaSearchInput" type="text" placeholder="Örn: 34 KV 8909, Kasko, Ticari Paket, Allianz, 123456..." class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Poliçe Türü</label>
+          <select id="filterSigortaType" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Türler</option>
+            <option value="Kasko">Kasko</option>
+            <option value="Trafik Sigortası">Trafik Sigortası</option>
+            <option value="Ticari Paket">Ticari Paket</option>
+            <option value="Şantiye All-Risk">Şantiye All-Risk</option>
+            <option value="İMM / Ek Teminat">İMM / Ek Teminat</option>
+            <option value="DASK / İşyeri">DASK / İşyeri</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-500 uppercase mb-1">Geçerlilik Durumu</label>
+          <select id="filterSigortaStatus" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+            <option value="ALL">Tüm Durumlar</option>
+            <option value="ACTIVE">Aktif</option>
+            <option value="EXPIRING">Yaklaşan (≤ 30 Gün)</option>
+            <option value="EXPIRED">Süresi Dolmuş</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="sigortaCardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
     </section>
 
   </main>
@@ -1710,6 +1814,98 @@
     </div>
   </div>
 
+  <!-- SİGORTA / POLİÇE EKLE & DÜZENLE MODALI -->
+  <div id="modalSigorta" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden my-6">
+      <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i data-lucide="shield-alert" class="w-5 h-5 text-rose-400"></i>
+          <h3 id="modalSigortaTitle" class="text-base font-bold">Yeni Sigorta Poliçesi Ekle</h3>
+        </div>
+        <button type="button" data-close-modal="modalSigorta" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="formSigorta" class="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
+        <input id="sigortaEditId" type="hidden" value="" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Poliçe Türü *</label>
+            <select id="sigortaTypeInput" required class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 bg-white focus:border-amber-500 outline-none">
+              <option value="Kasko">Kasko</option>
+              <option value="Trafik Sigortası">Trafik Sigortası</option>
+              <option value="Ticari Paket">Ticari Paket</option>
+              <option value="Şantiye All-Risk">Şantiye All-Risk</option>
+              <option value="İMM / Ek Teminat">İMM / Ek Teminat</option>
+              <option value="DASK / İşyeri">DASK / İşyeri</option>
+              <option value="Diğer">Diğer</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Bağlı Plaka / Şantiye / Birim *</label>
+            <input id="sigortaVehicleSiteInput" list="sigortaVehicleSiteDatalist" type="text" required placeholder="Örn: 34 KV 8909 veya Merkez Ofis" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+            <datalist id="sigortaVehicleSiteDatalist"></datalist>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Poliçe Başlığı / Açıklama *</label>
+            <input id="sigortaTitleInput" type="text" required placeholder="Örn: 34 KV 8909 Genişletilmiş Kasko" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Sigorta Şirketi *</label>
+            <input id="sigortaCompanyInput" type="text" required placeholder="Örn: Allianz, Anadolu Sigorta, Axa, HDI" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Poliçe No *</label>
+            <input id="sigortaPolicyNoInput" type="text" required placeholder="Örn: 000123456789" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 font-mono focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Başlangıç Tarihi</label>
+            <input id="sigortaStartDateInput" type="date" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Bitiş Tarihi *</label>
+            <input id="sigortaEndDateInput" type="date" required class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Yıllık Prim (₺)</label>
+            <input id="sigortaPremiumInput" type="number" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-rose-700 uppercase mb-1">Acil Hasar / Çekici Tel</label>
+            <input id="sigortaEmergencyPhoneInput" type="tel" placeholder="Örn: 0850 222 0 111" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-rose-300 focus:border-rose-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Acente / İlgili Kişi</label>
+            <input id="sigortaAgentInput" type="text" placeholder="Örn: Ahmet Yılmaz Sigorta" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+          </div>
+        </div>
+
+        <div class="bg-sky-50 border border-sky-200 rounded-xl p-3 space-y-1.5">
+          <label class="block text-[11px] font-bold text-sky-900 uppercase">Google Drive PDF / Dosya Linki</label>
+          <input id="sigortaDriveUrlInput" type="url" placeholder="https://drive.google.com/file/d/.../view" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-sky-300 bg-white focus:border-sky-500 outline-none" />
+          <p class="text-[11px] text-sky-800">Google Drive'daki poliçe PDF'ine sağ tıklayıp <b>Paylaş → Bağlantıyı kopyala</b> diyerek buraya yapıştırın. Uygulama boyutu hiç artmaz.</p>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Teminat Özeti / Kaza Anı Notları</label>
+          <textarea id="sigortaNotesInput" rows="2" placeholder="Örn: İMM 5 Milyon TL, ikame araç 15 gün, cam muafiyetsiz, kaza anında çekici için yukarıdaki numarayı arayın..." class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+          <button type="button" data-close-modal="modalSigorta" class="px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">İptal</button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">Poliçeyi Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- KULLANICI & ROL YÖNETİMİ MODALI (ADMIN ONLY) -->
   <div id="modalUsers" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -2149,6 +2345,12 @@
       }
       if (!Array.isArray(st.aracBakimlar)) {
         st.aracBakimlar = getInitialSeedState().aracBakimlar;
+      }
+      if (!Array.isArray(st.sigortalar)) {
+        st.sigortalar = [];
+      }
+      if (typeof st.driveArchiveUrl !== 'string') {
+        st.driveArchiveUrl = '';
       }
       // Faturaların sistemde dosya olarak yer kaplamaması için sadece metin içeriklerini tut
       st.faturalar = st.faturalar.map(f => {
@@ -3422,6 +3624,7 @@
       renderAraclarim();
       renderTransferler();
       renderFaturalar();
+      renderSigortalar();
       if (currentDetailSiteName && !document.getElementById('modalSiteDetail')?.classList.contains('hidden')) {
         renderSiteDetailModal();
       }
@@ -3440,6 +3643,7 @@
       const transferCount = (appState.transferler || []).length;
       const faturaCount = (appState.faturalar || []).length;
       const bakimCount = (appState.aracBakimlar || []).length;
+      const sigortaCount = (appState.sigortalar || []).length;
       const sites = getAllSiteNames();
 
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -3448,6 +3652,7 @@
       setEl('badgeTransferCount', transferCount);
       setEl('badgeFaturaCount', faturaCount);
       setEl('badgeBakimCount', bakimCount);
+      setEl('badgeSigortaCount', sigortaCount);
       setEl('badgeSiteCount', sites.length);
 
       let zimNet = 0, zimGross = 0;
@@ -3524,8 +3729,13 @@
         const diffDays = Math.ceil((new Date(b.nextDate).getTime() - todayMs) / 86400000);
         return diffDays <= 30;
       });
+      const upcomingSigorta = (appState.sigortalar || []).filter(s => {
+        if (!s.endDate) return false;
+        const diffDays = Math.ceil((new Date(s.endDate).getTime() - todayMs) / 86400000);
+        return diffDays <= 30;
+      });
 
-      if (lowStock.length === 0 && upcomingBakim.length === 0) {
+      if (lowStock.length === 0 && upcomingBakim.length === 0 && upcomingSigorta.length === 0) {
         box.classList.add('hidden');
         box.innerHTML = '';
         return;
@@ -3556,10 +3766,15 @@
             <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
             <span>Dikkat Edilmesi Gerekenler (Kritik Stok &amp; Yaklaşan Araç Bakımları)</span>
           </h3>
-          <span class="text-[11px] font-semibold text-slate-500">${lowStock.length} Kritik Stok • ${upcomingBakim.length} Yaklaşan Bakım</span>
+          <span class="text-[11px] font-semibold text-slate-500">${lowStock.length} Kritik Stok • ${upcomingBakim.length} Yaklaşan Bakım • ${upcomingSigorta.length} Poliçe Uyarısı</span>
         </div>
         ${lowStock.length ? `<div class="space-y-1"><div class="text-[11px] font-bold uppercase text-rose-700">Kritik Stoklar (≤ 2)</div><div class="flex flex-wrap gap-1.5">${stockHtml}</div></div>` : ''}
         ${upcomingBakim.length ? `<div class="space-y-1"><div class="text-[11px] font-bold uppercase text-amber-700">Bakım / Muayene Tarihi Yaklaşan Araçlar</div><div class="flex flex-wrap gap-1.5">${vehHtml}</div></div>` : ''}
+        ${upcomingSigorta.length ? `<div class="space-y-1"><div class="text-[11px] font-bold uppercase text-rose-700">Süresi Yaklaşan / Dolan Sigorta Poliçeleri</div><div class="flex flex-wrap gap-1.5">${upcomingSigorta.slice(0, 6).map(s => {
+          const diffDays = Math.ceil((new Date(s.endDate).getTime() - todayMs) / 86400000);
+          const lbl = diffDays < 0 ? `${Math.abs(diffDays)} gün geçti` : (diffDays === 0 ? 'Bugün bitiyor' : `${diffDays} gün kaldı`);
+          return `<button type="button" data-go-sigortalar="${escapeHtml(s.vehicleOrSite || s.policyNo || '')}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 text-xs font-semibold transition"><span>${escapeHtml(s.type || 'Poliçe')}: ${escapeHtml(s.vehicleOrSite || s.title || '-')}</span><span class="text-[10px] text-rose-600">• ${formatDateTR(s.endDate)} (${lbl})</span></button>`;
+        }).join('')}</div></div>` : ''}
       `;
     }
 
@@ -4377,8 +4592,24 @@
         }
       });
 
+      (appState.sigortalar || []).forEach(s => {
+        const hay = `${s.type} ${s.title} ${s.vehicleOrSite} ${s.company} ${s.policyNo} ${s.emergencyPhone} ${s.coverageNotes}`.toLocaleLowerCase('tr-TR');
+        if (!q || hay.includes(q)) {
+          results.push({
+            type: 'SIGORTA',
+            badge: `Poliçe (${s.type || 'Sigorta'})`,
+            badgeClass: 'bg-rose-100 text-rose-900',
+            title: `${s.title || s.vehicleOrSite || '-'} • ${s.company || '-'}`,
+            sub: `${s.vehicleOrSite || '-'} • Poliçe: ${s.policyNo || '-'} • Bitiş: ${formatDateTR(s.endDate)}`,
+            cost: formatCurrency(s.premium || 0),
+            secCost: s.emergencyPhone ? `Hasar Tel: ${s.emergencyPhone}` : 'Acil Tel Yok',
+            driveUrl: s.driveUrl || ''
+          });
+        }
+      });
+
       if (results.length === 0) {
-        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Aramanızla eşleşen fatura, seri no veya malzeme bulunamadı.</div>`;
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Aramanızla eşleşen fatura, seri no, malzeme veya poliçe bulunamadı.</div>`;
         return;
       }
 
@@ -4396,6 +4627,7 @@
               <span class="text-xs font-bold text-slate-900 block tabular-nums">${r.cost}</span>
               <span class="text-[10px] text-emerald-700 tabular-nums">${r.secCost}</span>
             </div>
+            ${r.driveUrl ? `<a href="${escapeHtml(r.driveUrl)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-700 text-white text-[11px] font-bold">Drive PDF</a>` : ''}
             ${r.invoiceNo ? `<button type="button" data-copy-invoice="${escapeHtml(r.invoiceNo)}" class="px-2 py-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-[11px] font-mono font-semibold text-slate-700" title="Fatura No Kopyala">${escapeHtml(r.invoiceNo)}</button>` : ''}
           </div>
         </div>
@@ -9185,6 +9417,318 @@ KURALLAR:
         saveState();
         renderUserRolesList();
         showToast(`${email} rol listesinden kaldırıldı.`);
+      });
+
+      // =========================================================================
+      // SİGORTALAR, POLİÇELER & GOOGLE DRIVE ARŞİVİ
+      // =========================================================================
+      function getSigortaStatusInfo(s) {
+        if (!s?.endDate) {
+          return { code: 'ACTIVE', label: 'Tarih Belirtilmedi', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200', daysLeft: 9999 };
+        }
+        const todayMs = new Date().setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((new Date(s.endDate).getTime() - todayMs) / 86400000);
+        if (diffDays < 0) {
+          return { code: 'EXPIRED', label: `Süresi Doldu (${Math.abs(diffDays)} gün)`, badgeClass: 'bg-rose-100 text-rose-800 border-rose-300', daysLeft: diffDays };
+        }
+        if (diffDays <= 30) {
+          return { code: 'EXPIRING', label: diffDays === 0 ? 'Bugün Bitiyor' : `${diffDays} Gün Kaldı`, badgeClass: 'bg-amber-100 text-amber-900 border-amber-300', daysLeft: diffDays };
+        }
+        return { code: 'ACTIVE', label: `Aktif (${diffDays} gün)`, badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200', daysLeft: diffDays };
+      }
+
+      function populateSigortaDatalist() {
+        const dl = document.getElementById('sigortaVehicleSiteDatalist');
+        if (!dl) return;
+        const set = new Set();
+        (appState.aracBakimlar || []).forEach(b => { if (b.vehicle) set.add(String(b.vehicle).trim()); });
+        (appState.zimmetler || []).forEach(z => {
+          if (z.category === 'Araba / Araç' && z.serial) set.add(String(z.serial).trim());
+        });
+        getAllSiteNames().forEach(site => { if (site) set.add(site); });
+        set.add('Merkez Ofis');
+        set.add('Şirket Geneli');
+        dl.innerHTML = Array.from(set).sort((a, b) => a.localeCompare(b, 'tr-TR')).map(v => `<option value="${escapeHtml(v)}"></option>`).join('');
+      }
+
+      window.renderSigortalar = function renderSigortalar() {
+        const grid = document.getElementById('sigortaCardsGrid');
+        if (!grid) return;
+        const list = Array.isArray(appState.sigortalar) ? appState.sigortalar : [];
+
+        // Drive arşiv çubuğunu güncelle
+        const driveInput = document.getElementById('driveArchiveUrlInput');
+        if (driveInput && document.activeElement !== driveInput) {
+          driveInput.value = appState.driveArchiveUrl || '';
+        }
+        const openDriveBtn = document.getElementById('btnOpenDriveArchive');
+        if (openDriveBtn) {
+          openDriveBtn.href = (appState.driveArchiveUrl && /^https?:\/\//i.test(appState.driveArchiveUrl)) ? appState.driveArchiveUrl : 'https://drive.google.com';
+        }
+
+        // KPI hesapları
+        let activeCount = 0;
+        let alertCount = 0;
+        let totalPremium = 0;
+        list.forEach(s => {
+          const st = getSigortaStatusInfo(s);
+          if (st.code === 'ACTIVE') activeCount++;
+          if (st.code === 'EXPIRING' || st.code === 'EXPIRED') alertCount++;
+          totalPremium += Number(s.premium || 0);
+        });
+        const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+        setTxt('sigStatTotal', `${list.length} Adet`);
+        setTxt('sigStatActive', `${activeCount} Adet`);
+        setTxt('sigStatAlert', `${alertCount} Adet`);
+        setTxt('sigStatPremium', formatCurrency(totalPremium));
+
+        const q = (document.getElementById('sigortaSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
+        const typeFilter = document.getElementById('filterSigortaType')?.value || 'ALL';
+        const statusFilter = document.getElementById('filterSigortaStatus')?.value || 'ALL';
+
+        const filtered = list.filter(s => {
+          const st = getSigortaStatusInfo(s);
+          if (typeFilter !== 'ALL' && s.type !== typeFilter) return false;
+          if (statusFilter !== 'ALL' && st.code !== statusFilter) return false;
+          if (q) {
+            const hay = `${s.type} ${s.title} ${s.vehicleOrSite} ${s.company} ${s.policyNo} ${s.emergencyPhone} ${s.agentName} ${s.coverageNotes}`.toLocaleLowerCase('tr-TR');
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        }).sort((a, b) => getSigortaStatusInfo(a).daysLeft - getSigortaStatusInfo(b).daysLeft);
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="col-span-full bg-white rounded-xl border border-dashed border-slate-300 p-8 text-center space-y-2">
+              <i data-lucide="shield-alert" class="w-8 h-8 text-slate-400 mx-auto"></i>
+              <p class="text-sm font-bold text-slate-700">Kayıtlı poliçe bulunamadı</p>
+              <p class="text-xs text-slate-500">Kaza veya denetim anında tek tıkla ulaşmak için araç kasko, trafik sigortası veya ticari paket poliçelerinizi ekleyebilirsiniz.</p>
+            </div>`;
+          return;
+        }
+
+        const adminUser = isAdmin();
+        grid.innerHTML = filtered.map(s => {
+          const st = getSigortaStatusInfo(s);
+          const safeDriveUrl = (s.driveUrl && /^https?:\/\//i.test(s.driveUrl)) ? s.driveUrl : '';
+          const telHref = s.emergencyPhone ? `tel:${String(s.emergencyPhone).replace(/[^+\d]/g, '')}` : '';
+          return `
+            <div class="bg-white rounded-xl border ${st.code === 'EXPIRED' ? 'border-rose-300' : (st.code === 'EXPIRING' ? 'border-amber-300' : 'border-slate-200')} p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between gap-3">
+              <div class="space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 text-amber-400">${escapeHtml(s.type || 'Poliçe')}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.badgeClass}">${escapeHtml(st.label)}</span>
+                  </div>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button type="button" data-edit-sigorta="${escapeHtml(s.id)}" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition" title="Düzenle">
+                      <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                    </button>
+                    ${adminUser ? `<button type="button" data-delete-sigorta="${escapeHtml(s.id)}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Sil"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900 leading-snug">${escapeHtml(s.title || '-')}</h3>
+                  <div class="flex flex-wrap items-center gap-2 mt-1 text-xs">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold font-mono">${escapeHtml(s.vehicleOrSite || '-')}</span>
+                    <span class="text-slate-600 font-semibold">${escapeHtml(s.company || '-')}</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 rounded-lg p-2.5 text-[11px]">
+                  <div>
+                    <span class="text-slate-400 block uppercase font-semibold">Poliçe No</span>
+                    <button type="button" data-copy-policy="${escapeHtml(s.policyNo || '')}" class="font-mono font-bold text-slate-800 hover:text-amber-600 text-left break-all" title="Kopyala">${escapeHtml(s.policyNo || '-')}</button>
+                  </div>
+                  <div>
+                    <span class="text-slate-400 block uppercase font-semibold">Bitiş Tarihi</span>
+                    <span class="font-bold text-slate-800">${s.endDate ? formatDateTR(s.endDate) : '-'}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-400 block uppercase font-semibold">Yıllık Prim</span>
+                    <span class="font-bold text-slate-900 tabular-nums">${formatCurrency(s.premium || 0)}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-400 block uppercase font-semibold">Acente</span>
+                    <span class="font-semibold text-slate-700 truncate block">${escapeHtml(s.agentName || '-')}</span>
+                  </div>
+                </div>
+
+                ${s.coverageNotes ? `<p class="text-[11px] text-slate-600 bg-amber-50/60 border border-amber-100 rounded-lg p-2 leading-relaxed">${escapeHtml(s.coverageNotes)}</p>` : ''}
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                ${telHref ? `
+                  <a href="${escapeHtml(telHref)}" class="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">
+                    <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                    <span>Hasar Ara: ${escapeHtml(s.emergencyPhone)}</span>
+                  </a>
+                ` : ''}
+                ${safeDriveUrl ? `
+                  <a href="${escapeHtml(safeDriveUrl)}" target="_blank" rel="noopener noreferrer" class="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    <span>Drive Poliçe PDF</span>
+                  </a>
+                ` : `<span class="text-[11px] text-slate-400 italic">Drive PDF linki eklenmemiş</span>`}
+              </div>
+            </div>
+          `;
+        }).join('');
+      };
+
+      function openSigortaModal(editId = '') {
+        populateSigortaDatalist();
+        const form = document.getElementById('formSigorta');
+        if (form) form.reset();
+        const idInput = document.getElementById('sigortaEditId');
+        const titleEl = document.getElementById('modalSigortaTitle');
+        if (editId) {
+          const item = (appState.sigortalar || []).find(x => x.id === editId);
+          if (!item) return;
+          if (idInput) idInput.value = item.id;
+          if (titleEl) titleEl.textContent = 'Sigorta Poliçesini Düzenle';
+          document.getElementById('sigortaTypeInput').value = item.type || 'Kasko';
+          document.getElementById('sigortaVehicleSiteInput').value = item.vehicleOrSite || '';
+          document.getElementById('sigortaTitleInput').value = item.title || '';
+          document.getElementById('sigortaCompanyInput').value = item.company || '';
+          document.getElementById('sigortaPolicyNoInput').value = item.policyNo || '';
+          document.getElementById('sigortaStartDateInput').value = item.startDate || '';
+          document.getElementById('sigortaEndDateInput').value = item.endDate || '';
+          document.getElementById('sigortaPremiumInput').value = item.premium || '';
+          document.getElementById('sigortaEmergencyPhoneInput').value = item.emergencyPhone || '';
+          document.getElementById('sigortaAgentInput').value = item.agentName || '';
+          document.getElementById('sigortaDriveUrlInput').value = item.driveUrl || '';
+          document.getElementById('sigortaNotesInput').value = item.coverageNotes || '';
+        } else {
+          if (idInput) idInput.value = '';
+          if (titleEl) titleEl.textContent = 'Yeni Sigorta Poliçesi Ekle';
+        }
+        openModal('modalSigorta');
+      }
+
+      function exportSigortalarToExcel() {
+        const list = Array.isArray(appState.sigortalar) ? appState.sigortalar : [];
+        if (list.length === 0) {
+          showToast('İndirilecek sigorta poliçesi bulunamadı.', 'error');
+          return;
+        }
+        const rows = list.map(s => {
+          const st = getSigortaStatusInfo(s);
+          return {
+            'Poliçe Türü': s.type || '',
+            'Plaka / Şantiye / Birim': s.vehicleOrSite || '',
+            'Başlık': s.title || '',
+            'Sigorta Şirketi': s.company || '',
+            'Poliçe No': s.policyNo || '',
+            'Başlangıç Tarihi': s.startDate ? formatDateTR(s.startDate) : '',
+            'Bitiş Tarihi': s.endDate ? formatDateTR(s.endDate) : '',
+            'Durum': st.label,
+            'Yıllık Prim (TL)': Number(s.premium || 0),
+            'Acil Hasar / Çekici Tel': s.emergencyPhone || '',
+            'Acente': s.agentName || '',
+            'Google Drive PDF Linki': s.driveUrl || '',
+            'Teminat / Notlar': s.coverageNotes || ''
+          };
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Sigorta_Policeleri');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `Sigorta_Policeleri_${dateStr}.xlsx`);
+        showToast('Sigorta poliçeleri Excel olarak indirildi.');
+      }
+
+      document.getElementById('btnOpenSigortaModal')?.addEventListener('click', () => openSigortaModal(''));
+      document.getElementById('btnExportSigortalarExcel')?.addEventListener('click', exportSigortalarToExcel);
+      document.getElementById('btnSaveDriveArchiveUrl')?.addEventListener('click', () => {
+        const url = (document.getElementById('driveArchiveUrlInput')?.value || '').trim();
+        appState.driveArchiveUrl = url;
+        saveState();
+        renderSigortalar();
+        showToast(url ? 'Google Drive ana arşiv klasörü kaydedildi ve cihazlara eşitlendi.' : 'Drive klasör bağlantısı temizlendi.');
+      });
+      document.getElementById('sigortaSearchInput')?.addEventListener('input', () => {
+        renderSigortalar();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('filterSigortaType')?.addEventListener('change', () => {
+        renderSigortalar();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('filterSigortaStatus')?.addEventListener('change', () => {
+        renderSigortalar();
+        if (window.lucide?.createIcons) window.lucide.createIcons();
+      });
+      document.getElementById('formSigorta')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!Array.isArray(appState.sigortalar)) appState.sigortalar = [];
+        const editId = document.getElementById('sigortaEditId')?.value || '';
+        const payload = {
+          id: editId || ('sig_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+          type: document.getElementById('sigortaTypeInput')?.value || 'Kasko',
+          vehicleOrSite: (document.getElementById('sigortaVehicleSiteInput')?.value || '').trim(),
+          title: (document.getElementById('sigortaTitleInput')?.value || '').trim(),
+          company: (document.getElementById('sigortaCompanyInput')?.value || '').trim(),
+          policyNo: (document.getElementById('sigortaPolicyNoInput')?.value || '').trim(),
+          startDate: document.getElementById('sigortaStartDateInput')?.value || '',
+          endDate: document.getElementById('sigortaEndDateInput')?.value || '',
+          premium: parseFloat(document.getElementById('sigortaPremiumInput')?.value) || 0,
+          emergencyPhone: (document.getElementById('sigortaEmergencyPhoneInput')?.value || '').trim(),
+          agentName: (document.getElementById('sigortaAgentInput')?.value || '').trim(),
+          driveUrl: (document.getElementById('sigortaDriveUrlInput')?.value || '').trim(),
+          coverageNotes: (document.getElementById('sigortaNotesInput')?.value || '').trim(),
+          updatedAt: new Date().toISOString()
+        };
+        if (editId) {
+          const idx = appState.sigortalar.findIndex(x => x.id === editId);
+          if (idx !== -1) appState.sigortalar[idx] = payload;
+        } else {
+          appState.sigortalar.unshift(payload);
+        }
+        saveState();
+        renderAll();
+        closeModal('modalSigorta');
+        showToast(editId ? 'Sigorta poliçesi güncellendi.' : 'Yeni sigorta poliçesi kaydedildi.');
+      });
+      document.getElementById('sigortaCardsGrid')?.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('[data-edit-sigorta]');
+        if (editBtn) {
+          openSigortaModal(editBtn.getAttribute('data-edit-sigorta'));
+          return;
+        }
+        const delBtn = e.target.closest('[data-delete-sigorta]');
+        if (delBtn) {
+          if (!isAdmin()) { showToast('Silme yetkisi yalnızca Admin içindir.', 'error'); return; }
+          const id = delBtn.getAttribute('data-delete-sigorta');
+          if (!confirm('Bu sigorta poliçesi kaydını silmek istediğinize emin misiniz?')) return;
+          appState.sigortalar = (appState.sigortalar || []).filter(x => x.id !== id);
+          saveState();
+          renderAll();
+          showToast('Sigorta poliçesi silindi.');
+          return;
+        }
+        const copyBtn = e.target.closest('[data-copy-policy]');
+        if (copyBtn) {
+          const pno = copyBtn.getAttribute('data-copy-policy') || '';
+          if (pno) {
+            navigator.clipboard?.writeText(pno);
+            showToast(`Poliçe No kopyalandı: ${pno}`);
+          }
+        }
+      });
+      document.getElementById('dashboardAlertsBox')?.addEventListener('click', (e) => {
+        const sigBtn = e.target.closest('[data-go-sigortalar]');
+        if (sigBtn) {
+          const q = sigBtn.getAttribute('data-go-sigortalar') || '';
+          document.querySelector('.nav-tab-btn[data-tab="sigortalar"]')?.click();
+          const inp = document.getElementById('sigortaSearchInput');
+          if (inp) {
+            inp.value = q;
+            renderSigortalar();
+            if (window.lucide?.createIcons) window.lucide.createIcons();
+          }
+        }
       });
 
       // Giriş & Çıkış Eventleri
