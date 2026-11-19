@@ -1929,8 +1929,17 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Yıllık Prim (₺)</label>
-            <input id="sigortaPremiumInput" type="number" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+            <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Yıllık Prim &amp; Döviz</label>
+            <div class="flex items-center gap-1.5">
+              <input id="sigortaPremiumInput" type="number" step="0.01" min="0" placeholder="0.00" class="w-full px-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 focus:border-amber-500 outline-none" />
+              <select id="sigortaCurrencyInput" class="px-2.5 py-2 text-xs sm:text-sm font-bold rounded-lg border border-slate-300 bg-slate-50 text-slate-800 focus:border-amber-500 outline-none shrink-0" title="Poliçe Döviz Cinsi">
+                <option value="TRY">₺ TL</option>
+                <option value="EUR">€ EUR</option>
+                <option value="USD">$ USD</option>
+                <option value="GBP">£ GBP</option>
+                <option value="CHF">CHF</option>
+              </select>
+            </div>
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-rose-700 uppercase mb-1">Acil Hasar / Çekici Tel</label>
@@ -4673,7 +4682,7 @@ function doPost(e) {
                   <span class="font-bold text-slate-900">${escapeHtml(s.company || '-')}</span>
                   <span class="font-mono text-slate-500">(${escapeHtml(s.policyNo || '-')})</span>
                 </div>
-                <div class="text-[11px] text-slate-500">Bitiş: <strong class="text-slate-700">${s.endDate ? formatDateTR(s.endDate) : '-'}</strong> • Prim: <strong class="text-slate-800 tabular-nums">${formatCurrency(s.premium || 0)}</strong></div>
+                <div class="text-[11px] text-slate-500">Bitiş: <strong class="text-slate-700">${s.endDate ? formatDateTR(s.endDate) : '-'}</strong> • Prim: <strong class="text-slate-800 tabular-nums">${window.formatPolicyPremium ? window.formatPolicyPremium(s.premium || 0, s.currency) : formatCurrency(s.premium || 0)}</strong></div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
                 ${telHref ? `<a href="${escapeHtml(telHref)}" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold"><i data-lucide="phone-call" class="w-3 h-3"></i><span>Hasar Ara</span></a>` : ''}
@@ -4797,7 +4806,7 @@ function doPost(e) {
             badgeClass: 'bg-rose-100 text-rose-900',
             title: `${s.title || s.vehicleOrSite || '-'} • ${s.company || '-'}`,
             sub: `${s.vehicleOrSite || '-'} • Poliçe: ${s.policyNo || '-'} • Bitiş: ${formatDateTR(s.endDate)}`,
-            cost: formatCurrency(s.premium || 0),
+            cost: window.formatPolicyPremium ? window.formatPolicyPremium(s.premium || 0, s.currency) : formatCurrency(s.premium || 0),
             secCost: s.emergencyPhone ? `Hasar Tel: ${s.emergencyPhone}` : 'Acil Tel Yok',
             driveUrl: s.driveUrl || ''
           });
@@ -9736,6 +9745,41 @@ KURALLAR:
       }
       window.getSigortaStatusInfo = getSigortaStatusInfo;
 
+      window.normalizePolicyCurrency = function normalizePolicyCurrency(raw) {
+        const val = String(raw || '').trim().toUpperCase();
+        if (!val) return 'TRY';
+        if (val === 'EUR' || val === '€' || val.includes('EURO') || val.includes('AVRO')) return 'EUR';
+        if (val === 'USD' || val === '$' || val.includes('DOLAR') || val.includes('DOLLAR')) return 'USD';
+        if (val === 'GBP' || val === '£' || val.includes('STERLIN') || val.includes('STERLİN')) return 'GBP';
+        if (val === 'CHF' || val.includes('FRANK') || val.includes('FRANG')) return 'CHF';
+        return 'TRY';
+      };
+
+      window.formatPolicyPremium = function formatPolicyPremium(amount, currency = 'TRY') {
+        const cur = window.normalizePolicyCurrency(currency);
+        const num = Number(amount || 0);
+        const formatted = (Number.isFinite(num) ? num : 0).toLocaleString('tr-TR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        const symbols = { TRY: '₺', EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' };
+        return (symbols[cur] || '₺') + formatted;
+      };
+
+      window.formatPolicyCurrencyBreakdown = function formatPolicyCurrencyBreakdown(policies) {
+        const totals = { TRY: 0, EUR: 0, USD: 0, GBP: 0, CHF: 0 };
+        (policies || []).forEach(s => {
+          const amt = Number(s?.premium || 0);
+          if (!Number.isFinite(amt) || amt <= 0) return;
+          const cur = window.normalizePolicyCurrency(s?.currency);
+          totals[cur] = (totals[cur] || 0) + amt;
+        });
+        const parts = Object.entries(totals)
+          .filter(([, val]) => val > 0)
+          .map(([cur, val]) => window.formatPolicyPremium(val, cur));
+        return parts.length > 0 ? parts.join(' + ') : window.formatPolicyPremium(0, 'TRY');
+      };
+
       function populateSigortaDatalist() {
         const dl = document.getElementById('sigortaVehicleSiteDatalist');
         if (!dl) return;
@@ -9780,18 +9824,16 @@ KURALLAR:
         // KPI hesapları
         let activeCount = 0;
         let alertCount = 0;
-        let totalPremium = 0;
         list.forEach(s => {
           const st = getSigortaStatusInfo(s);
           if (st.code === 'ACTIVE') activeCount++;
           if (st.code === 'EXPIRING' || st.code === 'EXPIRED') alertCount++;
-          totalPremium += Number(s.premium || 0);
         });
         const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
         setTxt('sigStatTotal', `${list.length} Adet`);
         setTxt('sigStatActive', `${activeCount} Adet`);
         setTxt('sigStatAlert', `${alertCount} Adet`);
-        setTxt('sigStatPremium', formatCurrency(totalPremium));
+        setTxt('sigStatPremium', window.formatPolicyCurrencyBreakdown(list));
 
         const q = (document.getElementById('sigortaSearchInput')?.value || '').trim().toLocaleLowerCase('tr-TR');
         const typeFilter = document.getElementById('filterSigortaType')?.value || 'ALL';
@@ -9858,7 +9900,7 @@ KURALLAR:
                   </div>
                   <div>
                     <span class="text-slate-400 block uppercase font-semibold">Yıllık Prim</span>
-                    <span class="font-bold text-slate-900 tabular-nums">${formatCurrency(s.premium || 0)}</span>
+                    <span class="font-bold text-slate-900 tabular-nums">${window.formatPolicyPremium(s.premium || 0, s.currency)}${window.normalizePolicyCurrency(s.currency) !== 'TRY' ? ` <span class="ml-1 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 text-[10px] font-extrabold">${escapeHtml(window.normalizePolicyCurrency(s.currency))}</span>` : ''}</span>
                   </div>
                   <div>
                     <span class="text-slate-400 block uppercase font-semibold">Acente</span>
@@ -9907,6 +9949,8 @@ KURALLAR:
           document.getElementById('sigortaStartDateInput').value = item.startDate || '';
           document.getElementById('sigortaEndDateInput').value = item.endDate || '';
           document.getElementById('sigortaPremiumInput').value = item.premium || '';
+          const curSel = document.getElementById('sigortaCurrencyInput');
+          if (curSel) curSel.value = window.normalizePolicyCurrency(item.currency);
           document.getElementById('sigortaEmergencyPhoneInput').value = item.emergencyPhone || '';
           document.getElementById('sigortaAgentInput').value = item.agentName || '';
           document.getElementById('sigortaDriveUrlInput').value = item.driveUrl || '';
@@ -9914,6 +9958,8 @@ KURALLAR:
         } else {
           if (idInput) idInput.value = '';
           if (titleEl) titleEl.textContent = 'Yeni Sigorta Poliçesi Ekle';
+          const curSel = document.getElementById('sigortaCurrencyInput');
+          if (curSel) curSel.value = 'TRY';
           if (prefillVehicleOrSite) {
             const vsInp = document.getElementById('sigortaVehicleSiteInput');
             if (vsInp) vsInp.value = prefillVehicleOrSite;
@@ -9984,7 +10030,9 @@ KURALLAR:
             'Başlangıç Tarihi': s.startDate ? formatDateTR(s.startDate) : '',
             'Bitiş Tarihi': s.endDate ? formatDateTR(s.endDate) : '',
             'Durum': st.label,
-            'Yıllık Prim (TL)': Number(s.premium || 0),
+            'Yıllık Prim': Number(s.premium || 0),
+            'Döviz Cinsi': window.normalizePolicyCurrency(s.currency),
+            'Formatlı Prim': window.formatPolicyPremium(s.premium || 0, s.currency),
             'Acil Hasar / Çekici Tel': s.emergencyPhone || '',
             'Acente': s.agentName || '',
             'Google Drive PDF Linki': s.driveUrl || '',
@@ -10031,12 +10079,13 @@ KURALLAR:
           policyNo: { type: 'string', description: 'Poliçe numarası' },
           startDate: { type: 'string', description: 'Başlangıç tarihi YYYY-MM-DD' },
           endDate: { type: 'string', description: 'Bitiş tarihi YYYY-MM-DD' },
-          premium: { type: 'number', description: 'Toplam brüt / ödenecek prim tutarı (TL)' },
+          premium: { type: 'number', description: 'Toplam brüt / ödenecek prim tutarı (sayı)' },
+          currency: { type: 'string', enum: ['TRY', 'EUR', 'USD', 'GBP', 'CHF'], description: 'Poliçe prim döviz cinsi: TRY (TL/₺), EUR (€/Euro), USD ($/ABD Doları), GBP (£/Sterlin), CHF (İsviçre Frangı)' },
           emergencyPhone: { type: 'string', description: 'Hasar ihbar / çekici / acil yardım telefonu' },
           agentName: { type: 'string', description: 'Acente veya broker adı' },
           coverageNotes: { type: 'string', description: 'Önemli teminatlar, İMM limiti, muafiyet veya kaza anı özeti' }
         },
-        required: ['type', 'vehicleOrSite', 'title', 'company', 'policyNo', 'endDate']
+        required: ['type', 'vehicleOrSite', 'title', 'company', 'policyNo', 'endDate', 'currency']
       };
 
       function normalizeTrFold(s) {
@@ -10163,10 +10212,33 @@ KURALLAR:
           }
         }
 
-        // 6. Prim Tutarı
+        // 6. Prim Tutarı ve Döviz Cinsi
         let premium = 0;
-        const premM = text.match(/(?:Brüt\s*Prim|Brut\s*Prim|Toplam\s*Prim|Ödenecek\s*Tutar|Odenecek\s*Tutar|Genel\s*Toplam|Net\s*Prim)[^\d]{0,25}([\d.]+,\d{2}|\d+(?:\.\d{2})?)/i);
-        if (premM) premium = parsePolicyMoney(premM[1]);
+        let currency = 'TRY';
+        let explicitCurrency = false;
+        const premM = text.match(/(?:Brüt\s*Prim|Brut\s*Prim|Toplam\s*Prim|Ödenecek\s*Tutar|Odenecek\s*Tutar|Genel\s*Toplam|Net\s*Prim)[^\d€$£]{0,25}(€|\$|£|EUR|USD|GBP|CHF|TL|TRY)?\s*([\d.]+,\d{2}|\d+(?:\.\d{2})?)\s*(€|\$|£|EUR|EURO|USD|ABD\s*DOLAR[Iİ]|DOLAR|GBP|STERL[Iİ]N|CHF|TL|TRY|TÜRK\s*L[İI]RASI)?/i);
+        if (premM) {
+          premium = parsePolicyMoney(premM[2]);
+          const curToken = (premM[1] || premM[3] || '').trim();
+          if (curToken) {
+            currency = window.normalizePolicyCurrency(curToken);
+            explicitCurrency = true;
+          }
+        }
+        if (!explicitCurrency && currency === 'TRY') {
+          const curLineM = text.match(/(?:Döviz\s*Cinsi|Doviz\s*Cinsi|Para\s*Birimi|Poliçe\s*Dövizi)\s*[:#\-]?\s*(EUR|EURO|€|USD|ABD\s*DOLAR[Iİ]|DOLAR|\$|GBP|STERL[Iİ]N|£|CHF|TL|TRY)/i);
+          if (curLineM) {
+            currency = window.normalizePolicyCurrency(curLineM[1]);
+          } else if (/(?:[\d.]+,\d{2}|\b\d+\b)\s*(?:EUR\b|EURO\b|€)/i.test(text) || /(?:€|\bEUR\b)\s*[\d.]+,\d{2}/i.test(text)) {
+            currency = 'EUR';
+          } else if (/(?:[\d.]+,\d{2}|\b\d+\b)\s*(?:USD\b|ABD\s*DOLAR[Iİ]|DOLAR\b|\$)/i.test(text) || /(?:\$|\bUSD\b)\s*[\d.]+,\d{2}/i.test(text)) {
+            currency = 'USD';
+          } else if (/(?:[\d.]+,\d{2}|\b\d+\b)\s*(?:GBP\b|STERL[Iİ]N\b|£)/i.test(text)) {
+            currency = 'GBP';
+          } else if (/(?:[\d.]+,\d{2}|\b\d+\b)\s*\bCHF\b/i.test(text)) {
+            currency = 'CHF';
+          }
+        }
 
         // 7. Acente
         let agentName = '';
@@ -10183,6 +10255,7 @@ KURALLAR:
           startDate,
           endDate,
           premium,
+          currency,
           emergencyPhone,
           agentName,
           coverageNotes: ''
@@ -10203,6 +10276,7 @@ KURALLAR:
 - policyNo: Poliçe numarası.
 - startDate / endDate: YYYY-MM-DD biçiminde.
 - premium: Vergiler dahil toplam brüt prim (sayı).
+- currency: Poliçe priminin döviz cinsi ("TRY", "EUR", "USD", "GBP", "CHF"). Poliçede EUR / € / Euro yazıyorsa kesinlikle "EUR", USD / $ / Dolar yazıyorsa "USD", GBP / £ / Sterlin yazıyorsa "GBP" döndür; dövizli poliçeyi TRY olarak kaydetme.
 - emergencyPhone: Poliçedeki 7/24 hasar ihbar / çekici telefonu.
 - coverageNotes: Teminat özeti (İMM limiti, ikame araç, muafiyet, kaza anında önemli detaylar).
 
@@ -10478,6 +10552,7 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
           startDate: aiParsed?.startDate || fallbackParsed.startDate || '',
           endDate: aiParsed?.endDate || fallbackParsed.endDate || '',
           premium: Number(aiParsed?.premium || fallbackParsed.premium || 0),
+          currency: window.normalizePolicyCurrency(aiParsed?.currency || fallbackParsed.currency || 'TRY'),
           emergencyPhone: pickVal(aiParsed?.emergencyPhone, fallbackParsed.emergencyPhone, ''),
           agentName: pickVal(aiParsed?.agentName, fallbackParsed.agentName, ''),
           coverageNotes: pickVal(aiParsed?.coverageNotes, fallbackParsed.coverageNotes, '')
@@ -10535,7 +10610,7 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
               <div class="flex flex-wrap items-center gap-1.5">
                 <span class="px-2 py-0.5 rounded bg-slate-900 text-amber-400 font-bold">${escapeHtml(p.type)}</span>
                 <span class="font-bold text-slate-900">${escapeHtml(p.vehicleOrSite || p.title)}</span>
-                <span class="text-slate-500">• ${escapeHtml(p.company)} (${escapeHtml(p.policyNo || 'No Yok')})</span>
+                <span class="text-slate-500">• ${escapeHtml(p.company)} (${escapeHtml(p.policyNo || 'No Yok')}) • ${escapeHtml(window.formatPolicyPremium(p.premium, p.currency))}</span>
                 <span class="text-[10px] text-slate-500">${analyzed.usedAi ? '🤖 Yapay Zeka' : '📄 Akıllı Tarama'}${isUpdate ? ' • Güncellendi' : ''}</span>
               </div>
               <div class="flex items-center gap-1.5">${driveBadge}</div>
@@ -10656,6 +10731,8 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
           document.getElementById('sigortaStartDateInput').value = p.startDate || '';
           document.getElementById('sigortaEndDateInput').value = p.endDate || '';
           document.getElementById('sigortaPremiumInput').value = p.premium || '';
+          const curSel = document.getElementById('sigortaCurrencyInput');
+          if (curSel) curSel.value = window.normalizePolicyCurrency(p.currency);
           document.getElementById('sigortaEmergencyPhoneInput').value = p.emergencyPhone || '';
           document.getElementById('sigortaAgentInput').value = p.agentName || '';
           document.getElementById('sigortaNotesInput').value = p.coverageNotes || '';
@@ -10701,6 +10778,7 @@ ${extractedText ? `POLİÇE METNİ (PDF):\n${extractedText.slice(0, 22000)}` : '
           startDate: document.getElementById('sigortaStartDateInput')?.value || '',
           endDate: document.getElementById('sigortaEndDateInput')?.value || '',
           premium: parseFloat(document.getElementById('sigortaPremiumInput')?.value) || 0,
+          currency: window.normalizePolicyCurrency(document.getElementById('sigortaCurrencyInput')?.value || 'TRY'),
           emergencyPhone: (document.getElementById('sigortaEmergencyPhoneInput')?.value || '').trim(),
           agentName: (document.getElementById('sigortaAgentInput')?.value || '').trim(),
           driveUrl: (document.getElementById('sigortaDriveUrlInput')?.value || '').trim(),
